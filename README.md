@@ -4,10 +4,15 @@
 
 Installer un environnement virtuel :
 ```bash
-python -m venv <virtual-environment-name>
+python -m venv venv
 ```
 
 Activer l'environnement virtuel :
 ```bash
-source <virtual-environment-name>/bin/activate
+source venv/bin/activate
+```
+
+Installer les dépendances :
+```bash
+pip install -r requirements.txt
 ```
