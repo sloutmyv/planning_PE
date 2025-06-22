@@ -52,3 +52,8 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **grade** : Agent, Maitrise, ou Cadre
 - **hire_date** : Date d'embauche (par défaut: date de création)
 - **departure_date** : Date de départ (optionnel, doit être postérieure à la date d'embauche)
+
+### Fonction
+- **designation** : Nom de la fonction
+- **description** : Description de la fonction (optionnel)
+- **status** : Statut actif/inactif (par défaut: actif)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agent
+from .models import Agent, Function
 
 
 @admin.register(Agent)
@@ -9,3 +9,11 @@ class AgentAdmin(admin.ModelAdmin):
     search_fields = ('matricule', 'first_name', 'last_name')
     ordering = ('matricule',)
     date_hierarchy = 'hire_date'
+
+
+@admin.register(Function)
+class FunctionAdmin(admin.ModelAdmin):
+    list_display = ('designation', 'status')
+    list_filter = ('status',)
+    search_fields = ('designation', 'description')
+    ordering = ('designation',)

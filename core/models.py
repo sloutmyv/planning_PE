@@ -40,3 +40,16 @@ class Agent(models.Model):
     class Meta:
         verbose_name = "Agent"
         verbose_name_plural = "Agents"
+
+
+class Function(models.Model):
+    designation = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    status = models.BooleanField(default=True, verbose_name="Actif")
+    
+    def __str__(self):
+        return self.designation
+    
+    class Meta:
+        verbose_name = "Fonction"
+        verbose_name_plural = "Fonctions"
