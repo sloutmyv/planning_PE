@@ -208,30 +208,56 @@ def agent_delete(request, pk):
 @login_required
 @user_passes_test(is_staff_user)
 def function_list(request):
-    """List all functions with search and pagination"""
+    """List all functions with search, sorting and pagination"""
     search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'designation')
+    order = request.GET.get('order', 'asc')
+    hide_inactive = request.GET.get('hide_inactive', 'false') == 'true'
+    
     functions = Function.objects.all()
+    
+    # Filter out inactive functions if requested
+    if hide_inactive:
+        functions = functions.filter(status=True)
     
     if search_query:
         functions = functions.filter(
-            designation__icontains=search_query
-        ) | functions.filter(
-            description__icontains=search_query
+            Q(designation__icontains=search_query) |
+            Q(description__icontains=search_query)
         )
+    
+    # Apply sorting
+    valid_sorts = ['designation', 'description', 'status']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        functions = functions.order_by(sort_by)
+    else:
+        functions = functions.order_by('designation')
     
     paginator = Paginator(functions, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'designation')
+    current_order = request.GET.get('order', 'asc')
+    
     if request.headers.get('HX-Request'):
         return render(request, 'core/functions/function_list_partial.html', {
             'page_obj': page_obj,
-            'search_query': search_query
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order,
+            'hide_inactive': hide_inactive
         })
     
     return render(request, 'core/functions/function_list.html', {
         'page_obj': page_obj,
-        'search_query': search_query
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order,
+        'hide_inactive': hide_inactive
     })
 
 
@@ -247,13 +273,14 @@ def function_create(request):
             if request.headers.get('HX-Request'):
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Fonction "{function.designation}" créée avec succès.</div>'
-                    '<script>setTimeout(() => { document.dispatchEvent(new CustomEvent("closeFunctionCreateForm")); location.reload(); }, 1000)</script>'
+                    '<script>setTimeout(() => { document.getElementById("function-modal").style.display = "none"; location.reload(); }, 1000)</script>'
                 )
             return redirect('function_list')
     else:
         form = FunctionForm()
     
-    return render(request, 'core/functions/function_form.html', {
+    template = 'core/functions/function_form_htmx.html' if request.headers.get('HX-Request') else 'core/functions/function_form.html'
+    return render(request, template, {
         'form': form,
         'title': 'Créer une Fonction',
         'is_htmx': request.headers.get('HX-Request')
@@ -282,13 +309,14 @@ def function_edit(request, pk):
             if request.headers.get('HX-Request'):
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Fonction "{function.designation}" modifiée avec succès.</div>'
-                    '<script>setTimeout(() => window.location.reload(), 1000)</script>'
+                    '<script>setTimeout(() => { document.getElementById("function-modal").style.display = "none"; location.reload(); }, 1000)</script>'
                 )
             return redirect('function_list')
     else:
         form = FunctionForm(instance=function)
     
-    return render(request, 'core/functions/function_form.html', {
+    template = 'core/functions/function_form_htmx.html' if request.headers.get('HX-Request') else 'core/functions/function_form.html'
+    return render(request, template, {
         'form': form,
         'function': function,
         'title': f'Modifier "{function.designation}"',
@@ -306,10 +334,45 @@ def function_delete(request, pk):
     function.delete()
     
     if request.headers.get('HX-Request'):
-        return HttpResponse(
-            f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Fonction "{designation}" supprimée avec succès.</div>'
-            '<script>setTimeout(() => window.location.reload(), 1000)</script>'
-        )
+        # Return updated function list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'designation')
+        order = request.GET.get('order', 'asc')
+        hide_inactive = request.GET.get('hide_inactive', 'false') == 'true'
+        
+        functions = Function.objects.all()
+        
+        # Filter out inactive functions if requested
+        if hide_inactive:
+            functions = functions.filter(status=True)
+            
+        if search_query:
+            functions = functions.filter(
+                Q(designation__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['designation', 'description', 'status']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            functions = functions.order_by(sort_by)
+        else:
+            functions = functions.order_by('designation')
+        
+        paginator = Paginator(functions, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        messages.success(request, f'Fonction "{designation}" supprimée avec succès.')
+        return render(request, 'core/functions/function_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'designation'),
+            'current_order': request.GET.get('order', 'asc'),
+            'hide_inactive': hide_inactive
+        })
     
     messages.success(request, f'Fonction "{designation}" supprimée avec succès.')
     return redirect('function_list')

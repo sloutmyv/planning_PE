@@ -21,8 +21,14 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Statuts visuels** : Badges colorés pour les grades et statuts (actif/parti)
 
 ### Gestion des fonctions
-- **CRUD complet** : Interface modale pour la gestion des fonctions
-- **Statuts** : Gestion des fonctions actives/inactives
+- **CRUD complet** : Création, lecture, modification, suppression
+- **Recherche en temps réel** : Recherche par désignation ou description avec délai de 300ms
+- **Tri multi-colonnes** : Tri par désignation ou statut (ASC/DESC)
+- **Pagination** : Navigation par pages avec conservation des filtres
+- **Filtrage avancé** : Option pour masquer les fonctions inactives
+- **Split buttons** : Actions d'édition et suppression combinées
+- **Modales HTMX** : Formulaires de création/modification sans navigation
+- **Statuts visuels** : Badges colorés pour les statuts (actif/inactif)
 
 ### Authentification et sécurité
 - **Interface d'administration sécurisée** : Accès restreint aux utilisateurs staff
@@ -54,13 +60,21 @@ python manage.py migrate
 Générer des données de test (optionnel) :
 ```bash
 python manage.py create_test_agents
+python manage.py create_test_functions
 ```
 
-Cette commande crée 50 agents avec :
+La commande **create_test_agents** crée 50 agents avec :
 - Noms français aléatoires
 - Grades distribués (Execution, Maitrise, Cadre)
 - Dates d'embauche entre 2010-2024
 - ~10% d'agents partis
+
+La commande **create_test_functions** crée 30 fonctions avec :
+- Fonctions techniques (10) : Développeur, DevOps, etc.
+- Fonctions management (10) : Chef de projet, Directeur, etc.
+- Fonctions opérationnelles (10) : Comptable, Secrétaire, etc.
+- Descriptions détaillées pour chaque fonction
+- ~20% de fonctions inactives
 
 ## Utilisation
 
