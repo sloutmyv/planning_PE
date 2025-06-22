@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestion des Fonctions - Planning PE{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ showCreateForm: false }" @closeFunctionCreateForm.document="showCreateForm = false">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Fonctions</h1>
+        <button @click="showCreateForm = !showCreateForm" 
+                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nouvelle Fonction
+        </button>
+    </div>
+
+    <!-- Create Form Modal -->
+    <div x-show="showCreateForm" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-90"
+         class="bg-white rounded-lg shadow-lg border border-gray-200 p-6"
+         x-init="$watch('showCreateForm', value => { if (value) { htmx.trigger('#function-create-form-content', 'loadForm') } })">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Créer une nouvelle fonction</h2>
+            <button @click="showCreateForm = false" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="function-create-form-content"
+             hx-get="{% url 'function_create' %}" 
+             hx-trigger="loadForm"
+             hx-target="this"
+             hx-swap="innerHTML">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="Rechercher par désignation ou description..."
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                       hx-get="{% url 'function_list' %}"
+                       hx-trigger="keyup changed delay:300ms"
+                       hx-target="#function-list-content"
+                       hx-include="[name='search']">
+            </div>
+            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    hx-get="{% url 'function_list' %}"
+                    hx-target="#function-list-content">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Actualiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Function List -->
+    <div id="function-list-content" class="bg-white rounded-lg shadow-sm border border-gray-200">
+        {% include 'core/functions/function_list_partial.html' %}
+    </div>
+</div>
+{% endblock %}

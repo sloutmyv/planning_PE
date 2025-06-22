@@ -1,0 +1,158 @@
+{% if not is_htmx %}
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }} - Planning PE{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ title }}</h1>
+{% endif %}
+
+        <form method="post" 
+              {% if is_htmx %}
+              hx-post="{% if agent %}{% url 'agent_edit' agent.pk %}{% else %}{% url 'agent_create' %}{% endif %}"
+              hx-target="this"
+              hx-swap="outerHTML"
+              {% endif %}
+              class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Matricule -->
+                <div>
+                    <label for="{{ form.matricule.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.matricule.label }}
+                    </label>
+                    {{ form.matricule }}
+                    {% if form.matricule.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.matricule.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Grade -->
+                <div>
+                    <label for="{{ form.grade.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.grade.label }}
+                    </label>
+                    {{ form.grade }}
+                    {% if form.grade.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.grade.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Prénom -->
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.first_name.label }}
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.first_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Nom de famille -->
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.last_name.label }}
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.last_name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Date d'embauche -->
+                <div>
+                    <label for="{{ form.hire_date.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.hire_date.label }}
+                    </label>
+                    {{ form.hire_date }}
+                    {% if form.hire_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.hire_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Date de départ -->
+                <div>
+                    <label for="{{ form.departure_date.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                        {{ form.departure_date.label }}
+                        <span class="text-gray-500 text-xs font-normal">(optionnel)</span>
+                    </label>
+                    {{ form.departure_date }}
+                    {% if form.departure_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.departure_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form-wide errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Erreurs de validation</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                {% if not is_htmx %}
+                <a href="{% url 'agent_list' %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    Annuler
+                </a>
+                {% else %}
+                <button type="button" 
+                        onclick="document.dispatchEvent(new CustomEvent('closeCreateForm'))"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                {% endif %}
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                    {% if agent %}Modifier{% else %}Créer{% endif %}
+                </button>
+            </div>
+        </form>
+
+{% if not is_htmx %}
+    </div>
+</div>
+{% endblock %}
+{% endif %}

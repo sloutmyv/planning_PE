@@ -1,0 +1,126 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ agent.matricule }} - {{ agent.first_name }} {{ agent.last_name }} - Planning PE{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header with Actions -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ agent.matricule }} - {{ agent.first_name }} {{ agent.last_name }}</h1>
+            <p class="text-gray-600 mt-1">Détails de l'agent</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'agent_edit' agent.pk %}" 
+               class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors">
+                Modifier
+            </a>
+            <a href="{% url 'agent_list' %}" 
+               class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Agent Information -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">Informations personnelles</h2>
+        </div>
+        <div class="p-6">
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Matricule</dt>
+                    <dd class="mt-1 text-lg font-semibold text-gray-900">{{ agent.matricule }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Grade</dt>
+                    <dd class="mt-1">
+                        <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
+                            {% if agent.grade == 'Cadre' %}bg-purple-100 text-purple-800
+                            {% elif agent.grade == 'Maitrise' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ agent.grade }}
+                        </span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Prénom</dt>
+                    <dd class="mt-1 text-lg text-gray-900">{{ agent.first_name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Nom de famille</dt>
+                    <dd class="mt-1 text-lg text-gray-900">{{ agent.last_name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Date d'embauche</dt>
+                    <dd class="mt-1 text-lg text-gray-900">{{ agent.hire_date|date:"d/m/Y" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Statut</dt>
+                    <dd class="mt-1">
+                        {% if agent.departure_date %}
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                                Parti le {{ agent.departure_date|date:"d/m/Y" }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                                Actif depuis le {{ agent.hire_date|date:"d/m/Y" }}
+                            </span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Employment Duration -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">Durée d'emploi</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">
+                        {% now "Y-m-d" as today %}
+                        {% if agent.departure_date %}
+                            {{ agent.departure_date|timeuntil:agent.hire_date }}
+                        {% else %}
+                            {{ today|timeuntil:agent.hire_date }}
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-500">Durée totale</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ agent.hire_date|date:"d/m/Y" }}</div>
+                    <div class="text-sm text-gray-500">Date de début</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold {% if agent.departure_date %}text-red-600{% else %}text-gray-400{% endif %}">
+                        {% if agent.departure_date %}
+                            {{ agent.departure_date|date:"d/m/Y" }}
+                        {% else %}
+                            En cours
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-500">Date de fin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Future: Planning Information -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">Planning</h2>
+        </div>
+        <div class="p-6 text-center text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <p class="mt-2">Informations de planning à venir...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
