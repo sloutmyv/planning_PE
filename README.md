@@ -1,6 +1,16 @@
 # planning_PE
 
-Application de planification développée avec Django.
+Application de planification développée avec Django, utilisant HTMX et Alpine.js pour une interface utilisateur moderne et réactive.
+
+## Fonctionnalités
+
+- **Interface utilisateur moderne** : UI responsive avec Tailwind CSS
+- **Interactions fluides** : HTMX pour les requêtes AJAX sans rechargement de page
+- **Composants réactifs** : Alpine.js pour l'interactivité côté client
+- **Gestion des agents** : CRUD complet avec recherche et pagination
+- **Gestion des fonctions** : CRUD complet avec interface modale
+- **Authentification** : Interface d'administration sécurisée
+- **Support multi-utilisateurs** : Permissions basées sur le statut staff
 
 ## Installation
 
@@ -31,10 +41,25 @@ Lancer le serveur de développement :
 python manage.py runserver
 ```
 
-Accéder à l'interface d'administration : http://127.0.0.1:8000/admin/
-- Utilisateur : azerty
-- Email : azerty@azerty.com
-- Mot de passe : azerty
+### Accès à l'application
+
+- **Page d'accueil** : http://127.0.0.1:8000/
+- **Interface d'administration Django** : http://127.0.0.1:8000/admin/
+
+### Identifiants d'administration
+
+- **Utilisateur** : azerty
+- **Email** : azerty@azerty.com
+- **Mot de passe** : azerty
+
+### Navigation
+
+L'interface principale propose :
+- **Accueil** : Vue d'ensemble avec placeholder pour le planning
+- **Administration** (menu déroulant pour les utilisateurs staff) :
+  - Gestion des Agents
+  - Gestion des Fonctions
+  - Interface d'Administration Django
 
 ## Tests
 
