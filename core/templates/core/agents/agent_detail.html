@@ -1,13 +1,13 @@
 {% extends 'core/base.html' %}
 
-{% block title %}{{ agent.matricule }} - {{ agent.first_name }} {{ agent.last_name }} - Planning PE{% endblock %}
+{% block title %}{{ agent.matricule }} - {{ agent.first_name }} {{ agent.last_name|upper }} - Planning PE{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header with Actions -->
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ agent.matricule }} - {{ agent.first_name }} {{ agent.last_name }}</h1>
+            <h1 class="text-3xl font-bold text-gray-900">{{ agent.matricule }} - {{ agent.first_name }} <span class="uppercase">{{ agent.last_name }}</span></h1>
             <p class="text-gray-600 mt-1">Détails de l'agent</p>
         </div>
         <div class="flex space-x-3">
@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Nom de famille</dt>
-                    <dd class="mt-1 text-lg text-gray-900">{{ agent.last_name }}</dd>
+                    <dd class="mt-1 text-lg text-gray-900 uppercase font-medium">{{ agent.last_name }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Date d'embauche</dt>

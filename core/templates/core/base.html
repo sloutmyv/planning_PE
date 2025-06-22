@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Planning PE{% endblock %}</title>
     
     <!-- Tailwind CSS -->
@@ -10,9 +11,40 @@
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        // Ensure Alpine.js loads properly
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine.js initialized successfully');
+        });
+        
+        // Fallback check
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (typeof Alpine === 'undefined') {
+                    console.error('Alpine.js failed to load!');
+                    alert('There was an issue loading Alpine.js. Please refresh the page.');
+                }
+            }, 100);
+        });
+    </script>
     
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // Configure HTMX to include CSRF token
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get CSRF token
+            function getCSRFToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                       document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+            }
+            
+            // Add CSRF token to all HTMX requests
+            document.body.addEventListener('htmx:configRequest', function(evt) {
+                evt.detail.headers['X-CSRFToken'] = getCSRFToken();
+            });
+        });
+    </script>
     
     <!-- Custom CSS -->
     <style>

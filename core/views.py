@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Agent, Function
 from .forms import AgentForm, FunctionForm
 
@@ -40,30 +41,55 @@ def function_count(request):
 def agent_list(request):
     """List all agents with search and pagination"""
     search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'matricule')
+    order = request.GET.get('order', 'asc')
+    hide_departed = request.GET.get('hide_departed', 'false') == 'true'
+    
     agents = Agent.objects.all()
+    
+    # Filter out departed agents if requested
+    if hide_departed:
+        agents = agents.filter(departure_date__isnull=True)
     
     if search_query:
         agents = agents.filter(
-            matricule__icontains=search_query
-        ) | agents.filter(
-            first_name__icontains=search_query
-        ) | agents.filter(
-            last_name__icontains=search_query
+            Q(matricule__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
         )
+    
+    # Apply sorting
+    valid_sorts = ['matricule', 'last_name', 'first_name', 'grade', 'hire_date']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        agents = agents.order_by(sort_by)
+    else:
+        agents = agents.order_by('matricule')
     
     paginator = Paginator(agents, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'matricule')
+    current_order = request.GET.get('order', 'asc')
+    
     if request.headers.get('HX-Request'):
         return render(request, 'core/agents/agent_list_partial.html', {
             'page_obj': page_obj,
-            'search_query': search_query
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order,
+            'hide_departed': hide_departed
         })
     
     return render(request, 'core/agents/agent_list.html', {
         'page_obj': page_obj,
-        'search_query': search_query
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order,
+        'hide_departed': hide_departed
     })
 
 
@@ -79,13 +105,14 @@ def agent_create(request):
             if request.headers.get('HX-Request'):
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Agent {agent.matricule} créé avec succès.</div>'
-                    '<script>setTimeout(() => { document.dispatchEvent(new CustomEvent("closeCreateForm")); location.reload(); }, 1000)</script>'
+                    '<script>setTimeout(() => { document.getElementById("agent-modal").style.display = "none"; location.reload(); }, 1000)</script>'
                 )
             return redirect('agent_list')
     else:
         form = AgentForm()
     
-    return render(request, 'core/agents/agent_form.html', {
+    template = 'core/agents/agent_form_htmx.html' if request.headers.get('HX-Request') else 'core/agents/agent_form.html'
+    return render(request, template, {
         'form': form,
         'title': 'Créer un Agent',
         'is_htmx': request.headers.get('HX-Request')
@@ -114,13 +141,14 @@ def agent_edit(request, pk):
             if request.headers.get('HX-Request'):
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Agent {agent.matricule} modifié avec succès.</div>'
-                    '<script>setTimeout(() => window.location.reload(), 1000)</script>'
+                    '<script>setTimeout(() => { document.getElementById("agent-modal").style.display = "none"; location.reload(); }, 1000)</script>'
                 )
             return redirect('agent_list')
     else:
         form = AgentForm(instance=agent)
     
-    return render(request, 'core/agents/agent_form.html', {
+    template = 'core/agents/agent_form_htmx.html' if request.headers.get('HX-Request') else 'core/agents/agent_form.html'
+    return render(request, template, {
         'form': form,
         'agent': agent,
         'title': f'Modifier {agent.matricule}',
@@ -138,10 +166,39 @@ def agent_delete(request, pk):
     agent.delete()
     
     if request.headers.get('HX-Request'):
-        return HttpResponse(
-            f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Agent {matricule} supprimé avec succès.</div>'
-            '<script>setTimeout(() => window.location.reload(), 1000)</script>'
-        )
+        # Return updated agent list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'matricule')
+        order = request.GET.get('order', 'asc')
+        
+        agents = Agent.objects.all()
+        if search_query:
+            agents = agents.filter(
+                Q(matricule__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['matricule', 'last_name', 'first_name', 'grade', 'hire_date']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            agents = agents.order_by(sort_by)
+        else:
+            agents = agents.order_by('matricule')
+        
+        paginator = Paginator(agents, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        messages.success(request, f'Agent {matricule} supprimé avec succès.')
+        return render(request, 'core/agents/agent_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'matricule'),
+            'current_order': request.GET.get('order', 'asc')
+        })
     
     messages.success(request, f'Agent {matricule} supprimé avec succès.')
     return redirect('agent_list')

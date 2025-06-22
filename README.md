@@ -4,13 +4,30 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 
 ## Fonctionnalités
 
-- **Interface utilisateur moderne** : UI responsive avec Tailwind CSS
+### Interface utilisateur
+- **Interface moderne et responsive** : UI avec Tailwind CSS
 - **Interactions fluides** : HTMX pour les requêtes AJAX sans rechargement de page
 - **Composants réactifs** : Alpine.js pour l'interactivité côté client
-- **Gestion des agents** : CRUD complet avec recherche et pagination
-- **Gestion des fonctions** : CRUD complet avec interface modale
-- **Authentification** : Interface d'administration sécurisée
-- **Support multi-utilisateurs** : Permissions basées sur le statut staff
+- **Split buttons** : Actions d'édition et suppression combinées
+- **Modales HTMX** : Formulaires de création/modification sans navigation
+
+### Gestion des agents
+- **CRUD complet** : Création, lecture, modification, suppression
+- **Recherche en temps réel** : Recherche par matricule, prénom ou nom avec délai de 300ms
+- **Tri multi-colonnes** : Tri par matricule, nom, grade ou date d'embauche (ASC/DESC)
+- **Pagination** : Navigation par pages avec conservation des filtres
+- **Filtrage avancé** : Option pour masquer les agents partis
+- **Noms en capitales** : Affichage des noms de famille en MAJUSCULES
+- **Statuts visuels** : Badges colorés pour les grades et statuts (actif/parti)
+
+### Gestion des fonctions
+- **CRUD complet** : Interface modale pour la gestion des fonctions
+- **Statuts** : Gestion des fonctions actives/inactives
+
+### Authentification et sécurité
+- **Interface d'administration sécurisée** : Accès restreint aux utilisateurs staff
+- **Protection CSRF** : Tokens CSRF pour toutes les requêtes HTMX
+- **Permissions** : Contrôle d'accès basé sur le statut utilisateur
 
 ## Installation
 
@@ -33,6 +50,17 @@ Effectuer les migrations :
 ```bash
 python manage.py migrate
 ```
+
+Générer des données de test (optionnel) :
+```bash
+python manage.py create_test_agents
+```
+
+Cette commande crée 50 agents avec :
+- Noms français aléatoires
+- Grades distribués (Execution, Maitrise, Cadre)
+- Dates d'embauche entre 2010-2024
+- ~10% d'agents partis
 
 ## Utilisation
 
