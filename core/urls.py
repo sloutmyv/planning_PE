@@ -2,6 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Authentication URLs
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('change-password/', views.change_password, name='change_password'),
+    
     # Homepage
     path('', views.index, name='index'),
     
@@ -22,4 +27,7 @@ urlpatterns = [
     path('functions/<int:pk>/', views.function_detail, name='function_detail'),
     path('functions/<int:pk>/edit/', views.function_edit, name='function_edit'),
     path('functions/<int:pk>/delete/', views.function_delete, name='function_delete'),
+    
+    # Permission Management URLs (integrated into agent management)
+    path('agents/<int:pk>/change-permission/save/', views.change_agent_permission, name='change_agent_permission'),
 ]

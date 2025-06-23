@@ -6,6 +6,36 @@
     {% csrf_token %}
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Nom de famille -->
+        <div>
+            <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                {{ form.last_name.label }}
+            </label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.last_name.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Prénom -->
+        <div>
+            <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                {{ form.first_name.label }}
+            </label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.first_name.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
         <!-- Matricule -->
         <div>
             <label for="{{ form.matricule.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
@@ -30,36 +60,6 @@
             {% if form.grade.errors %}
                 <div class="mt-1 text-sm text-red-600">
                     {% for error in form.grade.errors %}
-                        {{ error }}
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Prénom -->
-        <div>
-            <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
-                {{ form.first_name.label }}
-            </label>
-            {{ form.first_name }}
-            {% if form.first_name.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.first_name.errors %}
-                        {{ error }}
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Nom de famille -->
-        <div>
-            <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
-                {{ form.last_name.label }}
-            </label>
-            {{ form.last_name }}
-            {% if form.last_name.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.last_name.errors %}
                         {{ error }}
                     {% endfor %}
                 </div>
@@ -96,6 +96,26 @@
                 </div>
             {% endif %}
         </div>
+
+        <!-- Niveau de permission -->
+        {% if current_agent and current_agent.can_manage_permissions %}
+        <div>
+            <label for="{{ form.permission_level.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                {{ form.permission_level.label }}
+            </label>
+            {{ form.permission_level }}
+            {% if form.permission_level.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.permission_level.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="mt-1 text-xs text-gray-500">
+                R=Lecteur, E=Éditeur, A=Administrateur, SA=Super Administrateur
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Form-wide errors -->

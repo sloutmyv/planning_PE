@@ -14,11 +14,13 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 ### Gestion des agents
 - **CRUD complet** : Création, lecture, modification, suppression
 - **Recherche en temps réel** : Recherche par matricule, prénom ou nom avec délai de 300ms
-- **Tri multi-colonnes** : Tri par matricule, nom, grade ou date d'embauche (ASC/DESC)
+- **Tri multi-colonnes** : Tri par matricule, nom, grade, permission ou date d'embauche (ASC/DESC)
 - **Pagination** : Navigation par pages avec conservation des filtres
 - **Filtrage avancé** : Option pour masquer les agents partis
 - **Noms en capitales** : Affichage des noms de famille en MAJUSCULES
 - **Statuts visuels** : Badges colorés pour les grades et statuts (actif/parti)
+- **Gestion des permissions** : Modification des niveaux de permission directement dans la liste
+- **Permissions intégrées** : Création d'utilisateurs automatique avec comptes Django liés
 
 ### Gestion des fonctions
 - **CRUD complet** : Création, lecture, modification, suppression
@@ -29,11 +31,19 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Split buttons** : Actions d'édition et suppression combinées
 - **Modales HTMX** : Formulaires de création/modification sans navigation
 - **Statuts visuels** : Badges colorés pour les statuts (actif/inactif)
+- **Descriptions complètes** : Affichage intégral des descriptions sans troncature
 
 ### Authentification et sécurité
-- **Interface d'administration sécurisée** : Accès restreint aux utilisateurs staff
+- **Système de permissions à 4 niveaux** : 
+  - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
+  - **A (Administrateur)** : Gestion agents/fonctions + modification permissions
+  - **E (Éditeur)** : Édition du planning (à implémenter)
+  - **R (Lecteur)** : Visualisation seulement
+- **Connexion personnalisée** : Interface de login moderne avec redirection automatique
+- **Changement de mot de passe obligatoire** : Premier login force la mise à jour du mot de passe
+- **Comptes automatiques** : Création automatique d'utilisateurs Django pour chaque agent
 - **Protection CSRF** : Tokens CSRF pour toutes les requêtes HTMX
-- **Permissions** : Contrôle d'accès basé sur le statut utilisateur
+- **Validation des permissions** : Contrôles server-side pour tous les changements
 
 ## Installation
 
@@ -113,14 +123,17 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 ## Modèles
 
 ### Agent
-- **matricule** : Une lettre suivie de 4 chiffres (ex: A1234)
-- **first_name** : Prénom
-- **last_name** : Nom de famille
-- **grade** : Agent, Maitrise, ou Cadre
-- **hire_date** : Date d'embauche (par défaut: date de création)
-- **departure_date** : Date de départ (optionnel, doit être postérieure à la date d'embauche)
+- **last_name** : Nom de famille (ordre d'affichage 1)
+- **first_name** : Prénom (ordre d'affichage 2)
+- **matricule** : Une lettre suivie de 4 chiffres (ex: A1234) (ordre d'affichage 3)
+- **grade** : Agent, Maitrise, ou Cadre (ordre d'affichage 4)
+- **hire_date** : Date d'embauche (par défaut: date de création) (ordre d'affichage 5)
+- **departure_date** : Date de départ (optionnel, doit être postérieure à la date d'embauche) (ordre d'affichage 6)
+- **permission_level** : Niveau de permission (V/E/A/S) (ordre d'affichage 7, visible aux admins seulement)
+- **user** : Liaison avec compte utilisateur Django (créé automatiquement)
+- **password_changed** : Indicateur de changement de mot de passe initial
 
 ### Fonction
 - **designation** : Nom de la fonction
-- **description** : Description de la fonction (optionnel)
+- **description** : Description de la fonction (optionnel, affichage complet sans troncature)
 - **status** : Statut actif/inactif (par défaut: actif)

@@ -33,6 +33,47 @@ function clearModalAndEdit(editUrl) {
     // Load edit form
     htmx.ajax('GET', editUrl, '#create-form-content');
 }
+
+function changeAgentPermission(agentId, newPermission, agentName) {
+    if (confirm(`Changer la permission de ${agentName} ?`)) {
+        const formData = new FormData();
+        formData.append('permission_level', newPermission);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/agents/${agentId}/change-permission/save/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data.includes('text-red-600')) {
+                alert('Erreur lors du changement de permission');
+                location.reload(); // Reset the select
+            } else {
+                // Show success message temporarily
+                const successDiv = document.createElement('div');
+                successDiv.innerHTML = '<div class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50">Permission mise à jour avec succès</div>';
+                document.body.appendChild(successDiv);
+                setTimeout(() => {
+                    document.body.removeChild(successDiv);
+                }, 3000);
+                
+                // Refresh the agent list
+                htmx.ajax('GET', '{% url "agent_list" %}?' + new URLSearchParams(window.location.search), '#agent-list-content');
+            }
+        })
+        .catch(error => {
+            alert('Erreur lors du changement de permission');
+            location.reload(); // Reset the select
+        });
+    } else {
+        // Reset the select if user cancels
+        location.reload();
+    }
+}
 </script>
 <div class="space-y-6" x-data="{ showCreateForm: false }" @closeCreateForm.document="showCreateForm = false">
     {% csrf_token %}
