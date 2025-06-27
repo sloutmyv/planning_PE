@@ -8,7 +8,7 @@
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">{{ function.designation }}</h1>
-            <p class="text-gray-600 mt-1">Détails de la fonction</p>
+            <p class="text-gray-600 mt-1">Détails du poste</p>
         </div>
         <div class="flex space-x-3">
             <a href="{% url 'function_edit' function.pk %}" 
@@ -25,7 +25,7 @@
     <!-- Function Information -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-900">Informations de la fonction</h2>
+            <h2 class="text-lg font-semibold text-gray-900">Informations sur le poste</h2>
         </div>
         <div class="p-6">
             <dl class="grid grid-cols-1 gap-6">
@@ -72,7 +72,7 @@
     <!-- Future: Agents with this Function -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-900">Agents assignés à cette fonction</h2>
+            <h2 class="text-lg font-semibold text-gray-900">Agents assignés à ce poste</h2>
         </div>
         <div class="p-6 text-center text-gray-500">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

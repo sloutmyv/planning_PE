@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Gestion des Fonctions - Planning PE{% endblock %}
+{% block title %}Gestion des postes - Planning PE{% endblock %}
 
 {% block content %}
 <script>
@@ -38,20 +38,20 @@ function clearModalAndEditFunction(editUrl) {
     {% csrf_token %}
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Gestion des Fonctions</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Postes</h1>
         <button onclick="clearModalAndCreateFunction()" 
                 class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-            Nouvelle Fonction
+            Nouveau Poste
         </button>
     </div>
 
     <!-- Simple Modal -->
     <div id="function-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900">Créer une nouvelle fonction</h2>
+            <h2 class="text-xl font-semibold text-gray-900">Créer un nouveau poste</h2>
             <button onclick="document.getElementById('function-modal').style.display = 'none'" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +97,7 @@ function clearModalAndEditFunction(editUrl) {
                            hx-trigger="change"
                            hx-target="#function-list-content"
                            hx-include="[name='search'], [name='hide_inactive']">
-                    <span>Masquer les fonctions inactives</span>
+                    <span>Masquer les postes inactifs</span>
                 </label>
             </div>
         </div>
