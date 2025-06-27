@@ -72,6 +72,7 @@ Générer des données de test (optionnel) :
 python manage.py create_test_agents
 python manage.py create_test_agents --update
 python manage.py create_test_functions
+python manage.py create_test_functions --update
 ```
 
 La commande **create_test_agents** charge les agents depuis une base de données JSON :
@@ -82,12 +83,13 @@ La commande **create_test_agents** charge les agents depuis une base de données
 - Détection automatique des changements de données
 - Statistiques détaillées par grade et niveau de permission
 
-La commande **create_test_functions** crée 30 fonctions avec :
-- Fonctions techniques (10) : Développeur, DevOps, etc.
-- Fonctions management (10) : Chef de projet, Directeur, etc.
-- Fonctions opérationnelles (10) : Comptable, Secrétaire, etc.
-- Descriptions détaillées pour chaque fonction
-- ~20% de fonctions inactives
+La commande **create_test_functions** charge les fonctions depuis une base de données JSON :
+- **Mode création** : Crée de nouvelles fonctions, ignore les existantes
+- **Mode mise à jour** (`--update`) : Met à jour les fonctions existantes si les données JSON ont changé
+- **Mode nettoyage** (`--clear`) : Supprime toutes les fonctions existantes avant de créer
+- Fonctions spécialisées pour une centrale électrique (exploitation, maintenance, logistique)
+- Détection automatique des changements de description et statut
+- Statistiques détaillées par statut (actif/inactif)
 
 Réinitialiser la base de données (optionnel) :
 ```bash

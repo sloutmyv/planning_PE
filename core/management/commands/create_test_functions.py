@@ -1,104 +1,138 @@
 from django.core.management.base import BaseCommand
 from core.models import Function
-import random
+import json
+import os
 
 
 class Command(BaseCommand):
-    help = 'Create test functions for development'
+    help = 'Create test functions from JSON database'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--clear',
+            action='store_true',
+            help='Clear existing functions before creating new ones',
+        )
+        parser.add_argument(
+            '--update',
+            action='store_true',
+            help='Update existing functions if data has changed',
+        )
 
     def handle(self, *args, **options):
-        # Function names for different categories
-        technical_functions = [
-            "Développeur Frontend", "Développeur Backend", "DevOps Engineer", 
-            "Architecte Solution", "Administrateur Système", "Analyste Sécurité",
-            "Ingénieur Réseau", "Technicien Support", "Database Administrator",
-            "Quality Assurance Engineer"
-        ]
+        # Get the path to the JSON file in the same directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        json_file_path = os.path.join(current_dir, 'functions_data.json')
         
-        management_functions = [
-            "Chef de Projet", "Directeur Technique", "Product Owner", 
-            "Scrum Master", "Responsable Équipe", "Directeur Général",
-            "Directeur Commercial", "Responsable RH", "Contrôleur de Gestion",
-            "Responsable Marketing"
-        ]
-        
-        operational_functions = [
-            "Secrétaire Administrative", "Comptable", "Assistant RH",
-            "Réceptionniste", "Agent d'Accueil", "Coordinateur Logistique",
-            "Responsable Maintenance", "Gestionnaire Paie", "Assistant Commercial",
-            "Chargé de Communication"
-        ]
-        
-        # Descriptions corresponding to functions
-        descriptions = {
-            "Développeur Frontend": "Développement d'interfaces utilisateur modernes et responsive avec React, Vue.js ou Angular",
-            "Développeur Backend": "Développement d'APIs REST et services backend avec Python, Java ou Node.js",
-            "DevOps Engineer": "Gestion de l'infrastructure cloud, CI/CD, containerisation avec Docker et Kubernetes",
-            "Architecte Solution": "Conception d'architectures logicielles évolutives et sécurisées",
-            "Administrateur Système": "Administration des serveurs Linux/Windows, gestion des accès et sauvegardes",
-            "Analyste Sécurité": "Audit de sécurité, tests de pénétration et mise en place de politiques de sécurité",
-            "Ingénieur Réseau": "Configuration et maintenance des équipements réseau, monitoring et optimisation",
-            "Technicien Support": "Support technique niveau 1 et 2, résolution d'incidents utilisateurs",
-            "Database Administrator": "Administration des bases de données, optimisation des performances et sauvegardes",
-            "Quality Assurance Engineer": "Tests fonctionnels et automatisés, validation de la qualité logicielle",
-            "Chef de Projet": "Pilotage de projets informatiques, coordination d'équipes et respect des délais",
-            "Directeur Technique": "Direction technique, stratégie technologique et encadrement d'équipes",
-            "Product Owner": "Définition des besoins produit, priorisation du backlog et interface client",
-            "Scrum Master": "Animation des cérémonies Scrum, facilitation d'équipe et amélioration continue",
-            "Responsable Équipe": "Management d'équipe, entretiens individuels et développement des compétences",
-            "Directeur Général": "Direction générale de l'entreprise, stratégie globale et représentation externe",
-            "Directeur Commercial": "Développement commercial, négociation contrats et gestion du chiffre d'affaires",
-            "Responsable RH": "Gestion des ressources humaines, recrutement et formation des collaborateurs",
-            "Contrôleur de Gestion": "Analyse financière, reporting et contrôle budgétaire",
-            "Responsable Marketing": "Stratégie marketing, communication digitale et développement de la marque",
-            "Secrétaire Administrative": "Gestion administrative, accueil téléphonique et organisation des plannings",
-            "Comptable": "Tenue de la comptabilité, déclarations fiscales et rapprochements bancaires",
-            "Assistant RH": "Support RH, gestion administrative du personnel et suivi des formations",
-            "Réceptionniste": "Accueil physique et téléphonique, gestion du courrier et des visiteurs",
-            "Agent d'Accueil": "Premier contact client, orientation visiteurs et gestion des badges d'accès",
-            "Coordinateur Logistique": "Coordination des livraisons, gestion des stocks et suivi des commandes",
-            "Responsable Maintenance": "Maintenance préventive et curative, gestion des prestataires techniques",
-            "Gestionnaire Paie": "Établissement des bulletins de paie, déclarations sociales et suivi des congés",
-            "Assistant Commercial": "Support commercial, préparation des devis et suivi de la relation client",
-            "Chargé de Communication": "Communication interne et externe, animation des réseaux sociaux"
-        }
-        
-        all_functions = technical_functions + management_functions + operational_functions
-        
-        # Clear existing test functions (optional - comment this line if you want to keep existing data)
-        Function.objects.filter(designation__in=all_functions).delete()
-        
-        created_count = 0
-        
-        for function_name in all_functions:
-            # 20% chance of being inactive
-            is_active = random.random() > 0.2
-            
-            function = Function.objects.create(
-                designation=function_name,
-                description=descriptions.get(function_name, ""),
-                status=is_active
-            )
-            
-            created_count += 1
-            
-            status_text = "Active" if is_active else "Inactive"
+        # Check if JSON file exists
+        if not os.path.exists(json_file_path):
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'Created function: {function.designation} ({status_text})'
+                self.style.ERROR(f'JSON file not found: {json_file_path}')
+            )
+            return
+
+        # Load functions data from JSON
+        try:
+            with open(json_file_path, 'r', encoding='utf-8') as file:
+                functions_data = json.load(file)
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'Error loading JSON file: {str(e)}')
+            )
+            return
+
+        if options['clear']:
+            Function.objects.all().delete()
+            self.stdout.write(
+                self.style.WARNING('Cleared all existing functions')
+            )
+
+        # Create/update functions from JSON data
+        functions_created = 0
+        functions_updated = 0
+        functions_skipped = 0
+        
+        for function_data in functions_data:
+            # Check if function already exists
+            existing_function = Function.objects.filter(designation=function_data['designation']).first()
+            
+            if existing_function and not options['update']:
+                functions_skipped += 1
+                self.stdout.write(
+                    self.style.WARNING(f'Skipped existing function: {function_data["designation"]}')
                 )
-            )
-        
+                continue
+            
+            # Create or update the function
+            try:
+                if existing_function:
+                    # Update existing function
+                    updated = False
+                    changes = []
+                    
+                    if existing_function.description != function_data.get('description', ''):
+                        existing_function.description = function_data.get('description', '')
+                        changes.append('description')
+                        updated = True
+                    
+                    if existing_function.status != function_data.get('status', True):
+                        existing_function.status = function_data.get('status', True)
+                        changes.append('status')
+                        updated = True
+                    
+                    if updated:
+                        existing_function.save()
+                        functions_updated += 1
+                        status_text = "Actif" if existing_function.status else "Inactif"
+                        self.stdout.write(
+                            f"Updated: {existing_function.designation} ({status_text}) "
+                            f"[{', '.join(changes)}]"
+                        )
+                    else:
+                        functions_skipped += 1
+                        self.stdout.write(
+                            self.style.WARNING(f'No changes for: {existing_function.designation}')
+                        )
+                else:
+                    # Create new function
+                    function = Function.objects.create(
+                        designation=function_data['designation'],
+                        description=function_data.get('description', ''),
+                        status=function_data.get('status', True)
+                    )
+                    functions_created += 1
+                    
+                    status_text = "Actif" if function.status else "Inactif"
+                    self.stdout.write(
+                        f"Created: {function.designation} ({status_text})"
+                    )
+                
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(f'Error processing function {function_data["designation"]}: {str(e)}')
+                )
+
+        # Summary
         self.stdout.write(
-            self.style.SUCCESS(
-                f'\nSuccessfully created {created_count} test functions:'
-            )
+            self.style.SUCCESS(f'\nOperation completed:')
         )
-        self.stdout.write(f'- Technical functions: {len(technical_functions)}')
-        self.stdout.write(f'- Management functions: {len(management_functions)}') 
-        self.stdout.write(f'- Operational functions: {len(operational_functions)}')
+        if functions_created > 0:
+            self.stdout.write(f'Created: {functions_created} functions')
+        if functions_updated > 0:
+            self.stdout.write(f'Updated: {functions_updated} functions')
+        if functions_skipped > 0:
+            self.stdout.write(f'Skipped: {functions_skipped} functions')
         
-        active_count = Function.objects.filter(status=True).count()
-        inactive_count = Function.objects.filter(status=False).count()
-        self.stdout.write(f'- Active: {active_count}')
-        self.stdout.write(f'- Inactive: {inactive_count}')
+        # Show statistics
+        total_functions = Function.objects.count()
+        active_functions = Function.objects.filter(status=True).count()
+        inactive_functions = Function.objects.filter(status=False).count()
+        
+        self.stdout.write(f'\nStatistics:')
+        self.stdout.write(f'Total functions in database: {total_functions}')
+        self.stdout.write(f'Active functions: {active_functions}')
+        self.stdout.write(f'Inactive functions: {inactive_functions}')
+        
+        if total_functions > 0:
+            active_percentage = (active_functions / total_functions) * 100
+            self.stdout.write(f'Active rate: {active_percentage:.1f}%')
