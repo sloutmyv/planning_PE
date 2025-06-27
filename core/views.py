@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import transaction
 from .models import Agent, Function
 from .forms import AgentForm, FunctionForm
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
@@ -47,6 +48,7 @@ def logout_view(request):
 
 
 @login_required
+@transaction.atomic
 def change_password(request):
     """Change password view"""
     agent = get_agent_from_user(request.user)
@@ -157,6 +159,7 @@ def agent_list(request):
 
 
 @admin_required
+@transaction.atomic
 def agent_create(request):
     """Create new agent"""
     if request.method == 'POST':
@@ -189,6 +192,7 @@ def agent_detail(request, pk):
 
 
 @admin_required
+@transaction.atomic
 def agent_edit(request, pk):
     """Edit existing agent"""
     agent = get_object_or_404(Agent, pk=pk)
@@ -218,6 +222,7 @@ def agent_edit(request, pk):
 
 @admin_required
 @require_http_methods(["DELETE"])
+@transaction.atomic
 def agent_delete(request, pk):
     """Delete agent"""
     agent = get_object_or_404(Agent, pk=pk)
@@ -434,6 +439,7 @@ def function_delete(request, pk):
 
 @permission_required('admin')
 @require_http_methods(["POST"])
+@transaction.atomic
 def change_agent_permission(request, pk):
     """Change agent permission level"""
     agent = get_object_or_404(Agent, pk=pk)

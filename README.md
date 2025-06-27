@@ -39,11 +39,34 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
   - **A (Administrateur)** : Gestion agents/fonctions + modification permissions
   - **E (Éditeur)** : Édition du planning (à implémenter)
   - **R (Lecteur)** : Visualisation seulement
-- **Connexion personnalisée** : Interface de login moderne avec redirection automatique
+- **Connexion personnalisée** : Interface de login moderne avec logo d'entreprise centré
 - **Changement de mot de passe obligatoire** : Premier login force la mise à jour du mot de passe
 - **Comptes automatiques** : Création automatique d'utilisateurs Django pour chaque agent
 - **Protection CSRF** : Tokens CSRF pour toutes les requêtes HTMX
 - **Validation des permissions** : Contrôles server-side pour tous les changements
+- **Gestion transactionnelle** : Transactions atomiques pour toutes les opérations critiques
+
+## Architecture technique
+
+### Base de données et intégrité des données
+- **Gestion transactionnelle complète** : Toutes les opérations critiques sont protégées par `@transaction.atomic`
+- **Opérations atomiques** : Création d'agents, modifications de permissions, suppression avec rollback automatique
+- **Intégrité référentielle** : Contraintes de clés étrangères entre Agent et User Django
+- **Validation côté serveur** : Validation complète des données avant persistance
+- **Prêt pour PostgreSQL** : Architecture préparée pour migration vers base de données production
+
+### Opérations transactionnelles protégées
+- **Création d'agents** : Création Agent + compte User Django en une transaction
+- **Modification de permissions** : Mise à jour Agent + permissions Django User atomique
+- **Changement de mot de passe** : Mise à jour User + statut Agent synchronisée
+- **Suppression d'agents** : Suppression cascadée Agent + User avec rollback
+- **Édition d'agents** : Modifications des données Agent + User en transaction
+
+### Gestion des erreurs et récupération
+- **Rollback automatique** : Annulation complète des opérations en cas d'erreur
+- **Messages d'erreur détaillés** : Feedback utilisateur en cas de problème
+- **Logging des exceptions** : Traçabilité des erreurs pour debugging
+- **Validation préalable** : Contrôles avant exécution des transactions
 
 ## Installation
 

@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -45,6 +45,7 @@ class Agent(models.Model):
                 'departure_date': 'La date de départ doit être postérieure à la date d\'embauche.'
             })
     
+    @transaction.atomic
     def save(self, *args, **kwargs):
         """Override save to create user account when agent is created"""
         created = self.pk is None
