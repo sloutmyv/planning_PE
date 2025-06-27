@@ -86,6 +86,17 @@ La commande **create_test_functions** crée 30 fonctions avec :
 - Descriptions détaillées pour chaque fonction
 - ~20% de fonctions inactives
 
+Réinitialiser la base de données (optionnel) :
+```bash
+python manage.py reset_database --confirm
+```
+
+La commande **reset_database** supprime toutes les données tout en préservant les comptes superutilisateurs :
+- Supprime tous les agents et leurs comptes utilisateurs associés
+- Supprime toutes les fonctions
+- Préserve les comptes superutilisateurs existants
+- Nécessite le flag `--confirm` pour des raisons de sécurité
+
 ## Utilisation
 
 Lancer le serveur de développement :
