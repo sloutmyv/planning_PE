@@ -13,6 +13,7 @@ urlpatterns = [
     # HTMX endpoints for dashboard stats
     path('agent-count/', views.agent_count, name='agent_count'),
     path('function-count/', views.function_count, name='function_count'),
+    path('schedule-type-count/', views.schedule_type_count, name='schedule_type_count'),
     
     # Agent URLs
     path('agents/', views.agent_list, name='agent_list'),
@@ -27,6 +28,13 @@ urlpatterns = [
     path('functions/<int:pk>/', views.function_detail, name='function_detail'),
     path('functions/<int:pk>/edit/', views.function_edit, name='function_edit'),
     path('functions/<int:pk>/delete/', views.function_delete, name='function_delete'),
+    
+    # ScheduleType URLs
+    path('schedule-types/', views.schedule_type_list, name='schedule_type_list'),
+    path('schedule-types/create/', views.schedule_type_create, name='schedule_type_create'),
+    path('schedule-types/<int:pk>/', views.schedule_type_detail, name='schedule_type_detail'),
+    path('schedule-types/<int:pk>/edit/', views.schedule_type_edit, name='schedule_type_edit'),
+    path('schedule-types/<int:pk>/delete/', views.schedule_type_delete, name='schedule_type_delete'),
     
     # Permission Management URLs (integrated into agent management)
     path('agents/<int:pk>/change-permission/save/', views.change_agent_permission, name='change_agent_permission'),

@@ -135,3 +135,43 @@ class Function(models.Model):
     class Meta:
         verbose_name = "Fonction"
         verbose_name_plural = "Fonctions"
+
+
+class ScheduleType(models.Model):
+    designation = models.CharField(max_length=100, unique=True)
+    short_designation = models.CharField(
+        max_length=3, 
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="Abréviation en 2-3 lettres majuscules (ex: MAT, APM, NUIT)"
+    )
+    color = models.CharField(max_length=7, help_text="Code couleur hexadécimal (ex: #FF0000)")
+    
+    def clean(self):
+        super().clean()
+        # Validate hexadecimal color format
+        import re
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', self.color):
+            raise ValidationError({
+                'color': 'La couleur doit être au format hexadécimal (ex: #FF0000)'
+            })
+        
+        # Validate short designation format (only if provided)
+        if self.short_designation and not re.match(r'^[A-Z]{2,3}$', self.short_designation):
+            raise ValidationError({
+                'short_designation': 'L\'abréviation doit contenir 2 ou 3 lettres majuscules uniquement'
+            })
+    
+    def save(self, *args, **kwargs):
+        # Ensure short_designation is always uppercase
+        if self.short_designation:
+            self.short_designation = self.short_designation.upper()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.designation
+    
+    class Meta:
+        verbose_name = "Type de Planning"
+        verbose_name_plural = "Types de Planning"

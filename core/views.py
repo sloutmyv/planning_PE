@@ -8,8 +8,8 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db import transaction
-from .models import Agent, Function
-from .forms import AgentForm, FunctionForm
+from .models import Agent, Function, ScheduleType
+from .forms import AgentForm, FunctionForm, ScheduleTypeForm
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -99,6 +99,13 @@ def function_count(request):
     """HTMX endpoint for function count"""
     count = Function.objects.count()
     return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="function-count">{count}</p>')
+
+
+@admin_required
+def schedule_type_count(request):
+    """HTMX endpoint for schedule type count"""
+    count = ScheduleType.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="schedule-type-count">{count}</p>')
 
 
 # Agent Views
@@ -480,3 +487,159 @@ def change_agent_permission(request, pk):
         agent.user.save()
     
     return HttpResponse('<div class="text-green-600 text-sm">Permission mise à jour avec succès</div>')
+
+
+# ScheduleType Views
+@admin_required
+def schedule_type_list(request):
+    """List all schedule types with search, sorting and pagination"""
+    search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'designation')
+    order = request.GET.get('order', 'asc')
+    
+    schedule_types = ScheduleType.objects.all()
+    
+    if search_query:
+        schedule_types = schedule_types.filter(
+            Q(designation__icontains=search_query) |
+            Q(short_designation__icontains=search_query)
+        )
+    
+    # Apply sorting
+    valid_sorts = ['designation', 'short_designation', 'color']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        schedule_types = schedule_types.order_by(sort_by)
+    else:
+        schedule_types = schedule_types.order_by('designation')
+    
+    paginator = Paginator(schedule_types, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'designation')
+    current_order = request.GET.get('order', 'asc')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/schedule_types/schedule_type_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order
+        })
+    
+    return render(request, 'core/schedule_types/schedule_type_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order
+    })
+
+
+@admin_required
+def schedule_type_create(request):
+    """Create new schedule type"""
+    if request.method == 'POST':
+        form = ScheduleTypeForm(request.POST)
+        if form.is_valid():
+            schedule_type = form.save()
+            messages.success(request, f'Type de planning "{schedule_type.designation}" créé avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Type de planning "{schedule_type.designation}" créé avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("schedule-type-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('schedule_type_list')
+    else:
+        form = ScheduleTypeForm()
+    
+    template = 'core/schedule_types/schedule_type_form_htmx.html' if request.headers.get('HX-Request') else 'core/schedule_types/schedule_type_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': 'Créer un Type de Planning',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+def schedule_type_detail(request, pk):
+    """Schedule type detail view"""
+    schedule_type = get_object_or_404(ScheduleType, pk=pk)
+    return render(request, 'core/schedule_types/schedule_type_detail.html', {'schedule_type': schedule_type})
+
+
+@admin_required
+def schedule_type_edit(request, pk):
+    """Edit existing schedule type"""
+    schedule_type = get_object_or_404(ScheduleType, pk=pk)
+    
+    if request.method == 'POST':
+        form = ScheduleTypeForm(request.POST, instance=schedule_type)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Type de planning "{schedule_type.designation}" modifié avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Type de planning "{schedule_type.designation}" modifié avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("schedule-type-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('schedule_type_list')
+    else:
+        form = ScheduleTypeForm(instance=schedule_type)
+    
+    template = 'core/schedule_types/schedule_type_form_htmx.html' if request.headers.get('HX-Request') else 'core/schedule_types/schedule_type_form.html'
+    return render(request, template, {
+        'form': form,
+        'schedule_type': schedule_type,
+        'title': f'Modifier "{schedule_type.designation}"',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+@require_http_methods(["DELETE"])
+def schedule_type_delete(request, pk):
+    """Delete schedule type"""
+    schedule_type = get_object_or_404(ScheduleType, pk=pk)
+    designation = schedule_type.designation
+    schedule_type.delete()
+    
+    if request.headers.get('HX-Request'):
+        # Return updated schedule type list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'designation')
+        order = request.GET.get('order', 'asc')
+        
+        schedule_types = ScheduleType.objects.all()
+            
+        if search_query:
+            schedule_types = schedule_types.filter(
+                Q(designation__icontains=search_query) |
+                Q(short_designation__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['designation', 'short_designation', 'color']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            schedule_types = schedule_types.order_by(sort_by)
+        else:
+            schedule_types = schedule_types.order_by('designation')
+        
+        paginator = Paginator(schedule_types, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        messages.success(request, f'Type de planning "{designation}" supprimé avec succès.')
+        return render(request, 'core/schedule_types/schedule_type_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'designation'),
+            'current_order': request.GET.get('order', 'asc')
+        })
+    
+    messages.success(request, f'Type de planning "{designation}" supprimé avec succès.')
+    return redirect('schedule_type_list')

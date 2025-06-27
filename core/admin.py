@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agent, Function
+from .models import Agent, Function, ScheduleType
 
 
 @admin.register(Agent)
@@ -17,3 +17,16 @@ class FunctionAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('designation', 'description')
     ordering = ('designation',)
+
+
+@admin.register(ScheduleType)
+class ScheduleTypeAdmin(admin.ModelAdmin):
+    list_display = ('designation', 'short_designation', 'color', 'color_preview')
+    search_fields = ('designation', 'short_designation')
+    ordering = ('designation',)
+    
+    def color_preview(self, obj):
+        """Display color preview in admin list"""
+        return f'<div style="width: 20px; height: 20px; background-color: {obj.color}; border: 1px solid #ccc; display: inline-block;"></div>'
+    color_preview.allow_tags = True
+    color_preview.short_description = 'Aperçu'

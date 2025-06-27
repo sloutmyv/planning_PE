@@ -33,6 +33,18 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Statuts visuels** : Badges colorés pour les statuts (actif/inactif)
 - **Descriptions complètes** : Affichage intégral des descriptions sans troncature
 
+### Gestion des types d'horaire
+- **CRUD complet** : Création, lecture, modification, suppression
+- **Recherche en temps réel** : Recherche par désignation ou abréviation avec délai de 300ms
+- **Tri multi-colonnes** : Tri par désignation, abréviation ou couleur (ASC/DESC)
+- **Pagination** : Navigation par pages avec conservation des filtres
+- **Split buttons** : Actions d'édition et suppression combinées
+- **Modales HTMX** : Formulaires de création/modification sans navigation
+- **Sélecteur de couleur** : Choix de couleur hexadécimale pour identification visuelle
+- **Abréviation optionnelle** : Code court de 2-3 lettres majuscules (ex: MAT, APM, NUIT)
+- **Validation automatique** : Contrôle du format des couleurs et abréviations
+- **Affichage coloré** : Aperçu des couleurs dans la liste avec codes hexadécimaux
+
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
@@ -151,6 +163,7 @@ L'interface principale propose :
 - **Administration** (menu déroulant pour les utilisateurs staff) :
   - Gestion des Agents
   - Gestion des Fonctions
+  - Types d'Horaire
   - Interface d'Administration Django
 
 ## Tests
@@ -177,3 +190,9 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **designation** : Nom de la fonction
 - **description** : Description de la fonction (optionnel, affichage complet sans troncature)
 - **status** : Statut actif/inactif (par défaut: actif)
+
+### ScheduleType (Type d'Horaire)
+- **designation** : Nom complet du type d'horaire (unique)
+- **short_designation** : Abréviation optionnelle de 2-3 lettres majuscules (unique, ex: MAT, APM, NUIT)
+- **color** : Code couleur hexadécimal pour identification visuelle (ex: #FF0000)
+- **Validation automatique** : Format hexadécimal pour les couleurs et format alphabétique majuscule pour les abréviations

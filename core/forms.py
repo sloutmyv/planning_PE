@@ -1,5 +1,5 @@
 from django import forms
-from .models import Agent, Function
+from .models import Agent, Function, ScheduleType
 
 
 class AgentForm(forms.ModelForm):
@@ -92,4 +92,33 @@ class FunctionForm(forms.ModelForm):
             'designation': 'Désignation',
             'description': 'Description',
             'status': 'Actif',
+        }
+
+
+class ScheduleTypeForm(forms.ModelForm):
+    class Meta:
+        model = ScheduleType
+        fields = ['designation', 'short_designation', 'color']
+        widgets = {
+            'designation': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Nom du type de planning'
+            }),
+            'short_designation': forms.TextInput(attrs={
+                'class': 'block w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 uppercase',
+                'placeholder': 'MAT',
+                'maxlength': '3',
+                'style': 'text-transform: uppercase;',
+                'required': False
+            }),
+            'color': forms.TextInput(attrs={
+                'class': 'block w-20 h-10 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'color',
+                'placeholder': '#FF0000'
+            }),
+        }
+        labels = {
+            'designation': 'Désignation',
+            'short_designation': 'Abréviation',
+            'color': 'Couleur',
         }
