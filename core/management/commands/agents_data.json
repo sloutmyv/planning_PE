@@ -1,0 +1,542 @@
+[
+  {
+    "matricule": "E2271",
+    "first_name": "Bruno",
+    "last_name": "Abdelkader",
+    "grade": "Maitrise",
+    "hire_date": "2010-01-11",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2449",
+    "first_name": "Fabien",
+    "last_name": "Aourigna",
+    "grade": "Agent",
+    "hire_date": "2018-09-20",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2325",
+    "first_name": "Florien",
+    "last_name": "ATTI",
+    "grade": "Maitrise",
+    "hire_date": "2020-01-10",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2926",
+    "first_name": "Maurane",
+    "last_name": "ATUFELE",
+    "grade": "Agent",
+    "hire_date": "2014-07-08",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2412",
+    "first_name": "Nathanael",
+    "last_name": "AUVAO",
+    "grade": "Agent",
+    "hire_date": "2017-11-25",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2881",
+    "first_name": "Kevin",
+    "last_name": "Baly",
+    "grade": "Agent",
+    "hire_date": "2019-05-14",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2940",
+    "first_name": "Eric",
+    "last_name": "Bertholom",
+    "grade": "Maitrise",
+    "hire_date": "2012-02-28",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "Ex043",
+    "first_name": "Lionel",
+    "last_name": "Carlier",
+    "grade": "Maitrise",
+    "hire_date": "2016-08-12",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2308",
+    "first_name": "Loic",
+    "last_name": "Caserta",
+    "grade": "Maitrise",
+    "hire_date": "2021-04-03",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2884",
+    "first_name": "Sylvain",
+    "last_name": "Clerc",
+    "grade": "Cadre",
+    "hire_date": "2022-02-13",
+    "departure_date": null,
+    "permission_level": "A"
+  },
+  {
+    "matricule": "Ex396",
+    "first_name": "Raoul",
+    "last_name": "Fernandez",
+    "grade": "Maitrise",
+    "hire_date": "2019-12-05",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2767",
+    "first_name": "Jean-François",
+    "last_name": "Figueras",
+    "grade": "Cadre",
+    "hire_date": "2020-06-22",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+  {
+    "matricule": "E2723",
+    "first_name": "Sébastien",
+    "last_name": "Germain",
+    "grade": "Maitrise",
+    "hire_date": "2011-09-30",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2628",
+    "first_name": "Jacques",
+    "last_name": "Gowet",
+    "grade": "Agent",
+    "hire_date": "2018-03-18",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E3008",
+    "first_name": "Gilda",
+    "last_name": "Haocas",
+    "grade": "Agent",
+    "hire_date": "2022-01-08",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2845",
+    "first_name": "Gérard",
+    "last_name": "Inea",
+    "grade": "Agent",
+    "hire_date": "2015-11-12",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "Ex385",
+    "first_name": "Jonathan",
+    "last_name": "Jouanno",
+    "grade": "Agent",
+    "hire_date": "2017-07-04",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2151",
+    "first_name": "Pascal",
+    "last_name": "Kutran",
+    "grade": "Maitrise",
+    "hire_date": "2020-09-15",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "Ex303",
+    "first_name": "Kévin",
+    "last_name": "Lamy",
+    "grade": "Maitrise",
+    "hire_date": "2014-04-26",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2970",
+    "first_name": "Simon",
+    "last_name": "Laporte",
+    "grade": "Cadre",
+    "hire_date": "2016-12-09",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+  {
+    "matricule": "E2813",
+    "first_name": "Alexandre",
+    "last_name": "Leboucher",
+    "grade": "Cadre",
+    "hire_date": "2021-08-21",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+  {
+    "matricule": "Ex194",
+    "first_name": "Théodore",
+    "last_name": "Lefevre",
+    "grade": "Maitrise",
+    "hire_date": "2013-01-15",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2599",
+    "first_name": "Etienne",
+    "last_name": "Madjo",
+    "grade": "Agent",
+    "hire_date": "2018-05-30",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2796",
+    "first_name": "Xavier",
+    "last_name": "Merleau",
+    "grade": "Cadre",
+    "hire_date": "2019-10-11",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+  {
+    "matricule": "E2978",
+    "first_name": "Leroy",
+    "last_name": "Meureureu",
+    "grade": "Agent",
+    "hire_date": "2012-06-18",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2336",
+    "first_name": "Edouard",
+    "last_name": "Naaoutchoue",
+    "grade": "Agent",
+    "hire_date": "2017-02-14",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2996",
+    "first_name": "Alikiamo",
+    "last_name": "Nau",
+    "grade": "Maitrise",
+    "hire_date": "2020-11-28",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2911",
+    "first_name": "Jean-Stéphane",
+    "last_name": "Naviti-baou",
+    "grade": "Agent",
+    "hire_date": "2014-09-07",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2680",
+    "first_name": "Joshua",
+    "last_name": "Ouassette",
+    "grade": "Agent",
+    "hire_date": "2016-04-23",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2339",
+    "first_name": "Triama",
+    "last_name": "Palene",
+    "grade": "Agent",
+    "hire_date": "2021-12-06",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2774",
+    "first_name": "Kévin",
+    "last_name": "Payandi-rolland",
+    "grade": "Agent",
+    "hire_date": "2015-08-19",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "Ex138",
+    "first_name": "Patrick",
+    "last_name": "Perdereau",
+    "grade": "Maitrise",
+    "hire_date": "2018-01-25",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2343",
+    "first_name": "Wilson",
+    "last_name": "Peu",
+    "grade": "Maitrise",
+    "hire_date": "2020-03-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2678",
+    "first_name": "Yankel",
+    "last_name": "PIDJOT",
+    "grade": "Agent",
+    "hire_date": "2013-11-02",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E3027",
+    "first_name": "Moranne",
+    "last_name": "Poyle",
+    "grade": "Agent",
+    "hire_date": "2017-09-13",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2771",
+    "first_name": "Laurence",
+    "last_name": "Prouteau",
+    "grade": "Cadre",
+    "hire_date": "2019-07-08",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+  {
+    "matricule": "E1736",
+    "first_name": "Ricardo",
+    "last_name": "Robledo-garcia",
+    "grade": "Maitrise",
+    "hire_date": "2014-12-20",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2346",
+    "first_name": "Christian",
+    "last_name": "Rolland",
+    "grade": "Maitrise",
+    "hire_date": "2016-10-05",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2989",
+    "first_name": "Olivier",
+    "last_name": "Rusiecki",
+    "grade": "Maitrise",
+    "hire_date": "2021-02-18",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2285",
+    "first_name": "Kevin",
+    "last_name": "Sakoumory",
+    "grade": "Agent",
+    "hire_date": "2012-05-12",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2348",
+    "first_name": "Richard",
+    "last_name": "Sameke",
+    "grade": "Agent",
+    "hire_date": "2018-11-27",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2952",
+    "first_name": "Richard",
+    "last_name": "Sechi",
+    "grade": "Maitrise",
+    "hire_date": "2020-08-14",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2823",
+    "first_name": "Elie",
+    "last_name": "Sioremu",
+    "grade": "Maitrise",
+    "hire_date": "2015-01-29",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2968",
+    "first_name": "Joel",
+    "last_name": "Sioremu",
+    "grade": "Agent",
+    "hire_date": "2017-06-10",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2918",
+    "first_name": "Jérôme",
+    "last_name": "Stuart",
+    "grade": "Maitrise",
+    "hire_date": "2019-04-01",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "Ex163",
+    "first_name": "Stanley",
+    "last_name": "Tessier",
+    "grade": "Cadre",
+    "hire_date": "2013-08-15",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2674",
+    "first_name": "Mathieu",
+    "last_name": "Trin",
+    "grade": "Maitrise",
+    "hire_date": "2016-12-22",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2352",
+    "first_name": "Lolesio",
+    "last_name": "Tui",
+    "grade": "Maitrise",
+    "hire_date": "2021-10-07",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E2353",
+    "first_name": "Toa",
+    "last_name": "Tuiseka",
+    "grade": "Maitrise",
+    "hire_date": "2014-03-03",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+  {
+    "matricule": "E3010",
+    "first_name": "Grégory",
+    "last_name": "Vaiadimoin",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2962",
+    "first_name": "Paulo",
+    "last_name": "Vakalepu",
+    "grade": "Maitrise",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2572",
+    "first_name": "Nicolas",
+    "last_name": "Vincent",
+    "grade": "Cadre",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "E"
+  },
+    {
+    "matricule": "E2355",
+    "first_name": "David",
+    "last_name": "Vonitishi-zenoki",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2586",
+    "first_name": "Angélique",
+    "last_name": "Wamo",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2265",
+    "first_name": "José",
+    "last_name": "Wamo",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2559",
+    "first_name": "Josué",
+    "last_name": "Wea",
+    "grade": "Matrise",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2902",
+    "first_name": "Charles",
+    "last_name": "Wenisso",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2477",
+    "first_name": "Warren",
+    "last_name": "Xolawawa",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2874",
+    "first_name": "Jean-marc",
+    "last_name": "Yengo",
+    "grade": "Agent",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  },
+    {
+    "matricule": "E2312",
+    "first_name": "Gilles",
+    "last_name": "Deprez",
+    "grade": "Matrise",
+    "hire_date": "2018-07-16",
+    "departure_date": null,
+    "permission_level": "V"
+  }
+]

@@ -1,12 +1,13 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from core.models import Agent
-import random
-from datetime import date, timedelta
+import json
+import os
+from datetime import datetime
 
 
 class Command(BaseCommand):
-    help = 'Create 50 test agents with random data'
+    help = 'Create test agents from JSON database'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -14,31 +15,33 @@ class Command(BaseCommand):
             action='store_true',
             help='Clear existing agents before creating new ones',
         )
+        parser.add_argument(
+            '--update',
+            action='store_true',
+            help='Update existing agents if data has changed',
+        )
 
     def handle(self, *args, **options):
-        # French first names
-        first_names = [
-            'Jean', 'Pierre', 'Michel', 'André', 'Philippe', 'Alain', 'Bernard', 'Robert',
-            'Jacques', 'Daniel', 'Claude', 'François', 'Gérard', 'Antoine', 'Louis',
-            'Marie', 'Françoise', 'Monique', 'Catherine', 'Nathalie', 'Isabelle', 'Sylvie',
-            'Martine', 'Nicole', 'Christine', 'Brigitte', 'Sophie', 'Valérie', 'Patricia',
-            'Chantal', 'Julie', 'Caroline', 'Sandrine', 'Véronique', 'Stéphanie',
-            'Émilie', 'Aurélie', 'Céline', 'Marine', 'Camille', 'Laura', 'Manon'
-        ]
+        # Get the path to the JSON file in the same directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        json_file_path = os.path.join(current_dir, 'agents_data.json')
+        
+        # Check if JSON file exists
+        if not os.path.exists(json_file_path):
+            self.stdout.write(
+                self.style.ERROR(f'JSON file not found: {json_file_path}')
+            )
+            return
 
-        # French last names
-        last_names = [
-            'Martin', 'Bernard', 'Thomas', 'Petit', 'Robert', 'Richard', 'Durand',
-            'Dubois', 'Moreau', 'Laurent', 'Simon', 'Michel', 'Lefebvre', 'Leroy',
-            'Roux', 'David', 'Bertrand', 'Morel', 'Fournier', 'Girard', 'Bonnet',
-            'Dupont', 'Lambert', 'Fontaine', 'Rousseau', 'Vincent', 'Muller',
-            'Lefevre', 'Faure', 'Andre', 'Mercier', 'Blanc', 'Guerin', 'Boyer',
-            'Garnier', 'Chevalier', 'Francois', 'Legrand', 'Gauthier', 'Garcia',
-            'Perrin', 'Robin', 'Clement', 'Morin', 'Nicolas', 'Henry', 'Roussel'
-        ]
-
-        # Available grades
-        grades = ['Execution', 'Maitrise', 'Cadre']
+        # Load agents data from JSON
+        try:
+            with open(json_file_path, 'r', encoding='utf-8') as file:
+                agents_data = json.load(file)
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'Error loading JSON file: {str(e)}')
+            )
+            return
 
         if options['clear']:
             Agent.objects.all().delete()
@@ -46,70 +49,122 @@ class Command(BaseCommand):
                 self.style.WARNING('Cleared all existing agents')
             )
 
-        # Generate 50 agents
+        # Create/update agents from JSON data
         agents_created = 0
+        agents_updated = 0
+        agents_skipped = 0
         
-        for i in range(50):
-            # Generate unique matricule
-            matricule = f"AG{str(i+1).zfill(4)}"
-            
+        for agent_data in agents_data:
             # Check if matricule already exists
-            if Agent.objects.filter(matricule=matricule).exists():
-                continue
-                
-            # Random names
-            first_name = random.choice(first_names)
-            last_name = random.choice(last_names)
+            existing_agent = Agent.objects.filter(matricule=agent_data['matricule']).first()
             
-            # Random grade
-            grade = random.choice(grades)
-            
-            # Random hire date between 2010 and 2024
-            start_date = date(2010, 1, 1)
-            end_date = date(2024, 12, 31)
-            time_between = end_date - start_date
-            days_between = time_between.days
-            random_days = random.randrange(days_between)
-            hire_date = start_date + timedelta(days=random_days)
-            
-            # 10% chance of having left (departure date)
-            departure_date = None
-            if random.random() < 0.10:  # 10% chance
-                # Departure date should be after hire date but before today
-                min_departure = hire_date + timedelta(days=30)  # At least 30 days after hire
-                max_departure = min(date.today(), hire_date + timedelta(days=365*10))  # Max 10 years or today
-                
-                if min_departure < max_departure:
-                    time_between_departure = max_departure - min_departure
-                    if time_between_departure.days > 0:
-                        days_between_departure = time_between_departure.days
-                        random_days_departure = random.randrange(days_between_departure)
-                        departure_date = min_departure + timedelta(days=random_days_departure)
-            
-            # Create the agent
-            try:
-                agent = Agent.objects.create(
-                    matricule=matricule,
-                    first_name=first_name,
-                    last_name=last_name,
-                    grade=grade,
-                    hire_date=hire_date,
-                    departure_date=departure_date
+            if existing_agent and not options['update']:
+                agents_skipped += 1
+                self.stdout.write(
+                    self.style.WARNING(f'Skipped existing agent: {agent_data["matricule"]}')
                 )
-                agents_created += 1
-                
-                status = "parti" if departure_date else "actif"
-                self.stdout.write(f"Created: {agent.matricule} - {agent.first_name} {agent.last_name} ({agent.grade}) - {status}")
+                continue
+            
+            # Parse dates
+            try:
+                hire_date = datetime.strptime(agent_data['hire_date'], '%Y-%m-%d').date()
+                departure_date = None
+                if agent_data['departure_date']:
+                    departure_date = datetime.strptime(agent_data['departure_date'], '%Y-%m-%d').date()
+            except ValueError as e:
+                self.stdout.write(
+                    self.style.ERROR(f'Error parsing date for {agent_data["matricule"]}: {str(e)}')
+                )
+                continue
+            
+            # Create or update the agent
+            try:
+                if existing_agent:
+                    # Update existing agent
+                    updated = False
+                    changes = []
+                    
+                    if existing_agent.first_name != agent_data['first_name']:
+                        existing_agent.first_name = agent_data['first_name']
+                        changes.append('first_name')
+                        updated = True
+                    
+                    if existing_agent.last_name != agent_data['last_name']:
+                        existing_agent.last_name = agent_data['last_name']
+                        changes.append('last_name')
+                        updated = True
+                    
+                    if existing_agent.grade != agent_data['grade']:
+                        existing_agent.grade = agent_data['grade']
+                        changes.append('grade')
+                        updated = True
+                    
+                    if existing_agent.hire_date != hire_date:
+                        existing_agent.hire_date = hire_date
+                        changes.append('hire_date')
+                        updated = True
+                    
+                    if existing_agent.departure_date != departure_date:
+                        existing_agent.departure_date = departure_date
+                        changes.append('departure_date')
+                        updated = True
+                    
+                    new_permission = agent_data.get('permission_level', 'V')
+                    if existing_agent.permission_level != new_permission:
+                        existing_agent.permission_level = new_permission
+                        changes.append('permission_level')
+                        updated = True
+                    
+                    if updated:
+                        existing_agent.save()
+                        agents_updated += 1
+                        status = "parti" if departure_date else "actif"
+                        permission_display = existing_agent.get_permission_display_name()
+                        self.stdout.write(
+                            f"Updated: {existing_agent.matricule} - {existing_agent.first_name} {existing_agent.last_name} "
+                            f"({existing_agent.grade}) - {status} - {permission_display} "
+                            f"[{', '.join(changes)}]"
+                        )
+                    else:
+                        agents_skipped += 1
+                        self.stdout.write(
+                            self.style.WARNING(f'No changes for: {existing_agent.matricule}')
+                        )
+                else:
+                    # Create new agent
+                    agent = Agent.objects.create(
+                        matricule=agent_data['matricule'],
+                        first_name=agent_data['first_name'],
+                        last_name=agent_data['last_name'],
+                        grade=agent_data['grade'],
+                        hire_date=hire_date,
+                        departure_date=departure_date,
+                        permission_level=agent_data.get('permission_level', 'V')
+                    )
+                    agents_created += 1
+                    
+                    status = "parti" if departure_date else "actif"
+                    permission_display = agent.get_permission_display_name()
+                    self.stdout.write(
+                        f"Created: {agent.matricule} - {agent.first_name} {agent.last_name} "
+                        f"({agent.grade}) - {status} - {permission_display}"
+                    )
                 
             except Exception as e:
                 self.stdout.write(
-                    self.style.ERROR(f'Error creating agent {matricule}: {str(e)}')
+                    self.style.ERROR(f'Error processing agent {agent_data["matricule"]}: {str(e)}')
                 )
 
         # Summary
         self.stdout.write(
-            self.style.SUCCESS(f'\nSuccessfully created {agents_created} agents')
+            self.style.SUCCESS(f'\nOperation completed:')
         )
+        if agents_created > 0:
+            self.stdout.write(f'Created: {agents_created} agents')
+        if agents_updated > 0:
+            self.stdout.write(f'Updated: {agents_updated} agents')
+        if agents_skipped > 0:
+            self.stdout.write(f'Skipped: {agents_skipped} agents')
         
         # Show statistics
         total_agents = Agent.objects.count()
@@ -117,7 +172,7 @@ class Command(BaseCommand):
         departed_agents = Agent.objects.filter(departure_date__isnull=False).count()
         
         self.stdout.write(f'\nStatistics:')
-        self.stdout.write(f'Total agents: {total_agents}')
+        self.stdout.write(f'Total agents in database: {total_agents}')
         self.stdout.write(f'Active agents: {active_agents}')
         self.stdout.write(f'Departed agents: {departed_agents}')
         
@@ -126,8 +181,18 @@ class Command(BaseCommand):
             self.stdout.write(f'Departure rate: {departure_percentage:.1f}%')
             
         # Grade distribution
+        grades = ['Agent', 'Maitrise', 'Cadre']
         self.stdout.write(f'\nGrade distribution:')
         for grade in grades:
             count = Agent.objects.filter(grade=grade).count()
             percentage = (count / total_agents) * 100 if total_agents > 0 else 0
             self.stdout.write(f'{grade}: {count} ({percentage:.1f}%)')
+            
+        # Permission distribution
+        permissions = ['V', 'E', 'A', 'S']
+        permission_names = {'V': 'Viewer', 'E': 'Editor', 'A': 'Administrator', 'S': 'Super Administrator'}
+        self.stdout.write(f'\nPermission distribution:')
+        for perm in permissions:
+            count = Agent.objects.filter(permission_level=perm).count()
+            percentage = (count / total_agents) * 100 if total_agents > 0 else 0
+            self.stdout.write(f'{permission_names[perm]} ({perm}): {count} ({percentage:.1f}%)')

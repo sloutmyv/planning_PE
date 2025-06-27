@@ -70,14 +70,17 @@ python manage.py migrate
 Générer des données de test (optionnel) :
 ```bash
 python manage.py create_test_agents
+python manage.py create_test_agents --update
 python manage.py create_test_functions
 ```
 
-La commande **create_test_agents** crée 50 agents avec :
-- Noms français aléatoires
-- Grades distribués (Execution, Maitrise, Cadre)
-- Dates d'embauche entre 2010-2024
-- ~10% d'agents partis
+La commande **create_test_agents** charge les agents depuis une base de données JSON :
+- **Mode création** : Crée de nouveaux agents, ignore les existants
+- **Mode mise à jour** (`--update`) : Met à jour les agents existants si les données JSON ont changé
+- **Mode nettoyage** (`--clear`) : Supprime tous les agents existants avant de créer
+- Données réelles d'employés avec matricules, grades et permissions
+- Détection automatique des changements de données
+- Statistiques détaillées par grade et niveau de permission
 
 La commande **create_test_functions** crée 30 fonctions avec :
 - Fonctions techniques (10) : Développeur, DevOps, etc.
@@ -91,11 +94,12 @@ Réinitialiser la base de données (optionnel) :
 python manage.py reset_database --confirm
 ```
 
-La commande **reset_database** supprime toutes les données tout en préservant les comptes superutilisateurs :
-- Supprime tous les agents et leurs comptes utilisateurs associés
-- Supprime toutes les fonctions
-- Préserve les comptes superutilisateurs existants
-- Nécessite le flag `--confirm` pour des raisons de sécurité
+La commande **reset_database** effectue une remise à zéro complète de la base de données :
+- **Suppression totale** : Tous les agents, fonctions et comptes utilisateurs
+- **Préservation des superutilisateurs** : Sauvegarde et restauration automatique
+- **Nettoyage complet** : Élimine tous les comptes utilisateurs réguliers
+- **Sécurité** : Nécessite le flag `--confirm` pour confirmation
+- **Restauration intégrale** : Recrée les superutilisateurs avec toutes leurs données
 
 ## Utilisation
 
