@@ -22,12 +22,12 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Gestion des permissions** : Modification des niveaux de permission directement dans la liste
 - **Permissions intégrées** : Création d'utilisateurs automatique avec comptes Django liés
 
-### Gestion des fonctions
+### Gestion des postes
 - **CRUD complet** : Création, lecture, modification, suppression
 - **Recherche en temps réel** : Recherche par désignation ou description avec délai de 300ms
 - **Tri multi-colonnes** : Tri par désignation ou statut (ASC/DESC)
 - **Pagination** : Navigation par pages avec conservation des filtres
-- **Filtrage avancé** : Option pour masquer les fonctions inactives
+- **Filtrage avancé** : Option pour masquer les postes inactifs
 - **Split buttons** : Actions d'édition et suppression combinées
 - **Modales HTMX** : Formulaires de création/modification sans navigation
 - **Statuts visuels** : Badges colorés pour les statuts (actif/inactif)
@@ -48,7 +48,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
-  - **A (Administrateur)** : Gestion agents/fonctions + modification permissions
+  - **A (Administrateur)** : Gestion agents/postes + modification permissions
   - **E (Éditeur)** : Édition du planning (à implémenter)
   - **R (Lecteur)** : Visualisation seulement
 - **Connexion personnalisée** : Interface de login moderne avec logo d'entreprise centré
@@ -108,6 +108,8 @@ python manage.py create_test_agents
 python manage.py create_test_agents --update
 python manage.py create_test_functions
 python manage.py create_test_functions --update
+python manage.py create_test_schedule_types
+python manage.py create_test_schedule_types --update
 ```
 
 La commande **create_test_agents** charge les agents depuis une base de données JSON :
@@ -125,6 +127,14 @@ La commande **create_test_functions** charge les fonctions depuis une base de do
 - Fonctions spécialisées pour une centrale électrique (exploitation, maintenance, logistique)
 - Détection automatique des changements de description et statut
 - Statistiques détaillées par statut (actif/inactif)
+
+La commande **create_test_schedule_types** charge les types d'horaire depuis une base de données JSON :
+- **Mode création** : Crée de nouveaux types d'horaire, ignore les existants
+- **Mode mise à jour** (`--update`) : Met à jour les types d'horaire existants si les données JSON ont changé
+- **Mode nettoyage** (`--clear`) : Supprime tous les types d'horaire existants avant de créer
+- Types d'horaire prédéfinis avec codes couleur (JT, CP, JTC, NTC, FE, FS, etc.)
+- Détection automatique des changements d'abréviation et couleur
+- Statistiques détaillées avec taux d'abréviations définies
 
 Réinitialiser la base de données (optionnel) :
 ```bash
@@ -162,7 +172,7 @@ L'interface principale propose :
 - **Accueil** : Vue d'ensemble avec placeholder pour le planning
 - **Administration** (menu déroulant pour les utilisateurs staff) :
   - Gestion des Agents
-  - Gestion des Fonctions
+  - Gestion des Postes
   - Types d'Horaire
   - Interface d'Administration Django
 
@@ -179,16 +189,16 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **last_name** : Nom de famille (ordre d'affichage 1)
 - **first_name** : Prénom (ordre d'affichage 2)
 - **matricule** : Une lettre suivie de 4 chiffres (ex: A1234) (ordre d'affichage 3)
-- **grade** : Agent, Maitrise, ou Cadre (ordre d'affichage 4)
+- **grade** : Agent, Maîtrise, ou Cadre (ordre d'affichage 4)
 - **hire_date** : Date d'embauche (par défaut: date de création) (ordre d'affichage 5)
 - **departure_date** : Date de départ (optionnel, doit être postérieure à la date d'embauche) (ordre d'affichage 6)
 - **permission_level** : Niveau de permission (V/E/A/S) (ordre d'affichage 7, visible aux admins seulement)
 - **user** : Liaison avec compte utilisateur Django (créé automatiquement)
 - **password_changed** : Indicateur de changement de mot de passe initial
 
-### Fonction
-- **designation** : Nom de la fonction
-- **description** : Description de la fonction (optionnel, affichage complet sans troncature)
+### Fonction (Poste)
+- **designation** : Nom du poste
+- **description** : Description du poste (optionnel, affichage complet sans troncature)
 - **status** : Statut actif/inactif (par défaut: actif)
 
 ### ScheduleType (Type d'Horaire)
