@@ -1,0 +1,112 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestion des périodes de rotation - Planning PE{% endblock %}
+
+{% block content %}
+<script>
+function clearModalAndCreatePeriod() {
+    // Clear modal content
+    document.getElementById('period-create-form-content').innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    // Show modal
+    document.getElementById('period-modal').style.display = 'block';
+    // Load create form
+    htmx.ajax('GET', '{% url "rotation_period_create" %}', '#period-create-form-content');
+}
+
+function clearModalAndEditPeriod(editUrl) {
+    // Clear modal content
+    document.getElementById('period-create-form-content').innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    // Show modal
+    document.getElementById('period-modal').style.display = 'block';
+    // Load edit form
+    htmx.ajax('GET', editUrl, '#period-create-form-content');
+}
+</script>
+<div class="space-y-6" x-data="{ showCreateForm: false }" @closePeriodCreateForm.document="showCreateForm = false">
+    {% csrf_token %}
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Périodes de Rotation</h1>
+        <button onclick="clearModalAndCreatePeriod()" 
+                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nouvelle Période
+        </button>
+    </div>
+
+    <!-- Simple Modal -->
+    <div id="period-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Créer une nouvelle période</h2>
+            <button onclick="document.getElementById('period-modal').style.display = 'none'" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="period-create-form-content"
+             hx-get="{% url 'rotation_period_create' %}" 
+             hx-trigger="revealed"
+             hx-target="this"
+             hx-swap="innerHTML">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="Rechercher par nom de plan..."
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                       hx-get="{% url 'rotation_period_list' %}"
+                       hx-trigger="keyup changed delay:300ms"
+                       hx-target="#period-list-content"
+                       hx-include="[name='search'], [name='plan_filter']">
+            </div>
+            <div>
+                <select name="plan_filter"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                        hx-get="{% url 'rotation_period_list' %}"
+                        hx-trigger="change"
+                        hx-target="#period-list-content"
+                        hx-include="[name='search'], [name='plan_filter']">
+                    <option value="">Tous les plans</option>
+                    {% for plan in plans %}
+                        <option value="{{ plan.pk }}" {% if plan_filter == plan.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ plan.designation }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period List -->
+    <div id="period-list-content" class="bg-white rounded-lg shadow-sm border border-gray-200">
+        {% include 'core/rotation_periods/rotation_period_list_partial.html' %}
+    </div>
+</div>
+{% endblock %}

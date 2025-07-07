@@ -44,6 +44,15 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Abréviation optionnelle** : Code court de 2-3 lettres majuscules (ex: MAT, APM, NUIT)
 - **Validation automatique** : Contrôle du format des couleurs et abréviations
 - **Affichage coloré** : Aperçu des couleurs dans la liste avec codes hexadécimaux
+- **Protection contre suppression** : Avertissements visuels et blocage de suppression pour les types liés à des plans de rotation
+
+### Gestion des plans de rotation quotidienne
+- **Interface accordion** : Expansion/contraction des plans pour visualiser les périodes
+- **Visualisation multiple** : Plusieurs plans peuvent être ouverts simultanément
+- **Gestion des périodes intégrée** : Ajout/modification/suppression des périodes directement dans chaque plan
+- **Chargement à la demande** : Les périodes se chargent uniquement à l'expansion du plan
+- **Validation métier** : Contrôle des chevauchements de périodes et validation des horaires de nuit
+- **Association automatique** : Les nouvelles périodes sont automatiquement liées au plan courant
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -174,6 +183,7 @@ L'interface principale propose :
   - Gestion des Agents
   - Gestion des Postes
   - Types d'Horaire
+  - Plans de Rotation
   - Interface d'Administration Django
 
 ## Tests
@@ -206,3 +216,16 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **short_designation** : Abréviation optionnelle de 2-3 lettres majuscules (unique, ex: MAT, APM, NUIT)
 - **color** : Code couleur hexadécimal pour identification visuelle (ex: #FF0000)
 - **Validation automatique** : Format hexadécimal pour les couleurs et format alphabétique majuscule pour les abréviations
+
+### DailyRotationPlan (Plan de Rotation Quotidienne)
+- **designation** : Nom du plan de rotation (unique)
+- **description** : Description optionnelle du plan
+- **schedule_type** : Type d'horaire associé (clé étrangère vers ScheduleType)
+- **Relation avec RotationPeriod** : Un plan peut avoir plusieurs périodes
+
+### RotationPeriod (Période de Rotation)
+- **daily_rotation_plan** : Plan de rotation parent (clé étrangère)
+- **start_date** / **end_date** : Période de validité (dates)
+- **start_time** / **end_time** : Horaires quotidiens (heures)
+- **Validation métier** : Contrôle des chevauchements et validation des horaires de nuit (22h-6h)
+- **Méthodes calculées** : Detection automatique des équipes de nuit et calcul de durée

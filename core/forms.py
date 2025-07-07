@@ -1,5 +1,5 @@
 from django import forms
-from .models import Agent, Function, ScheduleType
+from .models import Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod
 
 
 class AgentForm(forms.ModelForm):
@@ -121,4 +121,63 @@ class ScheduleTypeForm(forms.ModelForm):
             'designation': 'Désignation',
             'short_designation': 'Abréviation',
             'color': 'Couleur',
+        }
+
+
+class DailyRotationPlanForm(forms.ModelForm):
+    class Meta:
+        model = DailyRotationPlan
+        fields = ['designation', 'description', 'schedule_type']
+        widgets = {
+            'designation': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Ex: Équipe A - Salle de contrôle'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Description détaillée du plan de rotation (optionnel)',
+                'rows': 3
+            }),
+            'schedule_type': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+        }
+        labels = {
+            'designation': 'Nom du plan',
+            'description': 'Description',
+            'schedule_type': 'Type d\'horaire',
+        }
+
+
+class RotationPeriodForm(forms.ModelForm):
+    class Meta:
+        model = RotationPeriod
+        fields = ['daily_rotation_plan', 'start_date', 'end_date', 'start_time', 'end_time']
+        widgets = {
+            'daily_rotation_plan': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'start_time': forms.TimeInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'time'
+            }),
+            'end_time': forms.TimeInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'time'
+            }),
+        }
+        labels = {
+            'daily_rotation_plan': 'Plan de rotation',
+            'start_date': 'Date de début',
+            'end_date': 'Date de fin',
+            'start_time': 'Heure de début',
+            'end_time': 'Heure de fin',
         }

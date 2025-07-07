@@ -6,10 +6,10 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db import transaction
-from .models import Agent, Function, ScheduleType
-from .forms import AgentForm, FunctionForm, ScheduleTypeForm
+from .models import Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod
+from .forms import AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -497,7 +497,9 @@ def schedule_type_list(request):
     sort_by = request.GET.get('sort', 'designation')
     order = request.GET.get('order', 'asc')
     
-    schedule_types = ScheduleType.objects.all()
+    schedule_types = ScheduleType.objects.annotate(
+        plans_count=Count('dailyrotationplan')
+    ).all()
     
     if search_query:
         schedule_types = schedule_types.filter(
@@ -604,6 +606,34 @@ def schedule_type_delete(request, pk):
     """Delete schedule type"""
     schedule_type = get_object_or_404(ScheduleType, pk=pk)
     designation = schedule_type.designation
+    
+    # Check if schedule type is linked to any rotation plans
+    linked_plans = DailyRotationPlan.objects.filter(schedule_type=schedule_type)
+    if linked_plans.exists():
+        plan_names = ", ".join([plan.designation for plan in linked_plans[:3]])
+        if linked_plans.count() > 3:
+            plan_names += f" et {linked_plans.count() - 3} autre(s)"
+        
+        error_message = f'Impossible de supprimer le type d\'horaire "{designation}". Il est utilisé par les plans de rotation suivants : {plan_names}.'
+        
+        if request.headers.get('HX-Request'):
+            return HttpResponse(
+                f'<div class="p-4 mb-4 text-red-800 bg-red-100 rounded-lg border border-red-200">'
+                f'<div class="flex items-center">'
+                f'<svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">'
+                f'<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>'
+                f'</svg>'
+                f'<strong>Erreur de suppression</strong>'
+                f'</div>'
+                f'<p class="mt-2">{error_message}</p>'
+                f'<p class="text-sm mt-2">Veuillez d\'abord supprimer ou modifier ces plans de rotation avant de supprimer ce type d\'horaire.</p>'
+                f'</div>',
+                status=400
+            )
+        
+        messages.error(request, error_message)
+        return redirect('schedule_type_list')
+    
     schedule_type.delete()
     
     if request.headers.get('HX-Request'):
@@ -643,3 +673,433 @@ def schedule_type_delete(request, pk):
     
     messages.success(request, f'Type de planning "{designation}" supprimé avec succès.')
     return redirect('schedule_type_list')
+
+
+# DailyRotationPlan Views
+@admin_required
+def daily_rotation_plan_list(request):
+    """List all daily rotation plans with search, sorting and pagination"""
+    search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'designation')
+    order = request.GET.get('order', 'asc')
+    
+    plans = DailyRotationPlan.objects.select_related('schedule_type').all()
+    
+    if search_query:
+        plans = plans.filter(
+            Q(designation__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(schedule_type__designation__icontains=search_query)
+        )
+    
+    # Apply sorting
+    valid_sorts = ['designation', 'schedule_type__designation', 'created_at']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        plans = plans.order_by(sort_by)
+    else:
+        plans = plans.order_by('designation')
+    
+    paginator = Paginator(plans, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'designation')
+    current_order = request.GET.get('order', 'asc')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order
+        })
+    
+    return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order
+    })
+
+
+@admin_required
+@transaction.atomic
+def daily_rotation_plan_create(request):
+    """Create new daily rotation plan"""
+    if request.method == 'POST':
+        form = DailyRotationPlanForm(request.POST)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, f'Plan de rotation "{plan.designation}" créé avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Plan de rotation "{plan.designation}" créé avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("plan-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('daily_rotation_plan_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            template = 'core/daily_rotation_plans/daily_rotation_plan_form_htmx.html'
+            return render(request, template, {
+                'form': form,
+                'title': 'Créer un Plan de Rotation',
+                'is_htmx': True
+            })
+    else:
+        form = DailyRotationPlanForm()
+    
+    template = 'core/daily_rotation_plans/daily_rotation_plan_form_htmx.html' if request.headers.get('HX-Request') else 'core/daily_rotation_plans/daily_rotation_plan_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': 'Créer un Plan de Rotation',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@viewer_required
+def daily_rotation_plan_detail(request, pk):
+    """Daily rotation plan detail view with periods"""
+    plan = get_object_or_404(DailyRotationPlan.objects.select_related('schedule_type'), pk=pk)
+    periods = plan.periods.all().order_by('start_date', 'start_time')
+    
+    return render(request, 'core/daily_rotation_plans/daily_rotation_plan_detail.html', {
+        'plan': plan,
+        'periods': periods
+    })
+
+
+@admin_required
+@transaction.atomic
+def daily_rotation_plan_edit(request, pk):
+    """Edit existing daily rotation plan"""
+    plan = get_object_or_404(DailyRotationPlan, pk=pk)
+    
+    if request.method == 'POST':
+        form = DailyRotationPlanForm(request.POST, instance=plan)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Plan de rotation "{plan.designation}" modifié avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Plan de rotation "{plan.designation}" modifié avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("plan-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('daily_rotation_plan_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            template = 'core/daily_rotation_plans/daily_rotation_plan_form_htmx.html'
+            return render(request, template, {
+                'form': form,
+                'plan': plan,
+                'title': f'Modifier "{plan.designation}"',
+                'is_htmx': True
+            })
+    else:
+        form = DailyRotationPlanForm(instance=plan)
+    
+    template = 'core/daily_rotation_plans/daily_rotation_plan_form_htmx.html' if request.headers.get('HX-Request') else 'core/daily_rotation_plans/daily_rotation_plan_form.html'
+    return render(request, template, {
+        'form': form,
+        'plan': plan,
+        'title': f'Modifier "{plan.designation}"',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+@require_http_methods(["DELETE"])
+@transaction.atomic
+def daily_rotation_plan_delete(request, pk):
+    """Delete daily rotation plan"""
+    plan = get_object_or_404(DailyRotationPlan, pk=pk)
+    designation = plan.designation
+    plan.delete()
+    
+    if request.headers.get('HX-Request'):
+        # Return updated plan list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'designation')
+        order = request.GET.get('order', 'asc')
+        
+        plans = DailyRotationPlan.objects.select_related('schedule_type').all()
+            
+        if search_query:
+            plans = plans.filter(
+                Q(designation__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(schedule_type__designation__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['designation', 'schedule_type__designation', 'created_at']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            plans = plans.order_by(sort_by)
+        else:
+            plans = plans.order_by('designation')
+        
+        paginator = Paginator(plans, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        messages.success(request, f'Plan de rotation "{designation}" supprimé avec succès.')
+        return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'designation'),
+            'current_order': request.GET.get('order', 'asc')
+        })
+    
+    messages.success(request, f'Plan de rotation "{designation}" supprimé avec succès.')
+    return redirect('daily_rotation_plan_list')
+
+
+# RotationPeriod Views
+@admin_required
+def rotation_period_list(request):
+    """List all rotation periods with search, sorting and pagination"""
+    search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'start_date')
+    order = request.GET.get('order', 'asc')
+    plan_filter = request.GET.get('plan_filter', '')
+    
+    periods = RotationPeriod.objects.select_related('daily_rotation_plan', 'daily_rotation_plan__schedule_type').all()
+    
+    # Filter by plan if specified
+    if plan_filter:
+        periods = periods.filter(daily_rotation_plan_id=plan_filter)
+    
+    if search_query:
+        periods = periods.filter(
+            Q(daily_rotation_plan__designation__icontains=search_query)
+        )
+    
+    # Apply sorting
+    valid_sorts = ['start_date', 'end_date', 'start_time', 'end_time', 'daily_rotation_plan__designation']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        periods = periods.order_by(sort_by)
+    else:
+        periods = periods.order_by('start_date', 'start_time')
+    
+    paginator = Paginator(periods, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get plans for filter dropdown
+    plans = DailyRotationPlan.objects.all().order_by('designation')
+    
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'start_date')
+    current_order = request.GET.get('order', 'asc')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/rotation_periods/rotation_period_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order,
+            'plan_filter': plan_filter,
+            'plans': plans
+        })
+    
+    return render(request, 'core/rotation_periods/rotation_period_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order,
+        'plan_filter': plan_filter,
+        'plans': plans
+    })
+
+
+@admin_required
+@transaction.atomic
+def rotation_period_create(request):
+    """Create new rotation period"""
+    plan_id = request.GET.get('plan_id')
+    
+    if request.method == 'POST':
+        form = RotationPeriodForm(request.POST)
+        if form.is_valid():
+            period = form.save()
+            messages.success(request, f'Période de rotation créée avec succès.')
+            if request.headers.get('HX-Request'):
+                plan_id = period.daily_rotation_plan.pk
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Période de rotation créée avec succès.</div>'
+                    f'<script>setTimeout(() => {{ document.getElementById("period-modal").style.display = "none"; refreshPlanPeriods({plan_id}); }}, 1000)</script>'
+                )
+            # Redirect to plan detail if creating from plan view
+            if plan_id:
+                return redirect('daily_rotation_plan_detail', pk=plan_id)
+            return redirect('rotation_period_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            template = 'core/rotation_periods/rotation_period_form_htmx.html'
+            return render(request, template, {
+                'form': form,
+                'title': 'Créer une Période de Rotation',
+                'is_htmx': True,
+                'plan_id': plan_id
+            })
+    else:
+        form = RotationPeriodForm()
+        # Pre-select plan if creating from plan detail view
+        if plan_id:
+            form.initial['daily_rotation_plan'] = plan_id
+    
+    template = 'core/rotation_periods/rotation_period_form_htmx.html' if request.headers.get('HX-Request') else 'core/rotation_periods/rotation_period_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': 'Créer une Période de Rotation',
+        'is_htmx': request.headers.get('HX-Request'),
+        'plan_id': plan_id
+    })
+
+
+@admin_required
+@transaction.atomic
+def rotation_period_edit(request, pk):
+    """Edit existing rotation period"""
+    period = get_object_or_404(RotationPeriod, pk=pk)
+    
+    if request.method == 'POST':
+        form = RotationPeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Période de rotation modifiée avec succès.')
+            if request.headers.get('HX-Request'):
+                plan_id = period.daily_rotation_plan.pk
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Période de rotation modifiée avec succès.</div>'
+                    f'<script>setTimeout(() => {{ document.getElementById("period-modal").style.display = "none"; refreshPlanPeriods({plan_id}); }}, 1000)</script>'
+                )
+            return redirect('rotation_period_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            template = 'core/rotation_periods/rotation_period_form_htmx.html'
+            return render(request, template, {
+                'form': form,
+                'period': period,
+                'title': f'Modifier la période',
+                'is_htmx': True
+            })
+    else:
+        form = RotationPeriodForm(instance=period)
+    
+    template = 'core/rotation_periods/rotation_period_form_htmx.html' if request.headers.get('HX-Request') else 'core/rotation_periods/rotation_period_form.html'
+    return render(request, template, {
+        'form': form,
+        'period': period,
+        'title': f'Modifier la période',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+@require_http_methods(["POST", "DELETE"])
+@transaction.atomic
+def rotation_period_delete(request, pk):
+    """Delete rotation period"""
+    period = get_object_or_404(RotationPeriod, pk=pk)
+    plan_designation = period.daily_rotation_plan.designation
+    plan_id = period.daily_rotation_plan.pk
+    period.delete()
+    
+    if request.headers.get('HX-Request'):
+        # Return updated period list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'start_date')
+        order = request.GET.get('order', 'asc')
+        plan_filter = request.GET.get('plan_filter', '')
+        
+        periods = RotationPeriod.objects.select_related('daily_rotation_plan', 'daily_rotation_plan__schedule_type').all()
+        
+        # Filter by plan if specified
+        if plan_filter:
+            periods = periods.filter(daily_rotation_plan_id=plan_filter)
+            
+        if search_query:
+            periods = periods.filter(
+                Q(daily_rotation_plan__designation__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['start_date', 'end_date', 'start_time', 'end_time', 'daily_rotation_plan__designation']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            periods = periods.order_by(sort_by)
+        else:
+            periods = periods.order_by('start_date', 'start_time')
+        
+        paginator = Paginator(periods, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Get plans for filter dropdown
+        plans = DailyRotationPlan.objects.all().order_by('designation')
+        
+        messages.success(request, f'Période de rotation supprimée avec succès.')
+        return render(request, 'core/rotation_periods/rotation_period_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'start_date'),
+            'current_order': request.GET.get('order', 'asc'),
+            'plan_filter': plan_filter,
+            'plans': plans
+        })
+    
+    messages.success(request, f'Période de rotation supprimée avec succès.')
+    # For periods accessed from plan detail, redirect back to plan
+    if plan_id:
+        return redirect('daily_rotation_plan_detail', pk=plan_id)
+    return redirect('rotation_period_list')
+
+
+# Count views for dashboard
+@admin_required
+def daily_rotation_plan_count(request):
+    """HTMX endpoint for daily rotation plan count"""
+    count = DailyRotationPlan.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="plan-count">{count}</p>')
+
+
+@admin_required
+def rotation_period_count(request):
+    """HTMX endpoint for rotation period count"""
+    count = RotationPeriod.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="period-count">{count}</p>')
+
+
+# API Views
+@admin_required
+def api_plan_periods(request, plan_id):
+    """API endpoint to get periods for a specific plan"""
+    plan = get_object_or_404(DailyRotationPlan, pk=plan_id)
+    periods = plan.periods.all().order_by('start_date', 'start_time')
+    
+    periods_data = []
+    for period in periods:
+        periods_data.append({
+            'id': period.pk,
+            'date_range': f"{period.start_date.strftime('%d/%m/%Y')} - {period.end_date.strftime('%d/%m/%Y')}",
+            'duration_text': f"{(period.end_date - period.start_date).days + 1} jours",
+            'time_range': f"{period.start_time.strftime('%H:%M')} - {period.end_time.strftime('%H:%M')}",
+            'is_night_shift': period.is_night_shift(),
+            'shift_type': 'Équipe de nuit' if period.is_night_shift() else 'Équipe de jour',
+            'duration_hours': f"{period.get_duration_hours():.1f}",
+            'schedule_type': plan.schedule_type.designation,
+            'schedule_color': plan.schedule_type.color,
+        })
+    
+    return JsonResponse({
+        'periods': periods_data,
+        'count': len(periods_data)
+    })

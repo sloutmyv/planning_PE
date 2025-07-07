@@ -5,33 +5,89 @@
 {% block content %}
 <script>
 function clearModalAndCreateFunction() {
+    console.log('clearModalAndCreateFunction called');
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
     // Clear modal content
-    document.getElementById('function-create-form-content').innerHTML = `
+    const contentDiv = document.getElementById('function-create-form-content');
+    if (!contentDiv) {
+        console.error('function-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
         <div class="animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
     `;
+    
     // Show modal
-    document.getElementById('function-modal').style.display = 'block';
+    const modal = document.getElementById('function-modal');
+    if (!modal) {
+        console.error('function-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
     // Load create form
-    htmx.ajax('GET', '{% url "function_create" %}', '#function-create-form-content');
+    console.log('Loading create form...');
+    try {
+        htmx.ajax('GET', '{% url "function_create" %}', '#function-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
 }
 
 function clearModalAndEditFunction(editUrl) {
+    console.log('clearModalAndEditFunction called with URL:', editUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
     // Clear modal content
-    document.getElementById('function-create-form-content').innerHTML = `
+    const contentDiv = document.getElementById('function-create-form-content');
+    if (!contentDiv) {
+        console.error('function-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
         <div class="animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
     `;
+    
     // Show modal
-    document.getElementById('function-modal').style.display = 'block';
+    const modal = document.getElementById('function-modal');
+    if (!modal) {
+        console.error('function-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
     // Load edit form
-    htmx.ajax('GET', editUrl, '#function-create-form-content');
+    console.log('Loading edit form...');
+    try {
+        htmx.ajax('GET', editUrl, '#function-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
 }
 </script>
 <div class="space-y-6" x-data="{ showCreateForm: false }" @closeFunctionCreateForm.document="showCreateForm = false">

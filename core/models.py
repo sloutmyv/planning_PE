@@ -3,6 +3,7 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth.models import User
+from datetime import datetime, time
 
 
 class Agent(models.Model):
@@ -175,3 +176,115 @@ class ScheduleType(models.Model):
     class Meta:
         verbose_name = "Type de Planning"
         verbose_name_plural = "Types de Planning"
+
+
+class DailyRotationPlan(models.Model):
+    designation = models.CharField(
+        max_length=200,
+        help_text="Nom du plan (ex: 'Équipe A - Salle de contrôle')"
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Description détaillée du plan de rotation"
+    )
+    schedule_type = models.ForeignKey(
+        ScheduleType,
+        on_delete=models.PROTECT,
+        help_text="Type d'horaire qui s'applique à toutes les périodes de ce plan"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.designation
+    
+    class Meta:
+        verbose_name = "Plan de Rotation Quotidien"
+        verbose_name_plural = "Plans de Rotation Quotidiens"
+        ordering = ['designation']
+
+
+class RotationPeriod(models.Model):
+    daily_rotation_plan = models.ForeignKey(
+        DailyRotationPlan,
+        on_delete=models.CASCADE,
+        related_name='periods',
+        help_text="Plan de rotation auquel appartient cette période"
+    )
+    start_date = models.DateField(
+        help_text="Date de début de validité de la période"
+    )
+    end_date = models.DateField(
+        help_text="Date de fin de validité de la période"
+    )
+    start_time = models.TimeField(
+        help_text="Heure de début quotidienne (ex: 08:00)"
+    )
+    end_time = models.TimeField(
+        help_text="Heure de fin quotidienne (ex: 16:00)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Validate that end_date >= start_date
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': 'La date de fin doit être postérieure ou égale à la date de début.'
+            })
+        
+        # Validate time consistency (except for night shifts)
+        if self.start_time and self.end_time:
+            # Allow night shifts where end_time < start_time (e.g., 22:00-06:00)
+            # Only validate if it's not a night shift
+            if self.start_time >= self.end_time:
+                # Check if this could be a valid night shift
+                if not (self.start_time >= time(18, 0) and self.end_time <= time(12, 0)):
+                    raise ValidationError({
+                        'end_time': 'L\'heure de fin doit être postérieure à l\'heure de début, sauf pour les équipes de nuit (18h00-12h00).'
+                    })
+        
+        # Check for overlapping periods within the same plan
+        if self.daily_rotation_plan_id:
+            overlapping_periods = RotationPeriod.objects.filter(
+                daily_rotation_plan=self.daily_rotation_plan
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            for period in overlapping_periods:
+                # Check if date ranges overlap
+                if (self.start_date <= period.end_date and 
+                    self.end_date >= period.start_date):
+                    raise ValidationError({
+                        'start_date': f'Cette période chevauche avec une période existante ({period.start_date} - {period.end_date}).',
+                        'end_date': f'Cette période chevauche avec une période existante ({period.start_date} - {period.end_date}).'
+                    })
+    
+    def is_night_shift(self):
+        """Check if this is a night shift (end_time < start_time)"""
+        return self.start_time > self.end_time
+    
+    def get_duration_hours(self):
+        """Calculate the duration of the shift in hours"""
+        if self.is_night_shift():
+            # Night shift calculation
+            end_next_day = datetime.combine(datetime.today(), self.end_time)
+            start_today = datetime.combine(datetime.today(), self.start_time)
+            duration = (end_next_day + timezone.timedelta(days=1)) - start_today
+        else:
+            # Regular shift calculation
+            end_today = datetime.combine(datetime.today(), self.end_time)
+            start_today = datetime.combine(datetime.today(), self.start_time)
+            duration = end_today - start_today
+        
+        return duration.total_seconds() / 3600
+    
+    def __str__(self):
+        return f"{self.daily_rotation_plan.designation} - {self.start_date} à {self.end_date}"
+    
+    class Meta:
+        verbose_name = "Période de Rotation"
+        verbose_name_plural = "Périodes de Rotation"
+        ordering = ['start_date', 'start_time']

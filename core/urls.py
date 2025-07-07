@@ -14,6 +14,8 @@ urlpatterns = [
     path('agent-count/', views.agent_count, name='agent_count'),
     path('function-count/', views.function_count, name='function_count'),
     path('schedule-type-count/', views.schedule_type_count, name='schedule_type_count'),
+    path('daily-rotation-plan-count/', views.daily_rotation_plan_count, name='daily_rotation_plan_count'),
+    path('rotation-period-count/', views.rotation_period_count, name='rotation_period_count'),
     
     # Agent URLs
     path('agents/', views.agent_list, name='agent_list'),
@@ -38,4 +40,20 @@ urlpatterns = [
     
     # Permission Management URLs (integrated into agent management)
     path('agents/<int:pk>/change-permission/save/', views.change_agent_permission, name='change_agent_permission'),
+    
+    # DailyRotationPlan URLs
+    path('daily-rotation-plans/', views.daily_rotation_plan_list, name='daily_rotation_plan_list'),
+    path('daily-rotation-plans/create/', views.daily_rotation_plan_create, name='daily_rotation_plan_create'),
+    path('daily-rotation-plans/<int:pk>/', views.daily_rotation_plan_detail, name='daily_rotation_plan_detail'),
+    path('daily-rotation-plans/<int:pk>/edit/', views.daily_rotation_plan_edit, name='daily_rotation_plan_edit'),
+    path('daily-rotation-plans/<int:pk>/delete/', views.daily_rotation_plan_delete, name='daily_rotation_plan_delete'),
+    
+    # RotationPeriod URLs
+    path('rotation-periods/', views.rotation_period_list, name='rotation_period_list'),
+    path('rotation-periods/create/', views.rotation_period_create, name='rotation_period_create'),
+    path('rotation-periods/<int:pk>/edit/', views.rotation_period_edit, name='rotation_period_edit'),
+    path('rotation-periods/<int:pk>/delete/', views.rotation_period_delete, name='rotation_period_delete'),
+    
+    # API endpoints for periods
+    path('api/plans/<int:plan_id>/periods/', views.api_plan_periods, name='api_plan_periods'),
 ]

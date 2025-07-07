@@ -5,33 +5,89 @@
 {% block content %}
 <script>
 function clearModalAndCreate() {
+    console.log('clearModalAndCreate called');
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
     // Clear modal content
-    document.getElementById('create-form-content').innerHTML = `
+    const contentDiv = document.getElementById('create-form-content');
+    if (!contentDiv) {
+        console.error('create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
         <div class="animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
     `;
+    
     // Show modal
-    document.getElementById('agent-modal').style.display = 'block';
+    const modal = document.getElementById('agent-modal');
+    if (!modal) {
+        console.error('agent-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
     // Load create form
-    htmx.ajax('GET', '{% url "agent_create" %}', '#create-form-content');
+    console.log('Loading create form...');
+    try {
+        htmx.ajax('GET', '{% url "agent_create" %}', '#create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
 }
 
 function clearModalAndEdit(editUrl) {
+    console.log('clearModalAndEdit called with URL:', editUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
     // Clear modal content
-    document.getElementById('create-form-content').innerHTML = `
+    const contentDiv = document.getElementById('create-form-content');
+    if (!contentDiv) {
+        console.error('create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
         <div class="animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
     `;
+    
     // Show modal
-    document.getElementById('agent-modal').style.display = 'block';
+    const modal = document.getElementById('agent-modal');
+    if (!modal) {
+        console.error('agent-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
     // Load edit form
-    htmx.ajax('GET', editUrl, '#create-form-content');
+    console.log('Loading edit form...');
+    try {
+        htmx.ajax('GET', editUrl, '#create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
 }
 
 function changeAgentPermission(agentId, newPermission, agentName) {

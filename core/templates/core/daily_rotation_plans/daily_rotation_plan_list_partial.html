@@ -1,0 +1,331 @@
+<!-- Daily Rotation Plan Accordion -->
+<div class="space-y-4">
+    {% for plan in page_obj %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200" x-data="{ 
+        expanded: false, 
+        planId: {{ plan.pk }},
+        periodsLoaded: false,
+        periods: [],
+        loadPeriods() {
+            fetch(`/api/plans/${this.planId}/periods/`)
+                .then(response => response.json())
+                .then(data => {
+                    this.periods = data.periods;
+                    this.periodsLoaded = true;
+                })
+                .catch(error => {
+                    console.error('Error loading periods:', error);
+                    this.periodsLoaded = true;
+                });
+        }
+    }">
+        <!-- Plan Header (clickable to expand) -->
+        <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+             @click="expanded = !expanded; if (expanded && !periodsLoaded) { loadPeriods() }">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-4">
+                        <!-- Expand/Collapse Icon -->
+                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                             :class="{ 'rotate-90': expanded }"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                        
+                        <!-- Plan Info -->
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900">{{ plan.designation }}</h3>
+                                    {% if plan.description %}
+                                        <p class="text-sm text-gray-500 mt-1">{{ plan.description }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Schedule Type -->
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 rounded mr-2" style="background-color: {{ plan.schedule_type.color }};"></div>
+                                    <span class="text-sm text-gray-700">{{ plan.schedule_type.designation }}</span>
+                                    {% if plan.schedule_type.short_designation %}
+                                        <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            {{ plan.schedule_type.short_designation }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Period Count -->
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    {{ plan.periods.count }} période{{ plan.periods.count|pluralize }}
+                                </span>
+                                
+                                <!-- Created Date -->
+                                <span class="text-sm text-gray-500">
+                                    Créé le {{ plan.created_at|date:"d/m/Y" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-1" @click.stop>
+                    <!-- Edit Plan Button -->
+                    <button onclick="clearModalAndEditPlan('{% url 'daily_rotation_plan_edit' plan.pk %}')"
+                            title="Modifier le plan"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Delete Plan Button -->
+                    <button hx-delete="{% url 'daily_rotation_plan_delete' plan.pk %}"
+                            hx-confirm="Êtes-vous sûr de vouloir supprimer ce plan de rotation ? Toutes ses périodes seront également supprimées."
+                            hx-target="#plan-list-content"
+                            hx-swap="outerHTML"
+                            title="Supprimer le plan"
+                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-r-md bg-white text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 -ml-px">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Periods Section (expandable) -->
+        <div x-show="expanded" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             class="border-t border-gray-200 bg-gray-50">
+            
+            <!-- Periods Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h4 class="text-md font-medium text-gray-900">
+                    Périodes de rotation (<span x-text="periods.length">{{ plan.periods.count }}</span>)
+                </h4>
+                <button @click="openPeriodModal({{ plan.pk }})"
+                        class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Ajouter une période
+                </button>
+            </div>
+            
+            <!-- Periods Content -->
+            <div class="px-6 py-4" :id="'periods-content-' + planId">
+                <div x-show="!periodsLoaded" class="text-center text-gray-500">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-4 mx-auto"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-4 mx-auto"></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                    </div>
+                </div>
+                
+                <div x-show="periodsLoaded && periods.length === 0" class="text-center text-gray-500 py-8">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="mt-2 text-sm">Aucune période définie pour ce plan</p>
+                    <p class="text-xs text-gray-400">Ajoutez des périodes pour définir quand ce plan est actif</p>
+                </div>
+                
+                <div x-show="periodsLoaded && periods.length > 0" class="space-y-3">
+                    <template x-for="period in periods" :key="period.id">
+                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <!-- Period Dates -->
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900" x-text="period.date_range"></div>
+                                        <div class="text-xs text-gray-500" x-text="period.duration_text"></div>
+                                    </div>
+                                    
+                                    <!-- Daily Hours -->
+                                    <div>
+                                        <div class="text-sm text-gray-900" x-text="period.time_range"></div>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                              :class="period.is_night_shift ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
+                                              x-text="period.shift_type"></span>
+                                    </div>
+                                    
+                                    <!-- Duration Hours -->
+                                    <div>
+                                        <span class="text-sm text-gray-900" x-text="period.duration_hours + 'h'"></span>
+                                    </div>
+                                    
+                                    <!-- Schedule Type -->
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 rounded mr-2" :style="'background-color: ' + period.schedule_color"></div>
+                                        <span class="text-sm text-gray-900" x-text="period.schedule_type"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Period Actions -->
+                                <div class="flex items-center space-x-1 ml-4">
+                                    <button @click="editPeriod(period.id)"
+                                            title="Modifier la période"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button @click="deletePeriod(period.id, planId)"
+                                            title="Supprimer la période"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-r-md bg-white text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 -ml-px">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        <p class="mt-2 text-sm text-gray-500">Aucun plan de rotation trouvé</p>
+        {% if search_query %}
+        <p class="text-xs text-gray-400">Essayez de modifier votre recherche</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 mt-6 rounded-lg shadow-sm">
+    <div class="flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+            <button hx-get="{% url 'daily_rotation_plan_list' %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    hx-target="#plan-list-content"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Précédent
+            </button>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <button hx-get="{% url 'daily_rotation_plan_list' %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                    hx-target="#plan-list-content"
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Suivant
+            </button>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Affichage de 
+                    <span class="font-medium">{{ page_obj.start_index }}</span>
+                    à 
+                    <span class="font-medium">{{ page_obj.end_index }}</span>
+                    sur 
+                    <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                    résultats
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    {% if page_obj.has_previous %}
+                    <button hx-get="{% url 'daily_rotation_plan_list' %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                            hx-target="#plan-list-content"
+                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-purple-500 bg-purple-50 text-sm font-medium text-purple-600">
+                            {{ num }}
+                        </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <button hx-get="{% url 'daily_rotation_plan_list' %}?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                                hx-target="#plan-list-content"
+                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </button>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <button hx-get="{% url 'daily_rotation_plan_list' %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                            hx-target="#plan-list-content"
+                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Global functions for accordion functionality
+function openPeriodModal(planId) {
+    window.currentPlanId = planId;
+    clearModalAndCreatePeriod(planId);
+}
+
+function editPeriod(periodId) {
+    clearModalAndEditPeriod(`/rotation-periods/${periodId}/edit/`);
+}
+
+function deletePeriod(periodId, planId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette période ?')) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/rotation-periods/${periodId}/delete/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload periods for this specific plan
+                refreshPlanPeriods(planId);
+            } else {
+                alert('Erreur lors de la suppression de la période');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de la suppression de la période');
+        });
+    }
+}
+
+function refreshPlanPeriods(planId) {
+    // Find the Alpine.js component for this plan and reload its periods
+    const planElements = document.querySelectorAll('[x-data]');
+    for (let element of planElements) {
+        if (element._x_dataStack && element._x_dataStack[0].planId === planId) {
+            const alpineData = element._x_dataStack[0];
+            alpineData.periodsLoaded = false;
+            alpineData.loadPeriods();
+            break;
+        }
+    }
+}
+</script>

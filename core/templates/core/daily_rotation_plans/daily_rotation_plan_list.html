@@ -1,0 +1,260 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestion des plans de rotation - Planning PE{% endblock %}
+
+{% block content %}
+<script>
+function clearModalAndCreatePlan() {
+    console.log('clearModalAndCreatePlan called');
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('plan-create-form-content');
+    if (!contentDiv) {
+        console.error('plan-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('plan-modal');
+    if (!modal) {
+        console.error('plan-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load create form
+    console.log('Loading create form...');
+    try {
+        htmx.ajax('GET', '{% url "daily_rotation_plan_create" %}', '#plan-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+
+function clearModalAndEditPlan(editUrl) {
+    console.log('clearModalAndEditPlan called with URL:', editUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('plan-create-form-content');
+    if (!contentDiv) {
+        console.error('plan-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('plan-modal');
+    if (!modal) {
+        console.error('plan-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load edit form
+    console.log('Loading edit form...');
+    try {
+        htmx.ajax('GET', editUrl, '#plan-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+
+// Functions for period management in accordion
+function clearModalAndCreatePeriod(planId) {
+    console.log('clearModalAndCreatePeriod called for plan:', planId);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('period-create-form-content');
+    if (!contentDiv) {
+        console.error('period-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('period-modal');
+    if (!modal) {
+        console.error('period-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load create form
+    console.log('Loading create form...');
+    try {
+        htmx.ajax('GET', `/rotation-periods/create/?plan_id=${planId}`, '#period-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+
+function clearModalAndEditPeriod(editUrl) {
+    console.log('clearModalAndEditPeriod called with URL:', editUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('period-create-form-content');
+    if (!contentDiv) {
+        console.error('period-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('period-modal');
+    if (!modal) {
+        console.error('period-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load edit form
+    console.log('Loading edit form...');
+    try {
+        htmx.ajax('GET', editUrl, '#period-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+</script>
+<div class="space-y-6" x-data="{ showCreateForm: false }" @closePlanCreateForm.document="showCreateForm = false">
+    {% csrf_token %}
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Plans de Rotation</h1>
+        <button onclick="clearModalAndCreatePlan()" 
+                class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Nouveau Plan de Rotation
+        </button>
+    </div>
+
+    <!-- Simple Modal -->
+    <div id="plan-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Créer un nouveau plan de rotation</h2>
+            <button onclick="document.getElementById('plan-modal').style.display = 'none'" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="plan-create-form-content"
+             hx-get="{% url 'daily_rotation_plan_create' %}" 
+             hx-trigger="revealed"
+             hx-target="this"
+             hx-swap="innerHTML">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="Rechercher par nom de plan, description ou type d'horaire..."
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                       hx-get="{% url 'daily_rotation_plan_list' %}"
+                       hx-trigger="keyup changed delay:300ms"
+                       hx-target="#plan-list-content"
+                       hx-include="[name='search']">
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan List -->
+    <div id="plan-list-content" class="bg-white rounded-lg shadow-sm border border-gray-200">
+        {% include 'core/daily_rotation_plans/daily_rotation_plan_list_partial.html' %}
+    </div>
+
+    <!-- Period Modal -->
+    <div id="period-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">Gérer la période</h2>
+            <button onclick="document.getElementById('period-modal').style.display = 'none'" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="period-create-form-content">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
