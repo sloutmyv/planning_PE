@@ -189,7 +189,7 @@ function deletePeriod(periodId, planId) {
                 Périodes de rotation ({{ periods|length }})
             </h2>
             <button onclick="clearModalAndCreatePeriod()" 
-                    class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700">
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -214,6 +214,9 @@ function deletePeriod(periodId, planId) {
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Type
                             </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Statut
+                            </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                                 Actions
                             </th>
@@ -221,14 +224,19 @@ function deletePeriod(periodId, planId) {
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for period in periods %}
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 {% if not period.is_active %}bg-red-50{% endif %}">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">
+                                <div class="text-sm font-medium {% if period.is_active %}text-gray-900{% else %}text-red-700{% endif %}">
                                     {{ period.start_date|date:"d/m/Y" }} - {{ period.end_date|date:"d/m/Y" }}
                                 </div>
                                 <div class="text-sm text-gray-500">
                                     {{ period.start_date|timesince:period.end_date|cut:"," }}
                                 </div>
+                                {% if not period.is_active %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 mt-1">
+                                        Expiré
+                                    </span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">
@@ -252,6 +260,11 @@ function deletePeriod(periodId, planId) {
                                     <div class="w-4 h-4 rounded mr-2" style="background-color: {{ plan.schedule_type.color }};"></div>
                                     <span class="text-sm text-gray-900">{{ plan.schedule_type.designation }}</span>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {% if period.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if period.is_active %}Actif{% else %}Expiré{% endif %}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-1">
@@ -288,7 +301,7 @@ function deletePeriod(periodId, planId) {
                 <p class="text-xs text-gray-400">Ajoutez des périodes pour définir quand ce plan est actif</p>
                 <div class="mt-4">
                     <button onclick="clearModalAndCreatePeriod()" 
-                            class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700">
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>

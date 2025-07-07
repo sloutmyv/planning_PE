@@ -614,7 +614,7 @@ def schedule_type_delete(request, pk):
         if linked_plans.count() > 3:
             plan_names += f" et {linked_plans.count() - 3} autre(s)"
         
-        error_message = f'Impossible de supprimer le type d\'horaire "{designation}". Il est utilisé par les plans de rotation suivants : {plan_names}.'
+        error_message = f'Impossible de supprimer le type d\'horaire "{designation}". Il est utilisé par les plans de rotation quotidienne suivants : {plan_names}.'
         
         if request.headers.get('HX-Request'):
             return HttpResponse(
@@ -626,7 +626,7 @@ def schedule_type_delete(request, pk):
                 f'<strong>Erreur de suppression</strong>'
                 f'</div>'
                 f'<p class="mt-2">{error_message}</p>'
-                f'<p class="text-sm mt-2">Veuillez d\'abord supprimer ou modifier ces plans de rotation avant de supprimer ce type d\'horaire.</p>'
+                f'<p class="text-sm mt-2">Veuillez d\'abord supprimer ou modifier ces plans de rotation quotidienne avant de supprimer ce type d\'horaire.</p>'
                 f'</div>',
                 status=400
             )
@@ -1095,8 +1095,8 @@ def api_plan_periods(request, plan_id):
             'is_night_shift': period.is_night_shift(),
             'shift_type': 'Équipe de nuit' if period.is_night_shift() else 'Équipe de jour',
             'duration_hours': f"{period.get_duration_hours():.1f}",
-            'schedule_type': plan.schedule_type.designation,
-            'schedule_color': plan.schedule_type.color,
+            'is_active': period.is_active(),
+            'status_text': 'Actif' if period.is_active() else 'Expiré',
         })
     
     return JsonResponse({

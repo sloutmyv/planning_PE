@@ -181,20 +181,20 @@ function clearModalAndEditPeriod(editUrl) {
     {% csrf_token %}
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Gestion des Plans de Rotation</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Plans de Rotation Quotidien</h1>
         <button onclick="clearModalAndCreatePlan()" 
-                class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center">
+                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
-            Nouveau Plan de Rotation
+            Nouveau Plan de Rotation Quotidien
         </button>
     </div>
 
     <!-- Simple Modal -->
     <div id="plan-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900">Créer un nouveau plan de rotation</h2>
+            <h2 class="text-xl font-semibold text-gray-900">Créer un nouveau plan de rotation quotidien</h2>
             <button onclick="document.getElementById('plan-modal').style.display = 'none'" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

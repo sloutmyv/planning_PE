@@ -10,6 +10,8 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Composants réactifs** : Alpine.js pour l'interactivité côté client
 - **Split buttons** : Actions d'édition et suppression combinées
 - **Modales HTMX** : Formulaires de création/modification sans navigation
+- **Design harmonisé** : Boutons de création avec palette de couleurs bleue unifiée
+- **Indicateurs visuels** : Statuts actif/expiré pour les périodes avec codes couleur
 
 ### Gestion des agents
 - **CRUD complet** : Création, lecture, modification, suppression
@@ -53,6 +55,9 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Chargement à la demande** : Les périodes se chargent uniquement à l'expansion du plan
 - **Validation métier** : Contrôle des chevauchements de périodes et validation des horaires de nuit
 - **Association automatique** : Les nouvelles périodes sont automatiquement liées au plan courant
+- **Affichage structuré** : Grille alignée avec colonnes dédiées (Nom, Type d'horaire, Nombre de périodes, Date de création)
+- **Indicateurs de statut** : Identification visuelle des périodes expirées avec couleurs et badges
+- **Terminologie cohérente** : Utilisation systématique de "plans de rotation quotidienne" dans toute l'interface
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -229,3 +234,4 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **start_time** / **end_time** : Horaires quotidiens (heures)
 - **Validation métier** : Contrôle des chevauchements et validation des horaires de nuit (22h-6h)
 - **Méthodes calculées** : Detection automatique des équipes de nuit et calcul de durée
+- **Statut d'activité** : Méthode `is_active()` pour détecter les périodes expirées (date de fin antérieure à aujourd'hui)

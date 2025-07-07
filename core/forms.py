@@ -175,7 +175,7 @@ class RotationPeriodForm(forms.ModelForm):
             }),
         }
         labels = {
-            'daily_rotation_plan': 'Plan de rotation',
+            'daily_rotation_plan': 'Plan de rotation quotidien',
             'start_date': 'Date de début',
             'end_date': 'Date de fin',
             'start_time': 'Heure de début',

@@ -24,42 +24,46 @@
              @click="expanded = !expanded; if (expanded && !periodsLoaded) { loadPeriods() }">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
                         <!-- Expand/Collapse Icon -->
-                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200 mr-4 flex-shrink-0"
                              :class="{ 'rotate-90': expanded }"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                         
-                        <!-- Plan Info -->
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4">
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900">{{ plan.designation }}</h3>
-                                    {% if plan.description %}
-                                        <p class="text-sm text-gray-500 mt-1">{{ plan.description }}</p>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Schedule Type -->
-                                <div class="flex items-center">
-                                    <div class="w-4 h-4 rounded mr-2" style="background-color: {{ plan.schedule_type.color }};"></div>
-                                    <span class="text-sm text-gray-700">{{ plan.schedule_type.designation }}</span>
+                        <!-- Plan Info Grid -->
+                        <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
+                            <!-- Plan Name Column -->
+                            <div class="lg:col-span-2">
+                                <h3 class="text-lg font-medium text-gray-900 mb-1">{{ plan.designation }}</h3>
+                                {% if plan.description %}
+                                    <p class="text-sm text-gray-500 truncate">{{ plan.description }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Schedule Type Column -->
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2 flex-shrink-0" style="background-color: {{ plan.schedule_type.color }};"></div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-sm text-gray-700 block truncate">{{ plan.schedule_type.designation }}</span>
                                     {% if plan.schedule_type.short_designation %}
-                                        <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 mt-1">
                                             {{ plan.schedule_type.short_designation }}
                                         </span>
                                     {% endif %}
                                 </div>
-                                
+                            </div>
+                            
+                            <!-- Statistics Column -->
+                            <div class="flex flex-col items-start space-y-2">
                                 <!-- Period Count -->
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                                     {{ plan.periods.count }} période{{ plan.periods.count|pluralize }}
                                 </span>
                                 
                                 <!-- Created Date -->
-                                <span class="text-sm text-gray-500">
+                                <span class="text-xs text-gray-500">
                                     Créé le {{ plan.created_at|date:"d/m/Y" }}
                                 </span>
                             </div>
@@ -106,10 +110,10 @@
             <!-- Periods Header -->
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h4 class="text-md font-medium text-gray-900">
-                    Périodes de rotation (<span x-text="periods.length">{{ plan.periods.count }}</span>)
+                    Périodes de rotation quotidienne (<span x-text="periods.length">{{ plan.periods.count }}</span>)
                 </h4>
                 <button @click="openPeriodModal({{ plan.pk }})"
-                        class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700">
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -137,12 +141,15 @@
                 
                 <div x-show="periodsLoaded && periods.length > 0" class="space-y-3">
                     <template x-for="period in periods" :key="period.id">
-                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="bg-white rounded-lg border p-4"
+                             :class="period.is_active ? 'border-gray-200' : 'border-red-200 bg-red-50'">
                             <div class="flex items-center justify-between">
                                 <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <!-- Period Dates -->
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900" x-text="period.date_range"></div>
+                                        <div class="text-sm font-medium" 
+                                             :class="period.is_active ? 'text-gray-900' : 'text-red-700'"
+                                             x-text="period.date_range"></div>
                                         <div class="text-xs text-gray-500" x-text="period.duration_text"></div>
                                     </div>
                                     
@@ -159,10 +166,11 @@
                                         <span class="text-sm text-gray-900" x-text="period.duration_hours + 'h'"></span>
                                     </div>
                                     
-                                    <!-- Schedule Type -->
-                                    <div class="flex items-center">
-                                        <div class="w-4 h-4 rounded mr-2" :style="'background-color: ' + period.schedule_color"></div>
-                                        <span class="text-sm text-gray-900" x-text="period.schedule_type"></span>
+                                    <!-- Status -->
+                                    <div>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                              :class="period.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                              x-text="period.status_text"></span>
                                     </div>
                                 </div>
                                 
@@ -196,7 +204,7 @@
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
-        <p class="mt-2 text-sm text-gray-500">Aucun plan de rotation trouvé</p>
+        <p class="mt-2 text-sm text-gray-500">Aucun plan de rotation quotidien trouvé</p>
         {% if search_query %}
         <p class="text-xs text-gray-400">Essayez de modifier votre recherche</p>
         {% endif %}

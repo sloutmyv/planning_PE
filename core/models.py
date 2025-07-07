@@ -281,6 +281,12 @@ class RotationPeriod(models.Model):
         
         return duration.total_seconds() / 3600
     
+    def is_active(self):
+        """Check if this period is currently active (end date is today or in the future)"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.end_date >= today
+    
     def __str__(self):
         return f"{self.daily_rotation_plan.designation} - {self.start_date} à {self.end_date}"
     
