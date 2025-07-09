@@ -12,7 +12,7 @@
                     <ol class="flex items-center space-x-4">
                         <li>
                             <a href="{% url 'shift_schedule_list' %}" class="text-gray-500 hover:text-gray-700">
-                                Plannings de Poste
+                                Plans de roulement
                             </a>
                         </li>
                         <li>
@@ -55,7 +55,7 @@
                     </p>
                 </div>
                 <div>
-                    <h3 class="text-sm font-medium text-gray-500">Nombre de Pauses</h3>
+                    <h3 class="text-sm font-medium text-gray-500">Durée de la pause</h3>
                     <p class="mt-1 text-sm text-gray-900">{{ schedule.break_times }} pause{{ schedule.break_times|pluralize }}</p>
                 </div>
                 <div>

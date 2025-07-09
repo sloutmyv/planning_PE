@@ -188,8 +188,8 @@ L'interface principale propose :
   - Gestion des Agents
   - Gestion des Postes
   - Types d'Horaire
-  - Plans de Rotation
-  - Plannings de Poste
+  - Plans de Rotation Quotidien
+  - Plans de roulement
   - Interface d'Administration Django
 
 ## Tests
@@ -237,14 +237,14 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Méthodes calculées** : Detection automatique des équipes de nuit et calcul de durée
 - **Statut d'activité** : Méthode `is_active()` pour détecter les périodes expirées (date de fin antérieure à aujourd'hui)
 
-### ShiftSchedule (Planning de Poste)
-- **name** : Nom du planning de poste (unique, ex: "Planning Été 2024")
-- **type** : Type de planning (jour/poste) - choix entre "day" et "shift"
+### ShiftSchedule (Plan de roulement)
+- **name** : Nom du plan de roulement (unique, ex: "Planning Été 2024")
+- **type** : Type de planning - choix entre "Journée" et "Quart"
 - **break_times** : Nombre de pauses par défaut (généralement 2)
-- **Relation avec ShiftSchedulePeriod** : Un planning peut avoir plusieurs périodes
+- **Relation avec ShiftSchedulePeriod** : Un plan peut avoir plusieurs périodes
 
-### ShiftSchedulePeriod (Période de Planning de Poste)
-- **shift_schedule** : Planning de poste parent (clé étrangère)
+### ShiftSchedulePeriod (Période de Plan de roulement)
+- **shift_schedule** : Plan de roulement parent (clé étrangère)
 - **start_date** / **end_date** : Période de validité (dates)
 - **Validation métier** : Contrôle des chevauchements de périodes
 - **Relation avec ShiftScheduleWeek** : Une période peut avoir plusieurs semaines
@@ -262,13 +262,14 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Méthodes utilitaires** : `get_weekday_display_french()` pour affichage des jours en français
 - **Contrainte unique** : Combinaison semaine + jour de la semaine unique
 
-### Gestion des plannings de poste
-- **Architecture hiérarchique** : Planning > Période > Semaine > Plan quotidien
-- **Types de planning** : Jour (basé sur la journée) ou Poste (basé sur les postes)
+### Gestion des plans de roulement
+- **Architecture hiérarchique** : Plan de roulement > Période > Semaine > Plan quotidien
+- **Types de planning** : Journée ou Quart
 - **Gestion des périodes** : Définition de périodes avec dates de début et fin, validation des chevauchements
 - **Planification hebdomadaire** : Ajout de semaines numérotées dans chaque période
 - **Assignation quotidienne** : Liaison de plans de rotation quotidiens à chaque jour de la semaine
-- **Interface moderne** : Navigation fluide avec breadcrumbs, modales HTMX et accordéons
+- **Interface moderne** : Navigation fluide avec breadcrumbs, modales HTMX et recherche en temps réel
 - **Validation métier** : Contrôle des dates et prévention des conflits de planification
 - **Flexibilité** : Possibilité d'avoir plusieurs semaines avec des plans différents
 - **Intégration complète** : Utilisation des plans de rotation quotidiens existants
+- **Recherche simplifiée** : Barre de recherche HTMX sans boutons ni filtres, cohérente avec les autres modules

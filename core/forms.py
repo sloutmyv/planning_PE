@@ -208,7 +208,7 @@ class ShiftScheduleForm(forms.ModelForm):
         labels = {
             'name': 'Nom du planning',
             'type': 'Type',
-            'break_times': 'Nombre de pauses',
+            'break_times': 'Durée de la pause',
         }
 
 

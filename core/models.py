@@ -298,8 +298,8 @@ class RotationPeriod(models.Model):
 
 class ShiftSchedule(models.Model):
     TYPE_CHOICES = [
-        ('day', 'Jour'),
-        ('shift', 'Poste'),
+        ('day', 'Journée'),
+        ('shift', 'Quart'),
     ]
     
     name = models.CharField(
@@ -310,8 +310,7 @@ class ShiftSchedule(models.Model):
     type = models.CharField(
         max_length=10,
         choices=TYPE_CHOICES,
-        default='day',
-        help_text="Type de planning: jour ou poste"
+        default='day'
     )
     break_times = models.PositiveIntegerField(
         default=2,

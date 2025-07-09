@@ -1,54 +1,40 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Plannings de Poste - Planning PE{% endblock %}
+{% block title %}Plans de roulement - Planning PE{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Plannings de Poste</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Plans de roulement</h1>
             <button onclick="document.getElementById('schedule-modal').style.display = 'block'" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Nouveau Planning
+                Nouveau Plan
             </button>
         </div>
 
-        <!-- Search and Filter Section -->
+        <!-- Search Section -->
         <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                <div class="flex-1 md:mr-4">
-                    <form method="get" class="flex items-center space-x-4">
-                        <div class="flex-1">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ search_query }}"
-                                   placeholder="Rechercher par nom..." 
-                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div class="w-48">
-                            <select name="type" 
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Tous les types</option>
-                                {% for key, value in type_choices %}
-                                    <option value="{{ key }}" {% if key == type_filter %}selected{% endif %}>
-                                        {{ value }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                            Rechercher
-                        </button>
-                    </form>
+            <div class="flex flex-col sm:flex-row gap-4 items-end">
+                <div class="flex-1">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="Rechercher par nom..." 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                           hx-get="{% url 'shift_schedule_list' %}"
+                           hx-trigger="keyup changed delay:300ms"
+                           hx-target="#shift-schedule-list-content"
+                           hx-include="[name='search']">
                 </div>
             </div>
         </div>
 
         <!-- Schedules List -->
+        <div id="shift-schedule-list-content">
         <div class="bg-white shadow rounded-lg overflow-hidden">
             {% if page_obj.object_list %}
                 <ul class="divide-y divide-gray-200">
@@ -133,8 +119,8 @@
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun planning de poste</h3>
-                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un nouveau planning de poste.</p>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun plan de roulement</h3>
+                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un nouveau plan de roulement.</p>
                 </div>
             {% endif %}
         </div>
@@ -144,13 +130,13 @@
             <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg mt-6">
                 <div class="flex-1 flex justify-between sm:hidden">
                     {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" 
                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Précédent
                         </a>
                     {% endif %}
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" 
                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Suivant
                         </a>
@@ -171,7 +157,7 @@
                     <div>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                             {% if page_obj.has_previous %}
-                                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" 
                                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <span class="sr-only">Précédent</span>
                                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -186,7 +172,7 @@
                                         {{ page_num }}
                                     </span>
                                 {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
-                                    <a href="?page={{ page_num }}&search={{ search_query }}&type={{ type_filter }}" 
+                                    <a href="?page={{ page_num }}&search={{ search_query }}" 
                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
                                         {{ page_num }}
                                     </a>
@@ -194,7 +180,7 @@
                             {% endfor %}
                             
                             {% if page_obj.has_next %}
-                                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" 
                                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <span class="sr-only">Suivant</span>
                                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -207,6 +193,7 @@
                 </div>
             </div>
         {% endif %}
+        </div>
     </div>
 </div>
 
@@ -214,7 +201,7 @@
 <div id="schedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Nouveau Planning de Poste</h3>
+            <h3 class="text-lg font-medium text-gray-900">Nouveau Plan de roulement</h3>
             <button onclick="document.getElementById('schedule-modal').style.display = 'none'" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

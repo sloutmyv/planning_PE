@@ -33,12 +33,9 @@
                 {% endfor %}
             </div>
         {% endif %}
-        <p class="mt-1 text-sm text-gray-500">
-            Choisissez le type de planning : jour (basé sur la journée) ou poste (basé sur les postes).
-        </p>
     </div>
 
-    <!-- Nombre de pauses -->
+    <!-- Durée de la pause -->
     <div>
         <label for="{{ form.break_times.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
             {{ form.break_times.label }}
@@ -52,7 +49,7 @@
             </div>
         {% endif %}
         <p class="mt-1 text-sm text-gray-500">
-            Nombre de pauses par défaut (généralement 2).
+            Durée par défaut = 2h.
         </p>
     </div>
 
