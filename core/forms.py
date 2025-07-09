@@ -1,5 +1,6 @@
 from django import forms
-from .models import Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod
+from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
 
 
 class AgentForm(forms.ModelForm):
@@ -181,3 +182,121 @@ class RotationPeriodForm(forms.ModelForm):
             'start_time': 'Heure de début',
             'end_time': 'Heure de fin',
         }
+
+
+# Shift Schedule Forms
+
+class ShiftScheduleForm(forms.ModelForm):
+    class Meta:
+        model = ShiftSchedule
+        fields = ['name', 'type', 'break_times']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Ex: Planning Été 2024'
+            }),
+            'type': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'break_times': forms.NumberInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'min': '0',
+                'max': '10',
+                'step': '1'
+            }),
+        }
+        labels = {
+            'name': 'Nom du planning',
+            'type': 'Type',
+            'break_times': 'Nombre de pauses',
+        }
+
+
+class ShiftSchedulePeriodForm(forms.ModelForm):
+    class Meta:
+        model = ShiftSchedulePeriod
+        fields = ['shift_schedule', 'start_date', 'end_date']
+        widgets = {
+            'shift_schedule': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+        }
+        labels = {
+            'shift_schedule': 'Planning de poste',
+            'start_date': 'Date de début',
+            'end_date': 'Date de fin',
+        }
+
+
+class ShiftScheduleWeekForm(forms.ModelForm):
+    class Meta:
+        model = ShiftScheduleWeek
+        fields = ['period', 'week_number']
+        widgets = {
+            'period': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'week_number': forms.NumberInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'min': '1',
+                'step': '1'
+            }),
+        }
+        labels = {
+            'period': 'Période',
+            'week_number': 'Numéro de semaine',
+        }
+
+
+class ShiftScheduleDailyPlanForm(forms.ModelForm):
+    class Meta:
+        model = ShiftScheduleDailyPlan
+        fields = ['week', 'weekday', 'daily_rotation_plan']
+        widgets = {
+            'week': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'weekday': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'daily_rotation_plan': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+        }
+        labels = {
+            'week': 'Semaine',
+            'weekday': 'Jour de la semaine',
+            'daily_rotation_plan': 'Plan de rotation quotidien',
+        }
+
+
+# Bulk forms for multiple daily plans per week
+class WeeklyPlanFormSet(forms.BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        self.week = kwargs.pop('week', None)
+        super().__init__(*args, **kwargs)
+        
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if self.week:
+            form.fields['week'].initial = self.week
+            form.fields['week'].widget = forms.HiddenInput()
+
+
+WeeklyPlanFormSet = forms.formset_factory(
+    ShiftScheduleDailyPlanForm,
+    formset=WeeklyPlanFormSet,
+    extra=7,  # 7 days of the week
+    max_num=7,
+    min_num=0,
+    validate_max=True,
+    validate_min=False
+)

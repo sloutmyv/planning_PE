@@ -1,0 +1,263 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Plannings de Poste - Planning PE{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">Plannings de Poste</h1>
+            <button onclick="document.getElementById('schedule-modal').style.display = 'block'" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Nouveau Planning
+            </button>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                <div class="flex-1 md:mr-4">
+                    <form method="get" class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ search_query }}"
+                                   placeholder="Rechercher par nom..." 
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div class="w-48">
+                            <select name="type" 
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Tous les types</option>
+                                {% for key, value in type_choices %}
+                                    <option value="{{ key }}" {% if key == type_filter %}selected{% endif %}>
+                                        {{ value }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                            Rechercher
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedules List -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            {% if page_obj.object_list %}
+                <ul class="divide-y divide-gray-200">
+                    {% for schedule in page_obj.object_list %}
+                        <li class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex-1">
+                                            <h3 class="text-lg font-medium text-gray-900">
+                                                <a href="{% url 'shift_schedule_detail' schedule.id %}" 
+                                                   class="hover:text-blue-600 transition-colors">
+                                                    {{ schedule.name }}
+                                                </a>
+                                            </h3>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <!-- Type Badge -->
+                                            <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full 
+                                                         {% if schedule.type == 'day' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                                {{ schedule.get_type_display }}
+                                            </span>
+                                            
+                                            <!-- Break Times -->
+                                            <span class="text-sm text-gray-500">
+                                                {{ schedule.break_times }} pause{{ schedule.break_times|pluralize }}
+                                            </span>
+                                            
+                                            <!-- Periods Count -->
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                {{ schedule.periods.count }} période{{ schedule.periods.count|pluralize }}
+                                            </span>
+                                            
+                                            <!-- Created Date -->
+                                            <span class="text-xs text-gray-500">
+                                                Créé le {{ schedule.created_at|date:"d/m/Y" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <div class="relative">
+                                        <button onclick="toggleDropdown({{ schedule.id }})" 
+                                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors flex items-center">
+                                            Actions
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        
+                                        <div id="dropdown-{{ schedule.id }}" 
+                                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 hidden">
+                                            <div class="py-1">
+                                                <a href="{% url 'shift_schedule_detail' schedule.id %}" 
+                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                                    Voir les détails
+                                                </a>
+                                                <a href="{% url 'shift_schedule_edit' schedule.id %}" 
+                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                                    Modifier
+                                                </a>
+                                                <form method="post" action="{% url 'shift_schedule_delete' schedule.id %}" 
+                                                      class="inline w-full">
+                                                    {% csrf_token %}
+                                                    <button type="submit" 
+                                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce planning ?')"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                        Supprimer
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun planning de poste</h3>
+                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un nouveau planning de poste.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg mt-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Précédent
+                        </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Suivant
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Affichage de 
+                            <span class="font-medium">{{ page_obj.start_index }}</span>
+                            à 
+                            <span class="font-medium">{{ page_obj.end_index }}</span>
+                            sur 
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                            résultats
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Précédent</span>
+                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                            
+                            {% for page_num in page_obj.paginator.page_range %}
+                                {% if page_num == page_obj.number %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                        {{ page_num }}
+                                    </span>
+                                {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                                    <a href="?page={{ page_num }}&search={{ search_query }}&type={{ type_filter }}" 
+                                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ page_num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&type={{ type_filter }}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Suivant</span>
+                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal for creating new schedule -->
+<div id="schedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Nouveau Planning de Poste</h3>
+            <button onclick="document.getElementById('schedule-modal').style.display = 'none'" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="schedule-form-container">
+            <div hx-get="{% url 'shift_schedule_create' %}" 
+                 hx-trigger="load" 
+                 hx-target="#schedule-form-container" 
+                 hx-swap="innerHTML">
+                <div class="text-center py-4">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 inline" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Chargement...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDropdown(scheduleId) {
+    const dropdown = document.getElementById('dropdown-' + scheduleId);
+    const isHidden = dropdown.classList.contains('hidden');
+    
+    // Close all dropdowns
+    document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+    
+    // Toggle current dropdown
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('button[onclick*="toggleDropdown"]')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+    }
+});
+</script>
+{% endblock %}

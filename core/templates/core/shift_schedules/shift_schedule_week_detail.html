@@ -1,0 +1,192 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ week.period.shift_schedule.name }} - Semaine {{ week.week_number }} - Planning PE{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-4">
+                        <li>
+                            <a href="{% url 'shift_schedule_list' %}" class="text-gray-500 hover:text-gray-700">
+                                Plannings de Poste
+                            </a>
+                        </li>
+                        <li>
+                            <svg class="flex-shrink-0 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </li>
+                        <li>
+                            <a href="{% url 'shift_schedule_detail' week.period.shift_schedule.id %}" class="text-gray-500 hover:text-gray-700">
+                                {{ week.period.shift_schedule.name }}
+                            </a>
+                        </li>
+                        <li>
+                            <svg class="flex-shrink-0 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </li>
+                        <li>
+                            <a href="{% url 'shift_schedule_period_detail' week.period.id %}" class="text-gray-500 hover:text-gray-700">
+                                {{ week.period.start_date|date:"d/m/Y" }} - {{ week.period.end_date|date:"d/m/Y" }}
+                            </a>
+                        </li>
+                        <li>
+                            <svg class="flex-shrink-0 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </li>
+                        <li class="text-gray-900 font-medium">
+                            Semaine {{ week.week_number }}
+                        </li>
+                    </ol>
+                </nav>
+                <h1 class="text-2xl font-bold text-gray-900 mt-2">
+                    Semaine {{ week.week_number }}
+                </h1>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="document.getElementById('daily-plan-modal').style.display = 'block'" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouveau Plan Quotidien
+                </button>
+                <a href="{% url 'shift_schedule_week_edit' week.id %}" 
+                   class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                    Modifier
+                </a>
+            </div>
+        </div>
+
+        <!-- Week Info -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Planning de Poste</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ week.period.shift_schedule.name }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Période</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ week.period.start_date|date:"d/m/Y" }} - {{ week.period.end_date|date:"d/m/Y" }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Numéro de Semaine</h3>
+                    <p class="mt-1 text-sm text-gray-900">{{ week.week_number }}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Plans Quotidiens</h3>
+                    <p class="mt-1 text-sm text-gray-900">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            {{ daily_plans.count }}/7 jours
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Plans Section -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">
+                    Plans Quotidiens
+                </h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6">
+                {% for weekday in weekday_data %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-900">{{ weekday.weekday_name }}</h3>
+                            {% if weekday.has_plan %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    Assigné
+                                </span>
+                            {% else %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Non assigné
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if weekday.has_plan %}
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-900 font-medium">{{ weekday.plan.daily_rotation_plan.designation }}</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Type: {{ weekday.plan.daily_rotation_plan.schedule_type.designation }}
+                                </p>
+                                <div class="flex items-center space-x-2 mt-3">
+                                    <a href="{% url 'shift_schedule_daily_plan_edit' weekday.plan.id %}" 
+                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                        Modifier
+                                    </a>
+                                    <form method="post" action="{% url 'shift_schedule_daily_plan_delete' weekday.plan.id %}" 
+                                          class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce plan quotidien ?')"
+                                                class="text-red-600 hover:text-red-800 text-xs font-medium">
+                                            Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">Aucun plan assigné</p>
+                                <button onclick="openDailyPlanModal({{ weekday.weekday_num }}, '{{ weekday.weekday_name }}')" 
+                                        class="text-blue-600 hover:text-blue-800 text-xs font-medium mt-2">
+                                    Assigner un plan
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for creating new daily plan -->
+<div id="daily-plan-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Nouveau Plan Quotidien</h3>
+            <button onclick="document.getElementById('daily-plan-modal').style.display = 'none'" 
+                    class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="daily-plan-form-container">
+            <div hx-get="{% url 'shift_schedule_daily_plan_create' week.id %}" 
+                 hx-trigger="load" 
+                 hx-target="#daily-plan-form-container" 
+                 hx-swap="innerHTML">
+                <div class="text-center py-4">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 inline" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Chargement...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDailyPlanModal(weekday, weekdayName) {
+    document.getElementById('daily-plan-modal').style.display = 'block';
+    // Store the selected weekday for the form
+    window.selectedWeekday = weekday;
+    window.selectedWeekdayName = weekdayName;
+}
+</script>
+{% endblock %}

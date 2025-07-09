@@ -56,4 +56,28 @@ urlpatterns = [
     
     # API endpoints for periods
     path('api/plans/<int:plan_id>/periods/', views.api_plan_periods, name='api_plan_periods'),
+    
+    # Shift Schedule URLs
+    path('shift-schedules/', views.shift_schedule_list, name='shift_schedule_list'),
+    path('shift-schedules/create/', views.shift_schedule_create, name='shift_schedule_create'),
+    path('shift-schedules/<int:schedule_id>/', views.shift_schedule_detail, name='shift_schedule_detail'),
+    path('shift-schedules/<int:schedule_id>/edit/', views.shift_schedule_edit, name='shift_schedule_edit'),
+    path('shift-schedules/<int:schedule_id>/delete/', views.shift_schedule_delete, name='shift_schedule_delete'),
+    
+    # Shift Schedule Period URLs
+    path('shift-schedules/<int:schedule_id>/periods/create/', views.shift_schedule_period_create, name='shift_schedule_period_create'),
+    path('shift-schedule-periods/<int:period_id>/', views.shift_schedule_period_detail, name='shift_schedule_period_detail'),
+    path('shift-schedule-periods/<int:period_id>/edit/', views.shift_schedule_period_edit, name='shift_schedule_period_edit'),
+    path('shift-schedule-periods/<int:period_id>/delete/', views.shift_schedule_period_delete, name='shift_schedule_period_delete'),
+    
+    # Shift Schedule Week URLs
+    path('shift-schedule-periods/<int:period_id>/weeks/create/', views.shift_schedule_week_create, name='shift_schedule_week_create'),
+    path('shift-schedule-weeks/<int:week_id>/', views.shift_schedule_week_detail, name='shift_schedule_week_detail'),
+    path('shift-schedule-weeks/<int:week_id>/edit/', views.shift_schedule_week_edit, name='shift_schedule_week_edit'),
+    path('shift-schedule-weeks/<int:week_id>/delete/', views.shift_schedule_week_delete, name='shift_schedule_week_delete'),
+    
+    # Shift Schedule Daily Plan URLs
+    path('shift-schedule-weeks/<int:week_id>/daily-plans/create/', views.shift_schedule_daily_plan_create, name='shift_schedule_daily_plan_create'),
+    path('shift-schedule-daily-plans/<int:daily_plan_id>/edit/', views.shift_schedule_daily_plan_edit, name='shift_schedule_daily_plan_edit'),
+    path('shift-schedule-daily-plans/<int:daily_plan_id>/delete/', views.shift_schedule_daily_plan_delete, name='shift_schedule_daily_plan_delete'),
 ]

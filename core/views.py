@@ -8,8 +8,11 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.db import transaction
-from .models import Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod
-from .forms import AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm
+from django import forms
+from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
+from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
+                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet)
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -1103,3 +1106,388 @@ def api_plan_periods(request, plan_id):
         'periods': periods_data,
         'count': len(periods_data)
     })
+
+
+# Shift Schedule Views
+
+@login_required
+@admin_required
+def shift_schedule_list(request):
+    """Display paginated list of shift schedules with search and filtering"""
+    # Get search parameters
+    search_query = request.GET.get('search', '')
+    type_filter = request.GET.get('type', '')
+    
+    # Build query
+    schedules = ShiftSchedule.objects.all()
+    
+    if search_query:
+        schedules = schedules.filter(
+            Q(name__icontains=search_query)
+        )
+    
+    if type_filter:
+        schedules = schedules.filter(type=type_filter)
+    
+    # Order by name
+    schedules = schedules.order_by('name')
+    
+    # Pagination
+    paginator = Paginator(schedules, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'type_filter': type_filter,
+        'type_choices': ShiftSchedule.TYPE_CHOICES,
+        'current_agent': get_agent_from_user(request.user),
+    }
+    
+    return render(request, 'core/shift_schedules/shift_schedule_list.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_create(request):
+    """Create a new shift schedule"""
+    if request.method == 'POST':
+        form = ShiftScheduleForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                schedule = form.save()
+                messages.success(request, f'Planning de poste "{schedule.name}" créé avec succès.')
+                return redirect('shift_schedule_list')
+    else:
+        form = ShiftScheduleForm()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
+        'form': form,
+        'schedule': None,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_edit(request, schedule_id):
+    """Edit an existing shift schedule"""
+    schedule = get_object_or_404(ShiftSchedule, id=schedule_id)
+    
+    if request.method == 'POST':
+        form = ShiftScheduleForm(request.POST, instance=schedule)
+        if form.is_valid():
+            with transaction.atomic():
+                schedule = form.save()
+                messages.success(request, f'Planning de poste "{schedule.name}" modifié avec succès.')
+                return redirect('shift_schedule_list')
+    else:
+        form = ShiftScheduleForm(instance=schedule)
+    
+    return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
+        'form': form,
+        'schedule': schedule,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def shift_schedule_delete(request, schedule_id):
+    """Delete a shift schedule"""
+    schedule = get_object_or_404(ShiftSchedule, id=schedule_id)
+    schedule_name = schedule.name
+    
+    with transaction.atomic():
+        schedule.delete()
+        messages.success(request, f'Planning de poste "{schedule_name}" supprimé avec succès.')
+    
+    return redirect('shift_schedule_list')
+
+
+@login_required
+@admin_required
+def shift_schedule_detail(request, schedule_id):
+    """Display shift schedule details with periods"""
+    schedule = get_object_or_404(ShiftSchedule, id=schedule_id)
+    periods = schedule.periods.all().order_by('start_date')
+    
+    context = {
+        'schedule': schedule,
+        'periods': periods,
+        'current_agent': get_agent_from_user(request.user),
+    }
+    
+    return render(request, 'core/shift_schedules/shift_schedule_detail.html', context)
+
+
+# Shift Schedule Period Views
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_period_create(request, schedule_id):
+    """Create a new period for a shift schedule"""
+    schedule = get_object_or_404(ShiftSchedule, id=schedule_id)
+    
+    if request.method == 'POST':
+        form = ShiftSchedulePeriodForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                period = form.save(commit=False)
+                period.shift_schedule = schedule
+                period.save()
+                messages.success(request, f'Période créée avec succès pour "{schedule.name}".')
+                return redirect('shift_schedule_detail', schedule_id=schedule.id)
+    else:
+        form = ShiftSchedulePeriodForm(initial={'shift_schedule': schedule})
+        form.fields['shift_schedule'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_period_form_htmx.html', {
+        'form': form,
+        'schedule': schedule,
+        'period': None,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_period_edit(request, period_id):
+    """Edit an existing shift schedule period"""
+    period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
+    
+    if request.method == 'POST':
+        form = ShiftSchedulePeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            with transaction.atomic():
+                period = form.save()
+                messages.success(request, f'Période modifiée avec succès.')
+                return redirect('shift_schedule_detail', schedule_id=period.shift_schedule.id)
+    else:
+        form = ShiftSchedulePeriodForm(instance=period)
+        form.fields['shift_schedule'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_period_form_htmx.html', {
+        'form': form,
+        'schedule': period.shift_schedule,
+        'period': period,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def shift_schedule_period_delete(request, period_id):
+    """Delete a shift schedule period"""
+    period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
+    schedule = period.shift_schedule
+    
+    with transaction.atomic():
+        period.delete()
+        messages.success(request, f'Période supprimée avec succès.')
+    
+    return redirect('shift_schedule_detail', schedule_id=schedule.id)
+
+
+@login_required
+@admin_required
+def shift_schedule_period_detail(request, period_id):
+    """Display period details with weeks"""
+    period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
+    weeks = period.weeks.all().order_by('week_number')
+    
+    context = {
+        'period': period,
+        'weeks': weeks,
+        'current_agent': get_agent_from_user(request.user),
+    }
+    
+    return render(request, 'core/shift_schedules/shift_schedule_period_detail.html', context)
+
+
+# Shift Schedule Week Views
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_week_create(request, period_id):
+    """Create a new week for a shift schedule period"""
+    period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
+    
+    if request.method == 'POST':
+        form = ShiftScheduleWeekForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                week = form.save(commit=False)
+                week.period = period
+                week.save()
+                messages.success(request, f'Semaine {week.week_number} créée avec succès.')
+                return redirect('shift_schedule_period_detail', period_id=period.id)
+    else:
+        # Auto-generate next week number
+        existing_weeks = period.weeks.all()
+        next_week_number = existing_weeks.count() + 1
+        form = ShiftScheduleWeekForm(initial={'period': period, 'week_number': next_week_number})
+        form.fields['period'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_week_form_htmx.html', {
+        'form': form,
+        'period': period,
+        'week': None,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_week_edit(request, week_id):
+    """Edit an existing shift schedule week"""
+    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    
+    if request.method == 'POST':
+        form = ShiftScheduleWeekForm(request.POST, instance=week)
+        if form.is_valid():
+            with transaction.atomic():
+                week = form.save()
+                messages.success(request, f'Semaine {week.week_number} modifiée avec succès.')
+                return redirect('shift_schedule_period_detail', period_id=week.period.id)
+    else:
+        form = ShiftScheduleWeekForm(instance=week)
+        form.fields['period'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_week_form_htmx.html', {
+        'form': form,
+        'period': week.period,
+        'week': week,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def shift_schedule_week_delete(request, week_id):
+    """Delete a shift schedule week"""
+    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    period = week.period
+    
+    with transaction.atomic():
+        week.delete()
+        messages.success(request, f'Semaine {week.week_number} supprimée avec succès.')
+    
+    return redirect('shift_schedule_period_detail', period_id=period.id)
+
+
+@login_required
+@admin_required
+def shift_schedule_week_detail(request, week_id):
+    """Display week details with daily plans"""
+    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    daily_plans = week.daily_plans.all().order_by('weekday')
+    
+    # Create a list of weekdays with their plans
+    weekday_data = []
+    for weekday_num, weekday_name in ShiftScheduleDailyPlan.WEEKDAY_CHOICES:
+        plan = daily_plans.filter(weekday=weekday_num).first()
+        weekday_data.append({
+            'weekday_num': weekday_num,
+            'weekday_name': weekday_name,
+            'plan': plan,
+            'has_plan': plan is not None
+        })
+    
+    # Get all rotation plans for the form
+    rotation_plans = DailyRotationPlan.objects.all().order_by('designation')
+    
+    context = {
+        'week': week,
+        'daily_plans': daily_plans,
+        'weekday_data': weekday_data,
+        'rotation_plans': rotation_plans,
+        'weekday_choices': ShiftScheduleDailyPlan.WEEKDAY_CHOICES,
+        'current_agent': get_agent_from_user(request.user),
+    }
+    
+    return render(request, 'core/shift_schedules/shift_schedule_week_detail.html', context)
+
+
+# Shift Schedule Daily Plan Views
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_daily_plan_create(request, week_id):
+    """Create or update daily plans for a week"""
+    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    
+    if request.method == 'POST':
+        form = ShiftScheduleDailyPlanForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                daily_plan = form.save(commit=False)
+                daily_plan.week = week
+                daily_plan.save()
+                weekday_name = daily_plan.get_weekday_display_french()
+                messages.success(request, f'Plan quotidien pour {weekday_name} créé avec succès.')
+                return redirect('shift_schedule_week_detail', week_id=week.id)
+    else:
+        form = ShiftScheduleDailyPlanForm(initial={'week': week})
+        form.fields['week'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+        'form': form,
+        'week': week,
+        'daily_plan': None,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_daily_plan_edit(request, daily_plan_id):
+    """Edit an existing daily plan"""
+    daily_plan = get_object_or_404(ShiftScheduleDailyPlan, id=daily_plan_id)
+    
+    if request.method == 'POST':
+        form = ShiftScheduleDailyPlanForm(request.POST, instance=daily_plan)
+        if form.is_valid():
+            with transaction.atomic():
+                daily_plan = form.save()
+                weekday_name = daily_plan.get_weekday_display_french()
+                messages.success(request, f'Plan quotidien pour {weekday_name} modifié avec succès.')
+                return redirect('shift_schedule_week_detail', week_id=daily_plan.week.id)
+    else:
+        form = ShiftScheduleDailyPlanForm(instance=daily_plan)
+        form.fields['week'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+        'form': form,
+        'week': daily_plan.week,
+        'daily_plan': daily_plan,
+        'current_agent': get_agent_from_user(request.user),
+    })
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def shift_schedule_daily_plan_delete(request, daily_plan_id):
+    """Delete a daily plan"""
+    daily_plan = get_object_or_404(ShiftScheduleDailyPlan, id=daily_plan_id)
+    week = daily_plan.week
+    weekday_name = daily_plan.get_weekday_display_french()
+    
+    with transaction.atomic():
+        daily_plan.delete()
+        messages.success(request, f'Plan quotidien pour {weekday_name} supprimé avec succès.')
+    
+    return redirect('shift_schedule_week_detail', week_id=week.id)

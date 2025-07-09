@@ -294,3 +294,160 @@ class RotationPeriod(models.Model):
         verbose_name = "Période de Rotation"
         verbose_name_plural = "Périodes de Rotation"
         ordering = ['start_date', 'start_time']
+
+
+class ShiftSchedule(models.Model):
+    TYPE_CHOICES = [
+        ('day', 'Jour'),
+        ('shift', 'Poste'),
+    ]
+    
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text="Nom du planning de poste (ex: 'Planning Été 2024')"
+    )
+    type = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES,
+        default='day',
+        help_text="Type de planning: jour ou poste"
+    )
+    break_times = models.PositiveIntegerField(
+        default=2,
+        help_text="Nombre de pauses par défaut (généralement 2)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "Planning de Poste"
+        verbose_name_plural = "Plannings de Poste"
+        ordering = ['name']
+
+
+class ShiftSchedulePeriod(models.Model):
+    shift_schedule = models.ForeignKey(
+        ShiftSchedule,
+        on_delete=models.CASCADE,
+        related_name='periods',
+        help_text="Planning de poste auquel appartient cette période"
+    )
+    start_date = models.DateField(
+        help_text="Date de début de la période"
+    )
+    end_date = models.DateField(
+        help_text="Date de fin de la période"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Validate that end_date >= start_date
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': 'La date de fin doit être postérieure ou égale à la date de début.'
+            })
+        
+        # Check for overlapping periods within the same shift schedule
+        if self.shift_schedule_id:
+            overlapping_periods = ShiftSchedulePeriod.objects.filter(
+                shift_schedule=self.shift_schedule
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            for period in overlapping_periods:
+                # Check if date ranges overlap
+                if (self.start_date <= period.end_date and 
+                    self.end_date >= period.start_date):
+                    raise ValidationError({
+                        'start_date': f'Cette période chevauche avec une période existante ({period.start_date} - {period.end_date}).',
+                        'end_date': f'Cette période chevauche avec une période existante ({period.start_date} - {period.end_date}).'
+                    })
+    
+    def __str__(self):
+        return f"{self.shift_schedule.name} - {self.start_date} à {self.end_date}"
+    
+    class Meta:
+        verbose_name = "Période de Planning de Poste"
+        verbose_name_plural = "Périodes de Planning de Poste"
+        ordering = ['start_date']
+
+
+class ShiftScheduleWeek(models.Model):
+    period = models.ForeignKey(
+        ShiftSchedulePeriod,
+        on_delete=models.CASCADE,
+        related_name='weeks',
+        help_text="Période à laquelle appartient cette semaine"
+    )
+    week_number = models.PositiveIntegerField(
+        help_text="Numéro de la semaine dans la période (1, 2, 3, etc.)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.period.shift_schedule.name} - Semaine {self.week_number}"
+    
+    class Meta:
+        verbose_name = "Semaine de Planning"
+        verbose_name_plural = "Semaines de Planning"
+        unique_together = ['period', 'week_number']
+        ordering = ['period', 'week_number']
+
+
+class ShiftScheduleDailyPlan(models.Model):
+    WEEKDAY_CHOICES = [
+        (1, 'Lundi'),
+        (2, 'Mardi'),
+        (3, 'Mercredi'),
+        (4, 'Jeudi'),
+        (5, 'Vendredi'),
+        (6, 'Samedi'),
+        (7, 'Dimanche'),
+    ]
+    
+    week = models.ForeignKey(
+        ShiftScheduleWeek,
+        on_delete=models.CASCADE,
+        related_name='daily_plans',
+        help_text="Semaine à laquelle appartient ce plan quotidien"
+    )
+    weekday = models.IntegerField(
+        choices=WEEKDAY_CHOICES,
+        help_text="Jour de la semaine (1=Lundi, 7=Dimanche)"
+    )
+    daily_rotation_plan = models.ForeignKey(
+        DailyRotationPlan,
+        on_delete=models.PROTECT,
+        help_text="Plan de rotation quotidienne assigné à ce jour"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def get_weekday_display_french(self):
+        """Return French weekday name"""
+        weekday_names = {
+            1: 'Lundi',
+            2: 'Mardi',
+            3: 'Mercredi',
+            4: 'Jeudi',
+            5: 'Vendredi',
+            6: 'Samedi',
+            7: 'Dimanche'
+        }
+        return weekday_names.get(self.weekday, 'Inconnu')
+    
+    def __str__(self):
+        return f"{self.week} - {self.get_weekday_display_french()}: {self.daily_rotation_plan.designation}"
+    
+    class Meta:
+        verbose_name = "Plan Quotidien de Planning"
+        verbose_name_plural = "Plans Quotidiens de Planning"
+        unique_together = ['week', 'weekday']
+        ordering = ['week', 'weekday']

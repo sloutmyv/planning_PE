@@ -189,6 +189,7 @@ L'interface principale propose :
   - Gestion des Postes
   - Types d'Horaire
   - Plans de Rotation
+  - Plannings de Poste
   - Interface d'Administration Django
 
 ## Tests
@@ -235,3 +236,39 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Validation métier** : Contrôle des chevauchements et validation des horaires de nuit (22h-6h)
 - **Méthodes calculées** : Detection automatique des équipes de nuit et calcul de durée
 - **Statut d'activité** : Méthode `is_active()` pour détecter les périodes expirées (date de fin antérieure à aujourd'hui)
+
+### ShiftSchedule (Planning de Poste)
+- **name** : Nom du planning de poste (unique, ex: "Planning Été 2024")
+- **type** : Type de planning (jour/poste) - choix entre "day" et "shift"
+- **break_times** : Nombre de pauses par défaut (généralement 2)
+- **Relation avec ShiftSchedulePeriod** : Un planning peut avoir plusieurs périodes
+
+### ShiftSchedulePeriod (Période de Planning de Poste)
+- **shift_schedule** : Planning de poste parent (clé étrangère)
+- **start_date** / **end_date** : Période de validité (dates)
+- **Validation métier** : Contrôle des chevauchements de périodes
+- **Relation avec ShiftScheduleWeek** : Une période peut avoir plusieurs semaines
+
+### ShiftScheduleWeek (Semaine de Planning)
+- **period** : Période parent (clé étrangère vers ShiftSchedulePeriod)
+- **week_number** : Numéro de la semaine dans la période (1, 2, 3, etc.)
+- **Relation avec ShiftScheduleDailyPlan** : Une semaine peut avoir jusqu'à 7 plans quotidiens
+- **Contrainte unique** : Combinaison période + numéro de semaine unique
+
+### ShiftScheduleDailyPlan (Plan Quotidien de Planning)
+- **week** : Semaine parent (clé étrangère vers ShiftScheduleWeek)
+- **weekday** : Jour de la semaine (1=Lundi, 7=Dimanche)
+- **daily_rotation_plan** : Plan de rotation quotidien assigné (clé étrangère vers DailyRotationPlan)
+- **Méthodes utilitaires** : `get_weekday_display_french()` pour affichage des jours en français
+- **Contrainte unique** : Combinaison semaine + jour de la semaine unique
+
+### Gestion des plannings de poste
+- **Architecture hiérarchique** : Planning > Période > Semaine > Plan quotidien
+- **Types de planning** : Jour (basé sur la journée) ou Poste (basé sur les postes)
+- **Gestion des périodes** : Définition de périodes avec dates de début et fin, validation des chevauchements
+- **Planification hebdomadaire** : Ajout de semaines numérotées dans chaque période
+- **Assignation quotidienne** : Liaison de plans de rotation quotidiens à chaque jour de la semaine
+- **Interface moderne** : Navigation fluide avec breadcrumbs, modales HTMX et accordéons
+- **Validation métier** : Contrôle des dates et prévention des conflits de planification
+- **Flexibilité** : Possibilité d'avoir plusieurs semaines avec des plans différents
+- **Intégration complète** : Utilisation des plans de rotation quotidiens existants
