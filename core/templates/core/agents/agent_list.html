@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Gestion des Agents - Planning PE{% endblock %}
+{% block title %}Liste des Agents - Planning PE{% endblock %}
 
 {% block content %}
 <script>
@@ -135,7 +135,7 @@ function changeAgentPermission(agentId, newPermission, agentName) {
     {% csrf_token %}
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Gestion des Agents</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Liste des Agents</h1>
         <button onclick="clearModalAndCreate()" 
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

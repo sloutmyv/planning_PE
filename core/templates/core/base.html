@@ -109,11 +109,11 @@
                                         <div class="py-1">
                                             <a href="{% url 'agent_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Gestion des Agents
+                                                    Liste des Agents
                                             </a>
                                             <a href="{% url 'function_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Gestion des Postes
+                                                Liste des Postes
                                             </a>
                                             <a href="{% url 'schedule_type_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
@@ -121,11 +121,11 @@
                                             </a>
                                             <a href="{% url 'daily_rotation_plan_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Plans de Rotation Quotidien
+                                                Rythmes Quotidien
                                             </a>
                                             <a href="{% url 'shift_schedule_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Plans de roulement
+                                                Roulements Hebdomadaires
                                             </a>
                                             {% if current_agent.is_super_admin %}
                                                 <div class="border-t border-gray-100"></div>

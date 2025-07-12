@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Gestion des types d'horaire - Planning PE{% endblock %}
+{% block title %}Types d'horaire - Planning PE{% endblock %}
 
 {% block content %}
 <script>
@@ -38,7 +38,7 @@ function clearModalAndEditScheduleType(editUrl) {
     {% csrf_token %}
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Gestion des Types d'horaire</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Types d'horaire</h1>
         <button onclick="clearModalAndCreateScheduleType()" 
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

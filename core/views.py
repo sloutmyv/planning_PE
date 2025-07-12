@@ -617,7 +617,7 @@ def schedule_type_delete(request, pk):
         if linked_plans.count() > 3:
             plan_names += f" et {linked_plans.count() - 3} autre(s)"
         
-        error_message = f'Impossible de supprimer le type d\'horaire "{designation}". Il est utilisé par les plans de rotation quotidienne suivants : {plan_names}.'
+        error_message = f'Impossible de supprimer le type d\'horaire "{designation}". Il est utilisé par les rythmes quotidiens suivants : {plan_names}.'
         
         if request.headers.get('HX-Request'):
             return HttpResponse(
@@ -629,7 +629,7 @@ def schedule_type_delete(request, pk):
                 f'<strong>Erreur de suppression</strong>'
                 f'</div>'
                 f'<p class="mt-2">{error_message}</p>'
-                f'<p class="text-sm mt-2">Veuillez d\'abord supprimer ou modifier ces plans de rotation quotidienne avant de supprimer ce type d\'horaire.</p>'
+                f'<p class="text-sm mt-2">Veuillez d\'abord supprimer ou modifier ces rythme quotidien avant de supprimer ce type d\'horaire.</p>'
                 f'</div>',
                 status=400
             )

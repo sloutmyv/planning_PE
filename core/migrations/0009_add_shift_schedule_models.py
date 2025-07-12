@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                 ('weekday', models.IntegerField(choices=[(1, 'Lundi'), (2, 'Mardi'), (3, 'Mercredi'), (4, 'Jeudi'), (5, 'Vendredi'), (6, 'Samedi'), (7, 'Dimanche')], help_text='Jour de la semaine (1=Lundi, 7=Dimanche)')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('daily_rotation_plan', models.ForeignKey(help_text='Plan de rotation quotidienne assigné à ce jour', on_delete=django.db.models.deletion.PROTECT, to='core.dailyrotationplan')),
+                ('daily_rotation_plan', models.ForeignKey(help_text='Rythme quotidien assigné à ce jour', on_delete=django.db.models.deletion.PROTECT, to='core.dailyrotationplan')),
                 ('week', models.ForeignKey(help_text='Semaine à laquelle appartient ce plan quotidien', on_delete=django.db.models.deletion.CASCADE, related_name='daily_plans', to='core.shiftscheduleweek')),
             ],
             options={

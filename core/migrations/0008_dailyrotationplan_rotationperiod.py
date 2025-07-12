@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
                 ('schedule_type', models.ForeignKey(help_text="Type d'horaire qui s'applique à toutes les périodes de ce plan", on_delete=django.db.models.deletion.PROTECT, to='core.scheduletype')),
             ],
             options={
-                'verbose_name': 'Plan de Rotation Quotidien',
-                'verbose_name_plural': 'Plans de Rotation Quotidiens',
+                'verbose_name': 'Rythme Quotidien',
+                'verbose_name_plural': 'Rythmes Quotidiens',
                 'ordering': ['designation'],
             },
         ),

@@ -64,7 +64,7 @@ class AgentForm(forms.ModelForm):
             'matricule': 'Matricule',
             'first_name': 'Prénom',
             'last_name': 'Nom de famille',
-            'grade': 'Grade',
+            'grade': 'Collège',
             'permission_level': 'Niveau de permission',
             'hire_date': 'Date d\'embauche',
             'departure_date': 'Date de départ',
@@ -176,7 +176,7 @@ class RotationPeriodForm(forms.ModelForm):
             }),
         }
         labels = {
-            'daily_rotation_plan': 'Plan de rotation quotidien',
+            'daily_rotation_plan': 'Rythme quotidien',
             'start_date': 'Date de début',
             'end_date': 'Date de fin',
             'start_time': 'Heure de début',
@@ -274,7 +274,7 @@ class ShiftScheduleDailyPlanForm(forms.ModelForm):
         labels = {
             'week': 'Semaine',
             'weekday': 'Jour de la semaine',
-            'daily_rotation_plan': 'Plan de rotation quotidien',
+            'daily_rotation_plan': 'Rythme quotidien',
         }
 
 

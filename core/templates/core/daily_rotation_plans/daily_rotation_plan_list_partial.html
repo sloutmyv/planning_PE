@@ -110,7 +110,7 @@
             <!-- Periods Header -->
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h4 class="text-md font-medium text-gray-900">
-                    Périodes de rotation quotidienne (<span x-text="periods.length">{{ plan.periods.count }}</span>)
+                    Périodes pour ce rythme quotidien (<span x-text="periods.length">{{ plan.periods.count }}</span>)
                 </h4>
                 <button @click="openPeriodModal({{ plan.pk }})"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
@@ -204,7 +204,7 @@
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
-        <p class="mt-2 text-sm text-gray-500">Aucun plan de rotation quotidien trouvé</p>
+        <p class="mt-2 text-sm text-gray-500">Aucun rythme quotidien trouvé</p>
         {% if search_query %}
         <p class="text-xs text-gray-400">Essayez de modifier votre recherche</p>
         {% endif %}

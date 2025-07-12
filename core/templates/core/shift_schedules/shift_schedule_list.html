@@ -1,18 +1,18 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Plans de roulement - Planning PE{% endblock %}
+{% block title %}Roulements Hebdomadaires - Planning PE{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Plans de roulement</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Roulements hebdomadaires</h1>
             <button onclick="document.getElementById('schedule-modal').style.display = 'block'" 
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Nouveau Plan
+                Nouveau Roulement
             </button>
         </div>
 
@@ -120,7 +120,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun plan de roulement</h3>
-                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un nouveau plan de roulement.</p>
+                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un roulement hebdomadaire.</p>
                 </div>
             {% endif %}
         </div>
@@ -201,7 +201,7 @@
 <div id="schedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Nouveau Plan de roulement</h3>
+            <h3 class="text-lg font-medium text-gray-900">Nouveau roulement hebdomadaire</h3>
             <button onclick="document.getElementById('schedule-modal').style.display = 'none'" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

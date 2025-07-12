@@ -46,18 +46,18 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Abréviation optionnelle** : Code court de 2-3 lettres majuscules (ex: MAT, APM, NUIT)
 - **Validation automatique** : Contrôle du format des couleurs et abréviations
 - **Affichage coloré** : Aperçu des couleurs dans la liste avec codes hexadécimaux
-- **Protection contre suppression** : Avertissements visuels et blocage de suppression pour les types liés à des plans de rotation
+- **Protection contre suppression** : Avertissements visuels et blocage de suppression pour les types liés à des rythmes quotidiens
 
-### Gestion des plans de rotation quotidienne
-- **Interface accordion** : Expansion/contraction des plans pour visualiser les périodes
-- **Visualisation multiple** : Plusieurs plans peuvent être ouverts simultanément
-- **Gestion des périodes intégrée** : Ajout/modification/suppression des périodes directement dans chaque plan
-- **Chargement à la demande** : Les périodes se chargent uniquement à l'expansion du plan
+### Gestion des rythmes quotidiens
+- **Interface accordion** : Expansion/contraction des rythmes pour visualiser les périodes
+- **Visualisation multiple** : Plusieurs rythmes peuvent être ouverts simultanément
+- **Gestion des périodes intégrée** : Ajout/modification/suppression des périodes directement dans chaque rythme
+- **Chargement à la demande** : Les périodes se chargent uniquement à l'expansion du rythme
 - **Validation métier** : Contrôle des chevauchements de périodes et validation des horaires de nuit
-- **Association automatique** : Les nouvelles périodes sont automatiquement liées au plan courant
+- **Association automatique** : Les nouvelles périodes sont automatiquement liées au rythme courant
 - **Affichage structuré** : Grille alignée avec colonnes dédiées (Nom, Type d'horaire, Nombre de périodes, Date de création)
 - **Indicateurs de statut** : Identification visuelle des périodes expirées avec couleurs et badges
-- **Terminologie cohérente** : Utilisation systématique de "plans de rotation quotidienne" dans toute l'interface
+- **Terminologie cohérente** : Utilisation systématique de "rythmes quotidiens" dans toute l'interface
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -188,8 +188,8 @@ L'interface principale propose :
   - Gestion des Agents
   - Gestion des Postes
   - Types d'Horaire
-  - Plans de Rotation Quotidien
-  - Plans de roulement
+  - Rythmes Quotidien
+  - Roulements Hebdomadaires
   - Interface d'Administration Django
 
 ## Tests
@@ -223,28 +223,28 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **color** : Code couleur hexadécimal pour identification visuelle (ex: #FF0000)
 - **Validation automatique** : Format hexadécimal pour les couleurs et format alphabétique majuscule pour les abréviations
 
-### DailyRotationPlan (Plan de Rotation Quotidienne)
-- **designation** : Nom du plan de rotation (unique)
-- **description** : Description optionnelle du plan
+### DailyRotationPlan (Rythme Quotidien)
+- **designation** : Nom du rythme quotidien (unique)
+- **description** : Description optionnelle du rythme
 - **schedule_type** : Type d'horaire associé (clé étrangère vers ScheduleType)
-- **Relation avec RotationPeriod** : Un plan peut avoir plusieurs périodes
+- **Relation avec RotationPeriod** : Un rythme peut avoir plusieurs périodes
 
 ### RotationPeriod (Période de Rotation)
-- **daily_rotation_plan** : Plan de rotation parent (clé étrangère)
+- **daily_rotation_plan** : Rythme quotidien parent (clé étrangère)
 - **start_date** / **end_date** : Période de validité (dates)
 - **start_time** / **end_time** : Horaires quotidiens (heures)
 - **Validation métier** : Contrôle des chevauchements et validation des horaires de nuit (22h-6h)
 - **Méthodes calculées** : Detection automatique des équipes de nuit et calcul de durée
 - **Statut d'activité** : Méthode `is_active()` pour détecter les périodes expirées (date de fin antérieure à aujourd'hui)
 
-### ShiftSchedule (Plan de roulement)
-- **name** : Nom du plan de roulement (unique, ex: "Planning Été 2024")
+### ShiftSchedule (Roulement Hebdomadaire)
+- **name** : Nom du roulement hebdomadaire (unique, ex: "Planning Été 2024")
 - **type** : Type de planning - choix entre "Journée" et "Quart"
 - **break_times** : Nombre de pauses par défaut (généralement 2)
-- **Relation avec ShiftSchedulePeriod** : Un plan peut avoir plusieurs périodes
+- **Relation avec ShiftSchedulePeriod** : Un roulement peut avoir plusieurs périodes
 
-### ShiftSchedulePeriod (Période de Plan de roulement)
-- **shift_schedule** : Plan de roulement parent (clé étrangère)
+### ShiftSchedulePeriod (Période de Roulement Hebdomadaire)
+- **shift_schedule** : Roulement hebdomadaire parent (clé étrangère)
 - **start_date** / **end_date** : Période de validité (dates)
 - **Validation métier** : Contrôle des chevauchements de périodes
 - **Relation avec ShiftScheduleWeek** : Une période peut avoir plusieurs semaines
@@ -255,21 +255,21 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Relation avec ShiftScheduleDailyPlan** : Une semaine peut avoir jusqu'à 7 plans quotidiens
 - **Contrainte unique** : Combinaison période + numéro de semaine unique
 
-### ShiftScheduleDailyPlan (Plan Quotidien de Planning)
+### ShiftScheduleDailyPlan (Rythme Quotidien de Planning)
 - **week** : Semaine parent (clé étrangère vers ShiftScheduleWeek)
 - **weekday** : Jour de la semaine (1=Lundi, 7=Dimanche)
-- **daily_rotation_plan** : Plan de rotation quotidien assigné (clé étrangère vers DailyRotationPlan)
+- **daily_rotation_plan** : Rythme quotidien assigné (clé étrangère vers DailyRotationPlan)
 - **Méthodes utilitaires** : `get_weekday_display_french()` pour affichage des jours en français
 - **Contrainte unique** : Combinaison semaine + jour de la semaine unique
 
-### Gestion des plans de roulement
-- **Architecture hiérarchique** : Plan de roulement > Période > Semaine > Plan quotidien
+### Gestion des roulements hebdomadaires
+- **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien
 - **Types de planning** : Journée ou Quart
 - **Gestion des périodes** : Définition de périodes avec dates de début et fin, validation des chevauchements
 - **Planification hebdomadaire** : Ajout de semaines numérotées dans chaque période
-- **Assignation quotidienne** : Liaison de plans de rotation quotidiens à chaque jour de la semaine
+- **Assignation quotidienne** : Liaison de rythmes quotidiens à chaque jour de la semaine
 - **Interface moderne** : Navigation fluide avec breadcrumbs, modales HTMX et recherche en temps réel
 - **Validation métier** : Contrôle des dates et prévention des conflits de planification
-- **Flexibilité** : Possibilité d'avoir plusieurs semaines avec des plans différents
-- **Intégration complète** : Utilisation des plans de rotation quotidiens existants
+- **Flexibilité** : Possibilité d'avoir plusieurs semaines avec des rythmes différents
+- **Intégration complète** : Utilisation des rythmes quotidiens existants
 - **Recherche simplifiée** : Barre de recherche HTMX sans boutons ni filtres, cohérente avec les autres modules

@@ -200,8 +200,8 @@ class DailyRotationPlan(models.Model):
         return self.designation
     
     class Meta:
-        verbose_name = "Plan de Rotation Quotidien"
-        verbose_name_plural = "Plans de Rotation Quotidiens"
+        verbose_name = "Rythme Quotidien"
+        verbose_name_plural = "Rythmes Quotidiens"
         ordering = ['designation']
 
 
@@ -424,7 +424,7 @@ class ShiftScheduleDailyPlan(models.Model):
     daily_rotation_plan = models.ForeignKey(
         DailyRotationPlan,
         on_delete=models.PROTECT,
-        help_text="Plan de rotation quotidienne assigné à ce jour"
+        help_text="Rythme quotidien assigné à ce jour"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
