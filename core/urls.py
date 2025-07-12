@@ -56,6 +56,7 @@ urlpatterns = [
     
     # API endpoints for periods
     path('api/plans/<int:plan_id>/periods/', views.api_plan_periods, name='api_plan_periods'),
+    path('api/shift-schedules/<int:schedule_id>/periods/', views.api_shift_schedule_periods, name='api_shift_schedule_periods'),
     
     # Shift Schedule URLs
     path('shift-schedules/', views.shift_schedule_list, name='shift_schedule_list'),

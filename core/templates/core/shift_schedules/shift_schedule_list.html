@@ -2,19 +2,112 @@
 
 {% block title %}Roulements Hebdomadaires - Planning PE{% endblock %}
 
+{% block extra_head %}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Roulements hebdomadaires</h1>
-            <button onclick="document.getElementById('schedule-modal').style.display = 'block'" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Nouveau Roulement
-            </button>
+<script>
+function clearModalAndCreateSchedule() {
+    console.log('clearModalAndCreateSchedule called');
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('schedule-create-form-content');
+    if (!contentDiv) {
+        console.error('schedule-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('schedule-modal');
+    if (!modal) {
+        console.error('schedule-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load create form
+    console.log('Loading create form...');
+    try {
+        htmx.ajax('GET', '{% url "shift_schedule_create" %}', '#schedule-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+
+function clearModalAndEditSchedule(editUrl) {
+    console.log('clearModalAndEditSchedule called with URL:', editUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('schedule-create-form-content');
+    if (!contentDiv) {
+        console.error('schedule-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('schedule-modal');
+    if (!modal) {
+        console.error('schedule-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load edit form
+    console.log('Loading edit form...');
+    try {
+        htmx.ajax('GET', editUrl, '#schedule-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+</script>
+<div class="space-y-6">
+    {% csrf_token %}
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Roulements hebdomadaires</h1>
+                <button onclick="clearModalAndCreateSchedule()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouveau Roulement
+                </button>
+            </div>
 
         <!-- Search Section -->
         <div class="bg-white shadow rounded-lg p-6 mb-6">
@@ -35,95 +128,205 @@
 
         <!-- Schedules List -->
         <div id="shift-schedule-list-content">
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            {% if page_obj.object_list %}
-                <ul class="divide-y divide-gray-200">
+            <!-- Shift Schedule Accordion -->
+            <div class="space-y-4">
+                {% if page_obj.object_list %}
                     {% for schedule in page_obj.object_list %}
-                        <li class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200" x-data="{ 
+                        expanded: false, 
+                        scheduleId: {{ schedule.pk }},
+                        periodsLoaded: false,
+                        periods: [],
+                        loadPeriods() {
+                            fetch(`/api/shift-schedules/${this.scheduleId}/periods/`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    this.periods = data.periods;
+                                    this.periodsLoaded = true;
+                                })
+                                .catch(error => {
+                                    console.error('Error loading periods:', error);
+                                    this.periodsLoaded = true;
+                                });
+                        }
+                    }">
+                        <!-- Schedule Header (clickable to expand) -->
+                        <div class="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                             @click="expanded = !expanded; if (expanded && !periodsLoaded) { loadPeriods() }">
                             <div class="flex items-center justify-between">
                                 <div class="flex-1">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex-1">
-                                            <h3 class="text-lg font-medium text-gray-900">
-                                                <a href="{% url 'shift_schedule_detail' schedule.id %}" 
-                                                   class="hover:text-blue-600 transition-colors">
-                                                    {{ schedule.name }}
-                                                </a>
-                                            </h3>
-                                        </div>
-                                        <div class="flex items-center space-x-4">
-                                            <!-- Type Badge -->
-                                            <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full 
-                                                         {% if schedule.type == 'day' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-                                                {{ schedule.get_type_display }}
-                                            </span>
-                                            
-                                            <!-- Break Times -->
-                                            <span class="text-sm text-gray-500">
-                                                {{ schedule.break_times }} pause{{ schedule.break_times|pluralize }}
-                                            </span>
-                                            
-                                            <!-- Periods Count -->
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                {{ schedule.periods.count }} période{{ schedule.periods.count|pluralize }}
-                                            </span>
-                                            
-                                            <!-- Created Date -->
-                                            <span class="text-xs text-gray-500">
-                                                Créé le {{ schedule.created_at|date:"d/m/Y" }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center space-x-2 ml-4">
-                                    <div class="relative">
-                                        <button onclick="toggleDropdown({{ schedule.id }})" 
-                                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors flex items-center">
-                                            Actions
-                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
+                                    <div class="flex items-center">
+                                        <!-- Expand/Collapse Icon -->
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200 mr-4 flex-shrink-0"
+                                             :class="{ 'rotate-90': expanded }"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
                                         
-                                        <div id="dropdown-{{ schedule.id }}" 
-                                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 hidden">
-                                            <div class="py-1">
-                                                <a href="{% url 'shift_schedule_detail' schedule.id %}" 
-                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                    Voir les détails
-                                                </a>
-                                                <a href="{% url 'shift_schedule_edit' schedule.id %}" 
-                                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                    Modifier
-                                                </a>
-                                                <form method="post" action="{% url 'shift_schedule_delete' schedule.id %}" 
-                                                      class="inline w-full">
-                                                    {% csrf_token %}
-                                                    <button type="submit" 
-                                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce planning ?')"
-                                                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                                        Supprimer
-                                                    </button>
-                                                </form>
+                                        <!-- Schedule Info Grid -->
+                                        <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
+                                            <!-- Schedule Name Column -->
+                                            <div class="lg:col-span-2">
+                                                <h3 class="text-lg font-medium text-gray-900 mb-1">{{ schedule.name }}</h3>
+                                            </div>
+                                            
+                                            <!-- Statistics Column -->
+                                            <div class="flex flex-col items-start space-y-2">
+                                                <!-- Period Count -->
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                    {{ schedule.periods.count }} période{{ schedule.periods.count|pluralize }}
+                                                </span>
+                                                
+                                                <!-- Created Date -->
+                                                <span class="text-xs text-gray-500">
+                                                    Créé le {{ schedule.created_at|date:"d/m/Y" }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="flex items-center space-x-1" @click.stop>
+                                    <!-- Edit Schedule Button -->
+                                    <button onclick="clearModalAndEditSchedule('{% url 'shift_schedule_edit' schedule.id %}')"
+                                            title="Modifier le planning"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <!-- Delete Schedule Button -->
+                                    <form method="post" action="{% url 'shift_schedule_delete' schedule.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce planning ? Toutes ses périodes seront également supprimées.')"
+                                                title="Supprimer le planning"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-r-md bg-white text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 -ml-px">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                        </li>
+                        </div>
+                        
+                        <!-- Periods Section (expandable) -->
+                        <div x-show="expanded" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 transform scale-100"
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             class="border-t border-gray-200 bg-gray-50">
+                            
+                            <!-- Periods Header -->
+                            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h4 class="text-md font-medium text-gray-900">
+                                    Périodes pour ce planning (<span x-text="periods.length">{{ schedule.periods.count }}</span>)
+                                </h4>
+                                <a href="{% url 'shift_schedule_period_create' schedule.id %}"
+                                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Ajouter une période
+                                </a>
+                            </div>
+                            
+                            <!-- Periods Content -->
+                            <div class="px-6 py-4" :id="'periods-content-' + scheduleId">
+                                <div x-show="!periodsLoaded" class="text-center text-gray-500">
+                                    <div class="animate-pulse">
+                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-4 mx-auto"></div>
+                                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-4 mx-auto"></div>
+                                        <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                                    </div>
+                                </div>
+                                
+                                <div x-show="periodsLoaded && periods.length === 0" class="text-center text-gray-500 py-8">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <p class="mt-2 text-sm">Aucune période définie pour ce planning</p>
+                                    <p class="text-xs text-gray-400">Ajoutez des périodes pour définir quand ce planning est actif</p>
+                                </div>
+                                
+                                <div x-show="periodsLoaded && periods.length > 0" class="space-y-3">
+                                    <template x-for="period in periods" :key="period.id">
+                                        <div class="bg-white rounded-lg border p-4 border-gray-200">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <!-- Period Dates -->
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-900" x-text="period.date_range"></div>
+                                                        <div class="text-xs text-gray-500" x-text="period.duration_text"></div>
+                                                    </div>
+                                                    
+                                                    <!-- Weeks Count -->
+                                                    <div>
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+                                                              x-text="period.weeks_count + ' semaine' + (period.weeks_count > 1 ? 's' : '')"></span>
+                                                    </div>
+                                                    
+                                                    <!-- Status -->
+                                                    <div>
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                                              :class="period.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                                              x-text="period.status_text"></span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Period Actions -->
+                                                <div class="flex items-center space-x-1 ml-4">
+                                                    <a :href="'/shift-schedule-periods/' + period.id + '/'"
+                                                       title="Voir les détails"
+                                                       class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        </svg>
+                                                    </a>
+                                                    
+                                                    <a :href="'/shift-schedule-periods/' + period.id + '/edit/'"
+                                                       title="Modifier la période"
+                                                       class="inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 -ml-px">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                        </svg>
+                                                    </a>
+                                                    
+                                                    <button @click="deletePeriod(period.id, scheduleId)"
+                                                            title="Supprimer la période"
+                                                            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-r-md bg-white text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 -ml-px">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
-                </ul>
-            {% else %}
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                {% else %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun plan de roulement</h3>
-                    <p class="mt-1 text-sm text-gray-500">Commencez par créer un roulement hebdomadaire.</p>
+                    <p class="mt-2 text-sm text-gray-500">Aucun planning de poste trouvé</p>
+                    {% if search_query %}
+                    <p class="text-xs text-gray-400">Essayez de modifier votre recherche</p>
+                    {% endif %}
                 </div>
-            {% endif %}
-        </div>
+                {% endif %}
+            </div>
 
         <!-- Pagination -->
         {% if page_obj.has_other_pages %}
@@ -197,54 +400,71 @@
     </div>
 </div>
 
-<!-- Modal for creating new schedule -->
-<div id="schedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Nouveau roulement hebdomadaire</h3>
-            <button onclick="document.getElementById('schedule-modal').style.display = 'none'" 
-                    class="text-gray-400 hover:text-gray-600">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <div id="schedule-form-container">
-            <div hx-get="{% url 'shift_schedule_create' %}" 
-                 hx-trigger="load" 
-                 hx-target="#schedule-form-container" 
-                 hx-swap="innerHTML">
-                <div class="text-center py-4">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600 inline" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Chargement...
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
+<!-- Simple Modal -->
+<div id="schedule-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Créer un nouveau planning de poste</h2>
+        <button onclick="document.getElementById('schedule-modal').style.display = 'none'" 
+                class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <div id="schedule-create-form-content">
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    </div>
+</div>
+</div>
+
 <script>
-function toggleDropdown(scheduleId) {
-    const dropdown = document.getElementById('dropdown-' + scheduleId);
-    const isHidden = dropdown.classList.contains('hidden');
-    
-    // Close all dropdowns
-    document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
-    
-    // Toggle current dropdown
-    if (isHidden) {
-        dropdown.classList.remove('hidden');
+// Global functions for accordion functionality
+function deletePeriod(periodId, scheduleId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette période ?')) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/shift-schedule-periods/${periodId}/delete/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload periods for this specific schedule
+                refreshSchedulePeriods(scheduleId);
+            } else {
+                alert('Erreur lors de la suppression de la période');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de la suppression de la période');
+        });
     }
 }
 
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('button[onclick*="toggleDropdown"]')) {
-        document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+function refreshSchedulePeriods(scheduleId) {
+    // Find the Alpine.js component for this schedule and reload its periods
+    const scheduleElements = document.querySelectorAll('[x-data]');
+    for (let element of scheduleElements) {
+        if (element._x_dataStack && element._x_dataStack[0].scheduleId === scheduleId) {
+            const alpineData = element._x_dataStack[0];
+            alpineData.periodsLoaded = false;
+            alpineData.loadPeriods();
+            break;
+        }
     }
-});
+}
 </script>
 {% endblock %}

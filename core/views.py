@@ -1108,6 +1108,38 @@ def api_plan_periods(request, plan_id):
     })
 
 
+@admin_required
+def api_shift_schedule_periods(request, schedule_id):
+    """API endpoint to get periods for a specific shift schedule"""
+    schedule = get_object_or_404(ShiftSchedule, pk=schedule_id)
+    periods = schedule.periods.all().order_by('start_date')
+    
+    periods_data = []
+    for period in periods:
+        # Calculate duration in days
+        duration_days = (period.end_date - period.start_date).days + 1
+        
+        # Check if period is active (end date is today or in the future)
+        from django.utils import timezone
+        today = timezone.now().date()
+        is_active = period.end_date >= today
+        
+        periods_data.append({
+            'id': period.pk,
+            'date_range': f"{period.start_date.strftime('%d/%m/%Y')} - {period.end_date.strftime('%d/%m/%Y')}",
+            'duration_text': f"{duration_days} jours",
+            'duration_days': duration_days,
+            'is_active': is_active,
+            'status_text': 'Actif' if is_active else 'Expiré',
+            'weeks_count': period.weeks.count(),
+        })
+    
+    return JsonResponse({
+        'periods': periods_data,
+        'count': len(periods_data)
+    })
+
+
 # Shift Schedule Views
 
 @login_required
@@ -1159,14 +1191,24 @@ def shift_schedule_create(request):
             with transaction.atomic():
                 schedule = form.save()
                 messages.success(request, f'Planning de poste "{schedule.name}" créé avec succès.')
+                if request.headers.get('HX-Request'):
+                    return HttpResponse(
+                        f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Planning de poste "{schedule.name}" créé avec succès.</div>'
+                        '<script>setTimeout(() => { document.getElementById("schedule-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                    )
                 return redirect('shift_schedule_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
+                'form': form,
+                'schedule': None
+            })
     else:
         form = ShiftScheduleForm()
     
     return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
         'form': form,
-        'schedule': None,
-        'current_agent': get_agent_from_user(request.user),
+        'schedule': None
     })
 
 
@@ -1183,14 +1225,24 @@ def shift_schedule_edit(request, schedule_id):
             with transaction.atomic():
                 schedule = form.save()
                 messages.success(request, f'Planning de poste "{schedule.name}" modifié avec succès.')
+                if request.headers.get('HX-Request'):
+                    return HttpResponse(
+                        f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Planning de poste "{schedule.name}" modifié avec succès.</div>'
+                        '<script>setTimeout(() => { document.getElementById("schedule-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                    )
                 return redirect('shift_schedule_list')
+        # If form is invalid and it's an HTMX request, return the form with errors
+        elif request.headers.get('HX-Request'):
+            return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
+                'form': form,
+                'schedule': schedule
+            })
     else:
         form = ShiftScheduleForm(instance=schedule)
     
     return render(request, 'core/shift_schedules/shift_schedule_form_htmx.html', {
         'form': form,
-        'schedule': schedule,
-        'current_agent': get_agent_from_user(request.user),
+        'schedule': schedule
     })
 
 

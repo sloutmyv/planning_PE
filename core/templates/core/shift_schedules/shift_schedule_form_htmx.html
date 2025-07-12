@@ -25,7 +25,9 @@
         <label for="{{ form.type.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
             {{ form.type.label }}
         </label>
-        {{ form.type }}
+        <div class="max-w-xs">
+            {{ form.type }}
+        </div>
         {% if form.type.errors %}
             <div class="mt-1 text-sm text-red-600">
                 {% for error in form.type.errors %}
@@ -33,14 +35,17 @@
                 {% endfor %}
             </div>
         {% endif %}
+        <p class="mt-1 text-sm text-gray-500">Choisissez le type de planning : journées ou quarts.</p>
     </div>
 
-    <!-- Durée de la pause -->
+    <!-- Nombre de pauses -->
     <div>
         <label for="{{ form.break_times.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
             {{ form.break_times.label }}
         </label>
-        {{ form.break_times }}
+        <div class="max-w-xs">
+            {{ form.break_times }}
+        </div>
         {% if form.break_times.errors %}
             <div class="mt-1 text-sm text-red-600">
                 {% for error in form.break_times.errors %}
@@ -48,9 +53,6 @@
                 {% endfor %}
             </div>
         {% endif %}
-        <p class="mt-1 text-sm text-gray-500">
-            Durée par défaut = 2h.
-        </p>
     </div>
 
     <!-- Form-wide errors -->

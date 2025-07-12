@@ -59,6 +59,17 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Indicateurs de statut** : Identification visuelle des périodes expirées avec couleurs et badges
 - **Terminologie cohérente** : Utilisation systématique de "rythmes quotidiens" dans toute l'interface
 
+### Gestion des roulements hebdomadaires
+- **Interface accordion moderne** : Expansion/contraction des plannings pour visualiser les périodes, identique aux rythmes quotidiens
+- **Navigation hiérarchique fluide** : Plannings > Périodes > Semaines > Rythmes quotidiens avec breadcrumbs
+- **Actions intégrées** : Boutons d'édition/suppression directement dans chaque ligne d'accordion
+- **Modales HTMX cohérentes** : Formulaires de création/modification avec la même expérience utilisateur que les autres modules
+- **Chargement dynamique** : Les périodes se chargent à la demande lors de l'expansion
+- **Gestion complète des périodes** : Ajout, modification, suppression et visualisation des périodes dans l'interface accordion
+- **API dédiée** : Endpoint REST pour le chargement des données de périodes
+- **Validation métier** : Contrôle des chevauchements de périodes et cohérence des dates
+- **Interface simplifiée** : Suppression de l'affichage du type et des pauses dans la vue liste pour plus de clarté
+
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
@@ -229,7 +240,7 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **schedule_type** : Type d'horaire associé (clé étrangère vers ScheduleType)
 - **Relation avec RotationPeriod** : Un rythme peut avoir plusieurs périodes
 
-### RotationPeriod (Période de Rotation)
+### RotationPeriod (Période pour rythme quotidien)
 - **daily_rotation_plan** : Rythme quotidien parent (clé étrangère)
 - **start_date** / **end_date** : Période de validité (dates)
 - **start_time** / **end_time** : Horaires quotidiens (heures)
