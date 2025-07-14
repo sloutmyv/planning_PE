@@ -5,7 +5,7 @@
       class="space-y-6">
     {% csrf_token %}
     
-    <!-- Plan de roulement (hidden) -->
+    <!-- Plan de roulement (hidden field) -->
     {% if not period %}
         {{ form.shift_schedule }}
     {% endif %}
@@ -78,3 +78,51 @@
         </button>
     </div>
 </form>
+
+<script>
+// Ensure CSS is properly applied after HTMX loads the form
+function applyPeriodFormStyling() {
+    // Target the correct container based on the actual DOM structure
+    const containers = ['#period-form-container', '#period-create-form-content'];
+    let currentForm = null;
+    
+    for (const containerId of containers) {
+        const container = document.querySelector(containerId);
+        if (container) {
+            currentForm = container.querySelector('form');
+            if (currentForm) break;
+        }
+    }
+    
+    // Also try to find any form in the current context for shift schedule periods
+    if (!currentForm) {
+        currentForm = document.querySelector('form[hx-post*="shift_schedule_period"]');
+    }
+    
+    if (currentForm) {
+        const inputs = currentForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            // Ensure Tailwind classes are applied if not already present
+            if (!input.className.includes('rounded-md')) {
+                input.className += ' block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500';
+            }
+        });
+    }
+}
+
+// Apply styling when DOM is ready
+document.addEventListener('DOMContentLoaded', applyPeriodFormStyling);
+
+// Apply styling after HTMX content swaps
+document.addEventListener('htmx:afterSwap', function(evt) {
+    // Check if this swap involves the period form
+    if (evt.target.id === 'period-form-container' || 
+        evt.target.closest('#period-form-container') ||
+        (evt.detail.xhr && evt.detail.xhr.responseURL && evt.detail.xhr.responseURL.includes('shift_schedule_period'))) {
+        setTimeout(applyPeriodFormStyling, 50); // Small delay to ensure DOM is ready
+    }
+});
+
+// Apply styling immediately for current form
+applyPeriodFormStyling();
+</script>

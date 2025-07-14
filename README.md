@@ -61,12 +61,17 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 
 ### Gestion des roulements hebdomadaires
 - **Interface accordion moderne** : Expansion/contraction des plannings pour visualiser les périodes, identique aux rythmes quotidiens
-- **Navigation hiérarchique fluide** : Plannings > Périodes > Semaines > Rythmes quotidiens avec breadcrumbs
+- **Tableau hebdomadaire interactif** : Visualisation des 7 jours de la semaine en format tableau avec assignation directe
+- **Gestion multiple des rythmes** : Possibilité d'assigner plusieurs rythmes quotidiens par jour pour couvrir toute la journée
+- **Interface sans détails** : Suppression complète des vues détail, toute la gestion se fait depuis la liste principale
+- **Assignation visuelle intuitive** : Pills/badges colorés pour chaque rythme assigné avec boutons de suppression individuels
+- **Ajout simplifié** : Boutons "Ajouter" dans chaque cellule de jour pour assignation rapide via modal
+- **Renumération automatique** : Les semaines se renumèrent automatiquement lors de suppression (S1, S2, S3, etc.)
 - **Actions intégrées** : Boutons d'édition/suppression directement dans chaque ligne d'accordion
 - **Modales HTMX cohérentes** : Formulaires de création/modification avec la même expérience utilisateur que les autres modules
 - **Chargement dynamique** : Les périodes se chargent à la demande lors de l'expansion
 - **Gestion complète des périodes** : Ajout, modification, suppression et visualisation des périodes dans l'interface accordion
-- **API dédiée** : Endpoint REST pour le chargement des données de périodes
+- **API dédiée** : Endpoints REST pour le chargement des données de périodes et semaines
 - **Validation métier** : Contrôle des chevauchements de périodes et cohérence des dates
 - **Interface simplifiée** : Suppression de l'affichage du type et des pauses dans la vue liste pour plus de clarté
 

@@ -448,5 +448,4 @@ class ShiftScheduleDailyPlan(models.Model):
     class Meta:
         verbose_name = "Plan Quotidien de Planning"
         verbose_name_plural = "Plans Quotidiens de Planning"
-        unique_together = ['week', 'weekday']
         ordering = ['week', 'weekday']

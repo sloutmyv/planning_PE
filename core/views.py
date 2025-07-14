@@ -1083,6 +1083,68 @@ def rotation_period_count(request):
 
 # API Views
 @admin_required
+def api_daily_rotation_plans(request):
+    """API endpoint to get all daily rotation plans"""
+    plans = DailyRotationPlan.objects.all().order_by('designation')
+    
+    plans_data = []
+    for plan in plans:
+        plans_data.append({
+            'id': plan.id,
+            'designation': plan.designation,
+            'description': plan.description or '',
+            'short_name': plan.designation[:10] + '...' if len(plan.designation) > 10 else plan.designation
+        })
+    
+    return JsonResponse({'plans': plans_data})
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def api_assign_daily_plan(request, week_id, weekday):
+    """API endpoint to directly assign a daily plan"""
+    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    
+    try:
+        plan_id = request.POST.get('plan_id')
+        if not plan_id:
+            return JsonResponse({'error': 'Plan ID is required'}, status=400)
+        
+        plan = get_object_or_404(DailyRotationPlan, id=plan_id)
+        
+        with transaction.atomic():
+            # Check if daily plan already exists for this week/weekday
+            daily_plan, created = ShiftScheduleDailyPlan.objects.get_or_create(
+                week=week,
+                weekday=weekday,
+                defaults={'daily_rotation_plan': plan}
+            )
+            
+            if not created:
+                # Update existing plan
+                daily_plan.daily_rotation_plan = plan
+                daily_plan.save()
+                action = 'modifié'
+            else:
+                action = 'créé'
+        
+        weekday_names = {1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi', 7: 'Dimanche'}
+        weekday_name = weekday_names.get(weekday, f'Jour {weekday}')
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Plan quotidien pour {weekday_name} {action} avec succès.',
+            'daily_plan': {
+                'id': daily_plan.id,
+                'plan_name': plan.designation,
+                'short_name': plan.designation[:10] + '...' if len(plan.designation) > 10 else plan.designation
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@admin_required
 def api_plan_periods(request, plan_id):
     """API endpoint to get periods for a specific plan"""
     plan = get_object_or_404(DailyRotationPlan, pk=plan_id)
@@ -1140,6 +1202,43 @@ def api_shift_schedule_periods(request, schedule_id):
     })
 
 
+@admin_required
+def api_shift_schedule_period_weeks(request, period_id):
+    """API endpoint to get weeks for a specific shift schedule period"""
+    period = get_object_or_404(ShiftSchedulePeriod, pk=period_id)
+    weeks = period.weeks.all().order_by('week_number')
+    
+    weeks_data = []
+    for week in weeks:
+        # Get daily plans for this week, organized by weekday (supporting multiple plans per day)
+        daily_plans_by_weekday = {}
+        for daily_plan in week.daily_plans.all():
+            weekday = daily_plan.weekday
+            if weekday not in daily_plans_by_weekday:
+                daily_plans_by_weekday[weekday] = []
+            
+            daily_plans_by_weekday[weekday].append({
+                'id': daily_plan.pk,
+                'short_name': daily_plan.daily_rotation_plan.designation[:3] if daily_plan.daily_rotation_plan else '?',
+                'full_name': daily_plan.daily_rotation_plan.designation if daily_plan.daily_rotation_plan else 'Non défini',
+                'weekday': daily_plan.weekday,
+                'plan_id': daily_plan.daily_rotation_plan.id if daily_plan.daily_rotation_plan else None,
+            })
+        
+        weeks_data.append({
+            'id': week.pk,
+            'week_number': week.week_number,
+            'daily_plans_count': week.daily_plans.count(),
+            'daily_plans': daily_plans_by_weekday,  # Now contains arrays of plans per weekday
+            'date_range': f"Semaine {week.week_number}",
+        })
+    
+    return JsonResponse({
+        'weeks': weeks_data,
+        'count': len(weeks_data)
+    })
+
+
 # Shift Schedule Views
 
 @login_required
@@ -1192,10 +1291,12 @@ def shift_schedule_create(request):
                 schedule = form.save()
                 messages.success(request, f'Planning de poste "{schedule.name}" créé avec succès.')
                 if request.headers.get('HX-Request'):
-                    return HttpResponse(
-                        f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Planning de poste "{schedule.name}" créé avec succès.</div>'
-                        '<script>setTimeout(() => { document.getElementById("schedule-modal").style.display = "none"; location.reload(); }, 1000)</script>'
-                    )
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('schedule-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
                 return redirect('shift_schedule_list')
         # If form is invalid and it's an HTMX request, return the form with errors
         elif request.headers.get('HX-Request'):
@@ -1226,10 +1327,12 @@ def shift_schedule_edit(request, schedule_id):
                 schedule = form.save()
                 messages.success(request, f'Planning de poste "{schedule.name}" modifié avec succès.')
                 if request.headers.get('HX-Request'):
-                    return HttpResponse(
-                        f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Planning de poste "{schedule.name}" modifié avec succès.</div>'
-                        '<script>setTimeout(() => { document.getElementById("schedule-modal").style.display = "none"; location.reload(); }, 1000)</script>'
-                    )
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('schedule-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
                 return redirect('shift_schedule_list')
         # If form is invalid and it's an HTMX request, return the form with errors
         elif request.headers.get('HX-Request'):
@@ -1261,20 +1364,6 @@ def shift_schedule_delete(request, schedule_id):
     return redirect('shift_schedule_list')
 
 
-@login_required
-@admin_required
-def shift_schedule_detail(request, schedule_id):
-    """Display shift schedule details with periods"""
-    schedule = get_object_or_404(ShiftSchedule, id=schedule_id)
-    periods = schedule.periods.all().order_by('start_date')
-    
-    context = {
-        'schedule': schedule,
-        'periods': periods,
-        'current_agent': get_agent_from_user(request.user),
-    }
-    
-    return render(request, 'core/shift_schedules/shift_schedule_detail.html', context)
 
 
 # Shift Schedule Period Views
@@ -1293,8 +1382,19 @@ def shift_schedule_period_create(request, schedule_id):
                 period = form.save(commit=False)
                 period.shift_schedule = schedule
                 period.save()
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('period-modal').style.display = 'none';
+                            if (typeof refreshSchedulePeriods === 'function') {
+                                refreshSchedulePeriods(%d);
+                            }
+                        </script>
+                    """ % (schedule.id))
+                
                 messages.success(request, f'Période créée avec succès pour "{schedule.name}".')
-                return redirect('shift_schedule_detail', schedule_id=schedule.id)
+                return redirect('shift_schedule_list')
     else:
         form = ShiftSchedulePeriodForm(initial={'shift_schedule': schedule})
         form.fields['shift_schedule'].widget = forms.HiddenInput()
@@ -1319,8 +1419,19 @@ def shift_schedule_period_edit(request, period_id):
         if form.is_valid():
             with transaction.atomic():
                 period = form.save()
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('period-modal').style.display = 'none';
+                            if (typeof refreshSchedulePeriods === 'function') {
+                                refreshSchedulePeriods(%d);
+                            }
+                        </script>
+                    """ % (period.shift_schedule.id))
+                
                 messages.success(request, f'Période modifiée avec succès.')
-                return redirect('shift_schedule_detail', schedule_id=period.shift_schedule.id)
+                return redirect('shift_schedule_list')
     else:
         form = ShiftSchedulePeriodForm(instance=period)
         form.fields['shift_schedule'].widget = forms.HiddenInput()
@@ -1345,23 +1456,9 @@ def shift_schedule_period_delete(request, period_id):
         period.delete()
         messages.success(request, f'Période supprimée avec succès.')
     
-    return redirect('shift_schedule_detail', schedule_id=schedule.id)
+    return redirect('shift_schedule_list')
 
 
-@login_required
-@admin_required
-def shift_schedule_period_detail(request, period_id):
-    """Display period details with weeks"""
-    period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
-    weeks = period.weeks.all().order_by('week_number')
-    
-    context = {
-        'period': period,
-        'weeks': weeks,
-        'current_agent': get_agent_from_user(request.user),
-    }
-    
-    return render(request, 'core/shift_schedules/shift_schedule_period_detail.html', context)
 
 
 # Shift Schedule Week Views
@@ -1381,7 +1478,24 @@ def shift_schedule_week_create(request, period_id):
                 week.period = period
                 week.save()
                 messages.success(request, f'Semaine {week.week_number} créée avec succès.')
-                return redirect('shift_schedule_period_detail', period_id=period.id)
+                
+                # Handle HTMX requests
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('week-modal').style.display = 'none';
+                            // Refresh the period weeks if we're in the list view
+                            if (typeof refreshPeriodWeeks === 'function') {
+                                refreshPeriodWeeks(%d);
+                            }
+                            // Show success message
+                            if (typeof showSuccessMessage === 'function') {
+                                showSuccessMessage('Semaine %d créée avec succès.');
+                            }
+                        </script>
+                    """ % (period.id, week.week_number))
+                
+                return redirect('shift_schedule_list')
     else:
         # Auto-generate next week number
         existing_weeks = period.weeks.all()
@@ -1410,6 +1524,23 @@ def shift_schedule_week_edit(request, week_id):
             with transaction.atomic():
                 week = form.save()
                 messages.success(request, f'Semaine {week.week_number} modifiée avec succès.')
+                
+                # Handle HTMX requests
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('week-modal').style.display = 'none';
+                            // Refresh the period weeks if we're in the list view
+                            if (typeof refreshPeriodWeeks === 'function') {
+                                refreshPeriodWeeks(%d);
+                            }
+                            // Show success message
+                            if (typeof showSuccessMessage === 'function') {
+                                showSuccessMessage('Semaine %d modifiée avec succès.');
+                            }
+                        </script>
+                    """ % (week.period.id, week.week_number))
+                
                 return redirect('shift_schedule_period_detail', period_id=week.period.id)
     else:
         form = ShiftScheduleWeekForm(instance=week)
@@ -1427,48 +1558,26 @@ def shift_schedule_week_edit(request, week_id):
 @admin_required
 @require_http_methods(["POST"])
 def shift_schedule_week_delete(request, week_id):
-    """Delete a shift schedule week"""
+    """Delete a shift schedule week and renumber remaining weeks"""
     week = get_object_or_404(ShiftScheduleWeek, id=week_id)
     period = week.period
+    deleted_week_number = week.week_number
     
     with transaction.atomic():
+        # Delete the week
         week.delete()
-        messages.success(request, f'Semaine {week.week_number} supprimée avec succès.')
+        
+        # Renumber all remaining weeks in this period that come after the deleted week
+        remaining_weeks = period.weeks.filter(week_number__gt=deleted_week_number).order_by('week_number')
+        for remaining_week in remaining_weeks:
+            remaining_week.week_number -= 1
+            remaining_week.save(update_fields=['week_number'])
+        
+        messages.success(request, f'Semaine {deleted_week_number} supprimée avec succès. Les semaines suivantes ont été renumérotées.')
     
-    return redirect('shift_schedule_period_detail', period_id=period.id)
+    return redirect('shift_schedule_list')
 
 
-@login_required
-@admin_required
-def shift_schedule_week_detail(request, week_id):
-    """Display week details with daily plans"""
-    week = get_object_or_404(ShiftScheduleWeek, id=week_id)
-    daily_plans = week.daily_plans.all().order_by('weekday')
-    
-    # Create a list of weekdays with their plans
-    weekday_data = []
-    for weekday_num, weekday_name in ShiftScheduleDailyPlan.WEEKDAY_CHOICES:
-        plan = daily_plans.filter(weekday=weekday_num).first()
-        weekday_data.append({
-            'weekday_num': weekday_num,
-            'weekday_name': weekday_name,
-            'plan': plan,
-            'has_plan': plan is not None
-        })
-    
-    # Get all rotation plans for the form
-    rotation_plans = DailyRotationPlan.objects.all().order_by('designation')
-    
-    context = {
-        'week': week,
-        'daily_plans': daily_plans,
-        'weekday_data': weekday_data,
-        'rotation_plans': rotation_plans,
-        'weekday_choices': ShiftScheduleDailyPlan.WEEKDAY_CHOICES,
-        'current_agent': get_agent_from_user(request.user),
-    }
-    
-    return render(request, 'core/shift_schedules/shift_schedule_week_detail.html', context)
 
 
 # Shift Schedule Daily Plan Views
@@ -1476,7 +1585,7 @@ def shift_schedule_week_detail(request, week_id):
 @login_required
 @admin_required
 @require_http_methods(["GET", "POST"])
-def shift_schedule_daily_plan_create(request, week_id):
+def shift_schedule_daily_plan_create(request, week_id, weekday):
     """Create or update daily plans for a week"""
     week = get_object_or_404(ShiftScheduleWeek, id=week_id)
     
@@ -1486,18 +1595,31 @@ def shift_schedule_daily_plan_create(request, week_id):
             with transaction.atomic():
                 daily_plan = form.save(commit=False)
                 daily_plan.week = week
+                daily_plan.weekday = weekday
                 daily_plan.save()
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('daily-plan-modal').style.display = 'none';
+                            // Reload the page to show the updated rhythm
+                            location.reload();
+                        </script>
+                    """)
+                
                 weekday_name = daily_plan.get_weekday_display_french()
                 messages.success(request, f'Plan quotidien pour {weekday_name} créé avec succès.')
-                return redirect('shift_schedule_week_detail', week_id=week.id)
+                return redirect('shift_schedule_list')
     else:
-        form = ShiftScheduleDailyPlanForm(initial={'week': week})
+        form = ShiftScheduleDailyPlanForm(initial={'week': week, 'weekday': weekday})
         form.fields['week'].widget = forms.HiddenInput()
+        form.fields['weekday'].widget = forms.HiddenInput()
     
     return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
         'form': form,
         'week': week,
         'daily_plan': None,
+        'weekday': weekday,
         'current_agent': get_agent_from_user(request.user),
     })
 
@@ -1516,7 +1638,7 @@ def shift_schedule_daily_plan_edit(request, daily_plan_id):
                 daily_plan = form.save()
                 weekday_name = daily_plan.get_weekday_display_french()
                 messages.success(request, f'Plan quotidien pour {weekday_name} modifié avec succès.')
-                return redirect('shift_schedule_week_detail', week_id=daily_plan.week.id)
+                return redirect('shift_schedule_list')
     else:
         form = ShiftScheduleDailyPlanForm(instance=daily_plan)
         form.fields['week'].widget = forms.HiddenInput()
@@ -1542,4 +1664,4 @@ def shift_schedule_daily_plan_delete(request, daily_plan_id):
         daily_plan.delete()
         messages.success(request, f'Plan quotidien pour {weekday_name} supprimé avec succès.')
     
-    return redirect('shift_schedule_week_detail', week_id=week.id)
+    return redirect('shift_schedule_list')

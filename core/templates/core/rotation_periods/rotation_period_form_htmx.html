@@ -123,3 +123,51 @@
         </button>
     </div>
 </form>
+
+<script>
+// Ensure CSS is properly applied after HTMX loads the form
+function applyFormStyling() {
+    // Target the correct container based on the actual DOM structure
+    const containers = ['#period-form-container', '#period-create-form-content'];
+    let currentForm = null;
+    
+    for (const containerId of containers) {
+        const container = document.querySelector(containerId);
+        if (container) {
+            currentForm = container.querySelector('form');
+            if (currentForm) break;
+        }
+    }
+    
+    // Also try to find any form in the current context
+    if (!currentForm) {
+        currentForm = document.querySelector('form[hx-post*="rotation_period"]');
+    }
+    
+    if (currentForm) {
+        const inputs = currentForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            // Ensure Tailwind classes are applied if not already present
+            if (!input.className.includes('rounded-md')) {
+                input.className += ' block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500';
+            }
+        });
+    }
+}
+
+// Apply styling when DOM is ready
+document.addEventListener('DOMContentLoaded', applyFormStyling);
+
+// Apply styling after HTMX content swaps
+document.addEventListener('htmx:afterSwap', function(evt) {
+    // Check if this swap involves the period form
+    if (evt.target.id === 'period-form-container' || 
+        evt.target.closest('#period-form-container') ||
+        evt.detail.xhr.responseURL.includes('rotation_period')) {
+        setTimeout(applyFormStyling, 50); // Small delay to ensure DOM is ready
+    }
+});
+
+// Apply styling immediately for current form
+applyFormStyling();
+</script>

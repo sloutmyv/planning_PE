@@ -1,5 +1,5 @@
 <form method="post" 
-      hx-post="{% if daily_plan %}{% url 'shift_schedule_daily_plan_edit' daily_plan.id %}{% else %}{% url 'shift_schedule_daily_plan_create' week.id %}{% endif %}"
+      hx-post="{% if daily_plan %}{% url 'shift_schedule_daily_plan_edit' daily_plan.id %}{% else %}{% url 'shift_schedule_daily_plan_create' week.id weekday %}{% endif %}"
       hx-target="this"
       hx-swap="outerHTML"
       class="space-y-6">
@@ -10,20 +10,8 @@
         {{ form.week }}
     {% endif %}
 
-    <!-- Jour de la semaine -->
-    <div>
-        <label for="{{ form.weekday.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
-            {{ form.weekday.label }}
-        </label>
-        {{ form.weekday }}
-        {% if form.weekday.errors %}
-            <div class="mt-1 text-sm text-red-600">
-                {% for error in form.weekday.errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
+    <!-- Jour de la semaine (hidden) -->
+    {{ form.weekday }}
 
     <!-- Rythme quotidien -->
     <div>
