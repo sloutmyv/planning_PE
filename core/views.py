@@ -936,7 +936,7 @@ def rotation_period_create(request):
                 plan_id = period.daily_rotation_plan.pk
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Période de rotation créée avec succès.</div>'
-                    f'<script>setTimeout(() => {{ document.getElementById("period-modal").style.display = "none"; refreshPlanPeriods({plan_id}); }}, 1000)</script>'
+                    f'<script>refreshPlanPeriods({plan_id}); setTimeout(() => {{ document.querySelector("form[hx-post*=\'rotation_period\']").reset(); }}, 500);</script>'
                 )
             # Redirect to plan detail if creating from plan view
             if plan_id:
@@ -1424,14 +1424,21 @@ def shift_schedule_period_edit(request, period_id):
                     return HttpResponse("""
                         <script>
                             document.getElementById('period-modal').style.display = 'none';
-                            if (typeof refreshSchedulePeriods === 'function') {
-                                refreshSchedulePeriods(%d);
-                            }
+                            location.reload();
                         </script>
-                    """ % (period.shift_schedule.id))
+                    """)
                 
                 messages.success(request, f'Période modifiée avec succès.')
                 return redirect('shift_schedule_list')
+        else:
+            # Form has validation errors - return the form with errors for HTMX
+            if request.headers.get('HX-Request'):
+                return render(request, 'core/shift_schedules/shift_schedule_period_form_htmx.html', {
+                    'form': form,
+                    'schedule': period.shift_schedule,
+                    'period': period,
+                    'current_agent': get_agent_from_user(request.user),
+                })
     else:
         form = ShiftSchedulePeriodForm(instance=period)
         form.fields['shift_schedule'].widget = forms.HiddenInput()
@@ -1599,17 +1606,47 @@ def shift_schedule_daily_plan_create(request, week_id, weekday):
                 daily_plan.save()
                 
                 if request.headers.get('HX-Request'):
-                    return HttpResponse("""
+                    period_id = week.period.id
+                    return HttpResponse(f"""
                         <script>
+                            // Close modal immediately
                             document.getElementById('daily-plan-modal').style.display = 'none';
-                            // Reload the page to show the updated rhythm
-                            location.reload();
+                            // Refresh the weeks data for the specific period to show the new rhythm
+                            fetch('/api/shift-schedule-periods/{period_id}/weeks/')
+                                .then(response => response.json())
+                                .then(data => {{
+                                    // Find the Alpine.js component for this specific period and update its weeks data
+                                    const periodElements = document.querySelectorAll('[x-data]');
+                                    for (let element of periodElements) {{
+                                        if (element._x_dataStack && element._x_dataStack[0].periodId === {period_id}) {{
+                                            const alpineData = element._x_dataStack[0];
+                                            alpineData.weeks = data.weeks;
+                                            alpineData.weeksLoaded = true;
+                                            break;
+                                        }}
+                                    }}
+                                }})
+                                .catch(error => {{
+                                    console.error('Error refreshing weeks:', error);
+                                    // Fallback: reload the page if API call fails
+                                    location.reload();
+                                }});
                         </script>
                     """)
                 
                 weekday_name = daily_plan.get_weekday_display_french()
                 messages.success(request, f'Plan quotidien pour {weekday_name} créé avec succès.')
                 return redirect('shift_schedule_list')
+        else:
+            # Form has validation errors - return the form with errors for HTMX
+            if request.headers.get('HX-Request'):
+                return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+                    'form': form,
+                    'week': week,
+                    'daily_plan': None,
+                    'weekday': weekday,
+                    'current_agent': get_agent_from_user(request.user),
+                })
     else:
         form = ShiftScheduleDailyPlanForm(initial={'week': week, 'weekday': weekday})
         form.fields['week'].widget = forms.HiddenInput()
@@ -1658,10 +1695,19 @@ def shift_schedule_daily_plan_delete(request, daily_plan_id):
     """Delete a daily plan"""
     daily_plan = get_object_or_404(ShiftScheduleDailyPlan, id=daily_plan_id)
     week = daily_plan.week
+    period_id = week.period.id
     weekday_name = daily_plan.get_weekday_display_french()
     
     with transaction.atomic():
         daily_plan.delete()
         messages.success(request, f'Plan quotidien pour {weekday_name} supprimé avec succès.')
+    
+    if request.headers.get('HX-Request') or request.headers.get('Accept') == 'application/json':
+        # Return JSON response with period ID for targeted refresh
+        return JsonResponse({
+            'success': True,
+            'period_id': period_id,
+            'message': f'Plan quotidien pour {weekday_name} supprimé avec succès.'
+        })
     
     return redirect('shift_schedule_list')

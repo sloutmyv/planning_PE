@@ -6,9 +6,7 @@
     {% csrf_token %}
     
     <!-- Plan de roulement (hidden field) -->
-    {% if not period %}
-        {{ form.shift_schedule }}
-    {% endif %}
+    {{ form.shift_schedule }}
 
     <!-- Dates -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

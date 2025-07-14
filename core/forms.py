@@ -276,6 +276,32 @@ class ShiftScheduleDailyPlanForm(forms.ModelForm):
             'weekday': 'Jour de la semaine',
             'daily_rotation_plan': 'Rythme quotidien',
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        week = cleaned_data.get('week')
+        weekday = cleaned_data.get('weekday')
+        daily_rotation_plan = cleaned_data.get('daily_rotation_plan')
+        
+        if week and weekday and daily_rotation_plan:
+            # Check if this exact combination already exists
+            existing = ShiftScheduleDailyPlan.objects.filter(
+                week=week,
+                weekday=weekday,
+                daily_rotation_plan=daily_rotation_plan
+            )
+            
+            # Exclude current instance if editing
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            
+            if existing.exists():
+                weekday_name = dict(ShiftScheduleDailyPlan.WEEKDAY_CHOICES).get(weekday, str(weekday))
+                raise forms.ValidationError(
+                    f'Le rythme "{daily_rotation_plan.designation}" est déjà assigné au {weekday_name} de cette semaine.'
+                )
+        
+        return cleaned_data
 
 
 # Bulk forms for multiple daily plans per week

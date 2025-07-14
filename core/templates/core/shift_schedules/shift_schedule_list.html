@@ -139,12 +139,35 @@ window.removeDailyPlan = function(dailyPlanId) {
     
     fetch(`/shift-schedule-daily-plans/${dailyPlanId}/delete/`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
     })
-    .then(response => {
-        if (response.ok) {
-            // Refresh the current period to show updated weeks
-            location.reload();
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh the weeks data for the specific period to show the updated table
+            fetch(`/api/shift-schedule-periods/${data.period_id}/weeks/`)
+                .then(response => response.json())
+                .then(weeksData => {
+                    // Find the Alpine.js component for this specific period and update its weeks data
+                    const periodElements = document.querySelectorAll('[x-data]');
+                    for (let element of periodElements) {
+                        if (element._x_dataStack && element._x_dataStack[0].periodId === data.period_id) {
+                            const alpineData = element._x_dataStack[0];
+                            alpineData.weeks = weeksData.weeks;
+                            alpineData.weeksLoaded = true;
+                            break;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing weeks:', error);
+                    // Fallback: reload the page if API call fails
+                    location.reload();
+                });
         } else {
             alert('Erreur lors de la suppression du rythme');
         }

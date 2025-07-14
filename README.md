@@ -74,6 +74,9 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **API dédiée** : Endpoints REST pour le chargement des données de périodes et semaines
 - **Validation métier** : Contrôle des chevauchements de périodes et cohérence des dates
 - **Interface simplifiée** : Suppression de l'affichage du type et des pauses dans la vue liste pour plus de clarté
+- **Workflow optimisé** : Interface qui reste ouverte après ajout/suppression de rythmes pour un travail continu
+- **Validation anti-doublons** : Prévention de l'assignation du même rythme plusieurs fois sur un même jour
+- **Mise à jour temps réel** : Actualisation immédiate des données sans rechargement de page
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -87,6 +90,22 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Protection CSRF** : Tokens CSRF pour toutes les requêtes HTMX
 - **Validation des permissions** : Contrôles server-side pour tous les changements
 - **Gestion transactionnelle** : Transactions atomiques pour toutes les opérations critiques
+
+## Améliorations récentes
+
+### Optimisations UX des roulements hebdomadaires (Juillet 2025)
+- **Résolution du problème de fermeture des accordéons** : Les dropdowns restent désormais ouverts après ajout/suppression de rythmes
+- **Workflow continu amélioré** : Plus besoin de rouvrir les sections après chaque modification
+- **Validation anti-doublons renforcée** : Impossible d'assigner le même rythme deux fois sur la même journée avec message d'erreur explicite
+- **Correction de l'édition des périodes** : Résolution du bug empêchant la modification des dates de fin de période
+- **Mise à jour temps réel optimisée** : Actualisation immédiate des données via API sans rechargement complet
+- **Gestion d'erreurs améliorée** : Affichage approprié des erreurs de validation dans les modales HTMX
+
+### Corrections techniques
+- **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes
+- **Validation côté serveur** : Amélioration de la gestion des erreurs de validation avec retour approprié des formulaires
+- **Actualisation des données** : Implémentation d'un système de refresh ciblé via Alpine.js et API REST
+- **Messages d'erreur** : Affichage cohérent des erreurs de validation dans toutes les modales
 
 ## Architecture technique
 
