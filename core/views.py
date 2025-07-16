@@ -1188,6 +1188,7 @@ def api_shift_schedule_periods(request, schedule_id):
         
         periods_data.append({
             'id': period.pk,
+            'schedule_id': period.shift_schedule.pk,
             'date_range': f"{period.start_date.strftime('%d/%m/%Y')} - {period.end_date.strftime('%d/%m/%Y')}",
             'duration_text': f"{duration_days} jours",
             'duration_days': duration_days,
@@ -1499,12 +1500,16 @@ def shift_schedule_week_create(request, period_id):
                             if (typeof refreshPeriodWeeks === 'function') {
                                 refreshPeriodWeeks(%d);
                             }
+                            // Also refresh schedule periods to update weeks count
+                            if (typeof refreshSchedulePeriods === 'function') {
+                                refreshSchedulePeriods(%d);
+                            }
                             // Show success message
                             if (typeof showSuccessMessage === 'function') {
                                 showSuccessMessage('Semaine %d créée avec succès.');
                             }
                         </script>
-                    """ % (period.id, week.week_number))
+                    """ % (period.id, period.shift_schedule.id, week.week_number))
                 
                 return redirect('shift_schedule_list')
     else:
@@ -1572,6 +1577,7 @@ def shift_schedule_week_delete(request, week_id):
     """Delete a shift schedule week and renumber remaining weeks"""
     week = get_object_or_404(ShiftScheduleWeek, id=week_id)
     period = week.period
+    schedule = period.shift_schedule
     deleted_week_number = week.week_number
     
     with transaction.atomic():
@@ -1585,6 +1591,10 @@ def shift_schedule_week_delete(request, week_id):
             remaining_week.save(update_fields=['week_number'])
         
         messages.success(request, f'Semaine {deleted_week_number} supprimée avec succès. Les semaines suivantes ont été renumérotées.')
+    
+    # For HTMX requests (frontend fetch), return empty success response to allow frontend refresh
+    if request.headers.get('HX-Request') or 'application/json' in request.headers.get('Accept', ''):
+        return HttpResponse('', status=200)
     
     return redirect('shift_schedule_list')
 

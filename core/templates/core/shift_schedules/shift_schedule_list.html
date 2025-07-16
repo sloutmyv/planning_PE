@@ -517,7 +517,7 @@ function clearModalAndAddWeek(periodId) {
                                             <div class="flex flex-col items-start space-y-2">
                                                 <!-- Period Count -->
                                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                    <span x-text="periodsLoaded ? periods.length : {{ schedule.periods.count }}"></span> période<span x-text="(periodsLoaded ? periods.length : {{ schedule.periods.count }}) > 1 ? 's' : ''"></span>
+                                                    <span x-text="periodsLoaded ? periods.length : {{ schedule.periods.count }}"></span>&nbsp;période<span x-text="(periodsLoaded ? periods.length : {{ schedule.periods.count }}) > 1 ? 's' : ''"></span>
                                                 </span>
                                                 
                                                 <!-- Created Date -->
@@ -949,7 +949,7 @@ function clearModalAndAddWeek(periodId) {
                                                                                     </svg>
                                                                                 </button>
                                                                                 
-                                                                                <button @click="deleteWeek(week.id, period.id)"
+                                                                                <button @click="deleteWeek(week.id, period.id, period.schedule_id)"
                                                                                         title="Supprimer la semaine"
                                                                                         class="inline-flex items-center px-2 py-1 border border-gray-300 rounded bg-white text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600">
                                                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1231,7 +1231,7 @@ function editWeek(weekId) {
     }
 }
 
-function deleteWeek(weekId, periodId) {
+function deleteWeek(weekId, periodId, scheduleId) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette semaine ?')) {
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
@@ -1247,6 +1247,8 @@ function deleteWeek(weekId, periodId) {
             if (response.ok) {
                 // Reload weeks for this specific period
                 refreshPeriodWeeks(periodId);
+                // Also refresh schedule periods to update weeks count
+                refreshSchedulePeriods(scheduleId);
             } else {
                 alert('Erreur lors de la suppression de la semaine');
             }
