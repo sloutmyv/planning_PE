@@ -182,6 +182,41 @@ class RotationPeriodForm(forms.ModelForm):
             'start_time': 'Heure de début',
             'end_time': 'Heure de fin',
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+        daily_rotation_plan = cleaned_data.get('daily_rotation_plan')
+        
+        # Basic date validation
+        if start_date and end_date and start_date > end_date:
+            raise forms.ValidationError('La date de fin doit être postérieure ou égale à la date de début.')
+        
+        # Check for overlapping periods within the same daily rotation plan
+        if start_date and end_date and daily_rotation_plan:
+            overlapping_periods = RotationPeriod.objects.filter(
+                daily_rotation_plan=daily_rotation_plan,
+                start_date__lte=end_date,
+                end_date__gte=start_date
+            )
+            
+            # Exclude current instance if editing
+            if self.instance.pk:
+                overlapping_periods = overlapping_periods.exclude(pk=self.instance.pk)
+            
+            if overlapping_periods.exists():
+                overlapping_period = overlapping_periods.first()
+                raise forms.ValidationError(
+                    f'Cette période chevauche avec une période existante '
+                    f'({overlapping_period.start_date.strftime("%d/%m/%Y")} - '
+                    f'{overlapping_period.end_date.strftime("%d/%m/%Y")}) '
+                    f'pour le même rythme quotidien.'
+                )
+        
+        return cleaned_data
 
 
 # Shift Schedule Forms
@@ -234,6 +269,39 @@ class ShiftSchedulePeriodForm(forms.ModelForm):
             'start_date': 'Date de début',
             'end_date': 'Date de fin',
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        shift_schedule = cleaned_data.get('shift_schedule')
+        
+        # Basic date validation
+        if start_date and end_date and start_date > end_date:
+            raise forms.ValidationError('La date de fin doit être postérieure ou égale à la date de début.')
+        
+        # Check for overlapping periods within the same shift schedule
+        if start_date and end_date and shift_schedule:
+            overlapping_periods = ShiftSchedulePeriod.objects.filter(
+                shift_schedule=shift_schedule,
+                start_date__lte=end_date,
+                end_date__gte=start_date
+            )
+            
+            # Exclude current instance if editing
+            if self.instance.pk:
+                overlapping_periods = overlapping_periods.exclude(pk=self.instance.pk)
+            
+            if overlapping_periods.exists():
+                overlapping_period = overlapping_periods.first()
+                raise forms.ValidationError(
+                    f'Cette période chevauche avec une période existante '
+                    f'({overlapping_period.start_date.strftime("%d/%m/%Y")} - '
+                    f'{overlapping_period.end_date.strftime("%d/%m/%Y")}) '
+                    f'pour le même planning de poste.'
+                )
+        
+        return cleaned_data
 
 
 class ShiftScheduleWeekForm(forms.ModelForm):

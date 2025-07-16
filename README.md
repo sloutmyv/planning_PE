@@ -77,6 +77,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Workflow optimisé** : Interface qui reste ouverte après ajout/suppression de rythmes pour un travail continu
 - **Validation anti-doublons** : Prévention de l'assignation du même rythme plusieurs fois sur un même jour
 - **Mise à jour temps réel** : Actualisation immédiate des données sans rechargement de page
+- **Duplication de périodes** : Fonction de copie complète des périodes avec toutes leurs semaines et rythmes quotidiens
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -106,6 +107,9 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Validation côté serveur** : Amélioration de la gestion des erreurs de validation avec retour approprié des formulaires
 - **Actualisation des données** : Implémentation d'un système de refresh ciblé via Alpine.js et API REST
 - **Messages d'erreur** : Affichage cohérent des erreurs de validation dans toutes les modales
+- **Validation des chevauchements** : Prévention des périodes qui se chevauchent pour les rythmes quotidiens et roulements hebdomadaires
+- **Couleurs dynamiques des rythmes** : Badges de rythmes quotidiens avec couleurs correspondant aux types d'horaire
+- **Contraste automatique** : Adaptation du texte (blanc/noir) selon la luminosité des couleurs de fond
 
 ## Architecture technique
 

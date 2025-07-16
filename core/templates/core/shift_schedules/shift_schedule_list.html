@@ -353,6 +353,49 @@ function clearModalAndEditPeriod(periodId) {
     }
 }
 
+function clearModalAndDuplicatePeriod(periodId) {
+    console.log('clearModalAndDuplicatePeriod called with period ID:', periodId);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('period-create-form-content');
+    if (!contentDiv) {
+        console.error('period-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('period-modal');
+    if (!modal) {
+        console.error('period-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load duplicate form
+    console.log('Loading period duplicate form...');
+    try {
+        htmx.ajax('GET', `/shift-schedule-periods/${periodId}/duplicate/`, '#period-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
+
 function clearModalAndAddWeek(periodId) {
     console.log('clearModalAndAddWeek called with period ID:', periodId);
     
@@ -670,6 +713,14 @@ function clearModalAndAddWeek(periodId) {
                                                             </svg>
                                                         </button>
                                                         
+                                                        <button @click="clearModalAndDuplicatePeriod(period.id)"
+                                                                title="Dupliquer la période"
+                                                                class="inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-600 hover:border-green-300 -ml-px">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                            </svg>
+                                                        </button>
+                                                        
                                                         <button @click="deletePeriod(period.id, scheduleId)"
                                                                 title="Supprimer la période"
                                                                 class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-r-md bg-white text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 -ml-px">
@@ -721,34 +772,45 @@ function clearModalAndAddWeek(periodId) {
                                                     
                                                     <div x-show="weeksLoaded && weeks.length > 0" class="overflow-x-auto">
                                                         <!-- Weekly Schedule Table -->
-                                                        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                                                        <table class="min-w-full bg-white border border-gray-200 rounded-lg table-fixed">
+                                                            <colgroup>
+                                                                <col class="w-16">  <!-- Semaine column -->
+                                                                <col class="w-1/8"> <!-- Lundi -->
+                                                                <col class="w-1/8"> <!-- Mardi -->
+                                                                <col class="w-1/8"> <!-- Mercredi -->
+                                                                <col class="w-1/8"> <!-- Jeudi -->
+                                                                <col class="w-1/8"> <!-- Vendredi -->
+                                                                <col class="w-1/8"> <!-- Samedi -->
+                                                                <col class="w-1/8"> <!-- Dimanche -->
+                                                                <col class="w-20">  <!-- Actions column -->
+                                                            </colgroup>
                                                             <thead class="bg-gray-50">
                                                                 <tr>
-                                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Semaine
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Lundi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Mardi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Mercredi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Jeudi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Vendredi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Samedi
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Dimanche
                                                                     </th>
-                                                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                                                    <th class="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                                                         Actions
                                                                     </th>
                                                                 </tr>
@@ -757,198 +819,205 @@ function clearModalAndAddWeek(periodId) {
                                                                 <template x-for="week in weeks" :key="week.id">
                                                                     <tr class="hover:bg-gray-50">
                                                                         <!-- Week Number -->
-                                                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                                        <td class="px-2 py-1 text-center text-xs font-medium text-gray-900">
                                                                             <span x-text="'S' + week.week_number"></span>
                                                                         </td>
                                                                         
                                                                         <!-- Monday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Monday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[1] && week.daily_plans[1].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[1]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 1, 'Lundi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Tuesday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Tuesday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[2] && week.daily_plans[2].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[2]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 2, 'Mardi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Wednesday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Wednesday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[3] && week.daily_plans[3].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[3]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 3, 'Mercredi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Thursday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Thursday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[4] && week.daily_plans[4].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[4]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 4, 'Jeudi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Friday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Friday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[5] && week.daily_plans[5].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[5]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 5, 'Vendredi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Saturday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Saturday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[6] && week.daily_plans[6].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[6]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 6, 'Samedi')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Sunday -->
-                                                                        <td class="px-2 py-2">
-                                                                            <div class="min-h-12 space-y-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <!-- Assigned rhythms for Sunday (multiple possible) -->
                                                                                 <template x-if="week.daily_plans && week.daily_plans[7] && week.daily_plans[7].length > 0">
-                                                                                    <div class="space-y-1">
+                                                                                    <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[7]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full mr-1 mb-1">
-                                                                                                <span x-text="plan.full_name"></span>
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                                 :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
+                                                                                                <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
-                                                                                                        class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                                                                                                        class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
                                                                                 </template>
                                                                                 <!-- Add rhythm button -->
                                                                                 <button @click="openDailyPlanModal(week.id, 7, 'Dimanche')"
-                                                                                        class="inline-flex items-center px-2 py-1 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600">
-                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        class="inline-flex items-center px-1 py-0.5 text-xs text-gray-600 border border-dashed border-gray-300 rounded hover:border-blue-300 hover:text-blue-600 w-full max-w-20 justify-center">
+                                                                                    <svg class="w-2 h-2 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                                                     </svg>
-                                                                                    Ajouter
+                                                                                    <span class="truncate text-xs">Ajouter</span>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
                                                                         
                                                                         <!-- Actions -->
-                                                                        <td class="px-3 py-2 text-center">
-                                                                            <div class="flex items-center justify-center space-x-1">
+                                                                        <td class="px-1 py-1">
+                                                                            <div class="min-h-8 flex flex-col items-center justify-center space-y-1">
                                                                                 <button @click="editWeek(week.id)"
                                                                                         title="Modifier la semaine"
-                                                                                        class="inline-flex items-center px-2 py-1 border border-gray-300 rounded bg-white text-xs font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600">
+                                                                                        class="inline-flex items-center px-2 py-1 border border-gray-300 rounded bg-white text-xs font-medium text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 w-full max-w-20 justify-center">
                                                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                                                     </svg>
@@ -956,7 +1025,7 @@ function clearModalAndAddWeek(periodId) {
                                                                                 
                                                                                 <button @click="deleteWeek(week.id, period.id, period.schedule_id)"
                                                                                         title="Supprimer la semaine"
-                                                                                        class="inline-flex items-center px-2 py-1 border border-gray-300 rounded bg-white text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600">
+                                                                                        class="inline-flex items-center px-2 py-1 border border-gray-300 rounded bg-white text-xs font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 w-full max-w-20 justify-center">
                                                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                                                     </svg>
@@ -1303,6 +1372,23 @@ function refreshPeriodWeeks(periodId) {
             }
         });
     }
+}
+
+// Function to determine if text should be white or black based on background color
+function getContrastColor(hexColor) {
+    // Remove # if present
+    const color = hexColor.replace('#', '');
+    
+    // Convert to RGB
+    const r = parseInt(color.substr(0, 2), 16);
+    const g = parseInt(color.substr(2, 2), 16);
+    const b = parseInt(color.substr(4, 2), 16);
+    
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return black for light colors, white for dark colors
+    return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
 
 </script>

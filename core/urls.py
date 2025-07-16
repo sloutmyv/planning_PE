@@ -75,6 +75,7 @@ urlpatterns = [
     path('shift-schedules/<int:schedule_id>/periods/create/', views.shift_schedule_period_create, name='shift_schedule_period_create'),
     path('shift-schedule-periods/<int:period_id>/edit/', views.shift_schedule_period_edit, name='shift_schedule_period_edit'),
     path('shift-schedule-periods/<int:period_id>/delete/', views.shift_schedule_period_delete, name='shift_schedule_period_delete'),
+    path('shift-schedule-periods/<int:period_id>/duplicate/', views.shift_schedule_period_duplicate, name='shift_schedule_period_duplicate'),
     
     # Shift Schedule Week URLs
     path('shift-schedule-periods/<int:period_id>/weeks/create/', views.shift_schedule_week_create, name='shift_schedule_week_create'),

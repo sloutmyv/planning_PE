@@ -1224,6 +1224,7 @@ def api_shift_schedule_period_weeks(request, period_id):
                 'full_name': daily_plan.daily_rotation_plan.designation if daily_plan.daily_rotation_plan else 'Non défini',
                 'weekday': daily_plan.weekday,
                 'plan_id': daily_plan.daily_rotation_plan.id if daily_plan.daily_rotation_plan else None,
+                'schedule_type_color': daily_plan.daily_rotation_plan.schedule_type.color if daily_plan.daily_rotation_plan and daily_plan.daily_rotation_plan.schedule_type else '#6B7280',
             })
         
         weeks_data.append({
@@ -1469,6 +1470,70 @@ def shift_schedule_period_delete(request, period_id):
         return HttpResponse('', status=200)
     
     return redirect('shift_schedule_list')
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def shift_schedule_period_duplicate(request, period_id):
+    """Duplicate a shift schedule period with all its weeks and daily plans"""
+    original_period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
+    
+    if request.method == 'POST':
+        form = ShiftSchedulePeriodForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                # Create new period with new dates
+                new_period = form.save(commit=False)
+                new_period.shift_schedule = original_period.shift_schedule
+                new_period.save()
+                
+                # Copy all weeks from original period
+                original_weeks = original_period.weeks.all().order_by('week_number')
+                for original_week in original_weeks:
+                    # Create new week
+                    new_week = ShiftScheduleWeek.objects.create(
+                        period=new_period,
+                        week_number=original_week.week_number
+                    )
+                    
+                    # Copy all daily plans from original week
+                    original_daily_plans = original_week.daily_plans.all()
+                    for original_daily_plan in original_daily_plans:
+                        ShiftScheduleDailyPlan.objects.create(
+                            week=new_week,
+                            weekday=original_daily_plan.weekday,
+                            daily_rotation_plan=original_daily_plan.daily_rotation_plan
+                        )
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse(f"""
+                        <script>
+                            document.getElementById('period-modal').style.display = 'none';
+                            if (typeof refreshSchedulePeriods === 'function') {{
+                                refreshSchedulePeriods({original_period.shift_schedule.id});
+                            }}
+                        </script>
+                    """)
+                
+                messages.success(request, f'Période dupliquée avec succès avec {original_weeks.count()} semaines.')
+                return redirect('shift_schedule_list')
+    else:
+        # Pre-fill form with original period data but empty dates for user to set
+        initial_data = {
+            'shift_schedule': original_period.shift_schedule,
+            'start_date': '',  # User must set new dates
+            'end_date': ''
+        }
+        form = ShiftSchedulePeriodForm(initial=initial_data)
+        form.fields['shift_schedule'].widget = forms.HiddenInput()
+    
+    return render(request, 'core/shift_schedules/shift_schedule_period_duplicate_form_htmx.html', {
+        'form': form,
+        'original_period': original_period,
+        'schedule': original_period.shift_schedule,
+        'current_agent': get_agent_from_user(request.user),
+    })
 
 
 

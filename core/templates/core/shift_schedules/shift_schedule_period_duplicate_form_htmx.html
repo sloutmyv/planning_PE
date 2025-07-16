@@ -1,0 +1,128 @@
+<form method="post" 
+      hx-post="{% url 'shift_schedule_period_duplicate' original_period.id %}"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="space-y-6">
+    {% csrf_token %}
+    
+    <!-- Plan de roulement (hidden field) -->
+    {{ form.shift_schedule }}
+
+    <!-- Information about original period -->
+    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div class="flex">
+            <svg class="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Duplication de période</h3>
+                <div class="mt-1 text-sm text-blue-700">
+                    <p><strong>Période source :</strong> {{ original_period.start_date|date:"d/m/Y" }} - {{ original_period.end_date|date:"d/m/Y" }}</p>
+                    <p><strong>Semaines à copier :</strong> {{ original_period.weeks.count }} semaine{{ original_period.weeks.count|pluralize }}</p>
+                    <p class="text-xs mt-1">Toutes les semaines et leurs rythmes quotidiens seront copiés vers la nouvelle période.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Period Dates -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <!-- Date de début -->
+        <div>
+            <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                {{ form.start_date.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.start_date }}
+            {% if form.start_date.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.start_date.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Date de fin -->
+        <div>
+            <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
+                {{ form.end_date.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.end_date }}
+            {% if form.end_date.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.end_date.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <p class="mt-1 text-sm text-gray-500">
+                La date de fin doit être postérieure ou égale à la date de début.
+            </p>
+        </div>
+    </div>
+
+    <!-- Form-wide errors -->
+    {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-md p-4">
+            <div class="flex">
+                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Erreurs de validation</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+        <button type="button" 
+                onclick="document.getElementById('period-modal').style.display = 'none'"
+                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            Annuler
+        </button>
+        <button type="submit" 
+                class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Dupliquer la période
+        </button>
+    </div>
+</form>
+
+<script>
+// Ensure CSS is properly applied after HTMX loads the form
+function applyDuplicateFormStyling() {
+    const currentForm = document.querySelector('form[hx-post*="duplicate"]');
+    
+    if (currentForm) {
+        const inputs = currentForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            // Ensure Tailwind classes are applied if not already present
+            if (!input.className.includes('rounded-md')) {
+                input.className += ' block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500';
+            }
+        });
+    }
+}
+
+// Apply styling when DOM is ready
+document.addEventListener('DOMContentLoaded', applyDuplicateFormStyling);
+
+// Apply styling after HTMX content swaps
+document.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.xhr && evt.detail.xhr.responseURL && evt.detail.xhr.responseURL.includes('duplicate')) {
+        setTimeout(applyDuplicateFormStyling, 50);
+    }
+});
+
+// Apply styling immediately for current form
+applyDuplicateFormStyling();
+</script>
