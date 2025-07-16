@@ -517,7 +517,7 @@ function clearModalAndAddWeek(periodId) {
                                             <div class="flex flex-col items-start space-y-2">
                                                 <!-- Period Count -->
                                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                    {{ schedule.periods.count }} période{{ schedule.periods.count|pluralize }}
+                                                    <span x-text="periodsLoaded ? periods.length : {{ schedule.periods.count }}"></span> période<span x-text="(periodsLoaded ? periods.length : {{ schedule.periods.count }}) > 1 ? 's' : ''"></span>
                                                 </span>
                                                 
                                                 <!-- Created Date -->

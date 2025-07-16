@@ -1463,6 +1463,10 @@ def shift_schedule_period_delete(request, period_id):
         period.delete()
         messages.success(request, f'Période supprimée avec succès.')
     
+    # For HTMX requests (frontend fetch), return empty success response to allow frontend refresh
+    if request.headers.get('HX-Request') or 'application/json' in request.headers.get('Accept', ''):
+        return HttpResponse('', status=200)
+    
     return redirect('shift_schedule_list')
 
 
