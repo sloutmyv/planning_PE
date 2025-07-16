@@ -16,6 +16,7 @@ urlpatterns = [
     path('schedule-type-count/', views.schedule_type_count, name='schedule_type_count'),
     path('daily-rotation-plan-count/', views.daily_rotation_plan_count, name='daily_rotation_plan_count'),
     path('rotation-period-count/', views.rotation_period_count, name='rotation_period_count'),
+    path('public-holiday-count/', views.public_holiday_count, name='public_holiday_count'),
     
     # Agent URLs
     path('agents/', views.agent_list, name='agent_list'),
@@ -86,4 +87,11 @@ urlpatterns = [
     path('shift-schedule-weeks/<int:week_id>/daily-plans/create/<int:weekday>/', views.shift_schedule_daily_plan_create, name='shift_schedule_daily_plan_create'),
     path('shift-schedule-daily-plans/<int:daily_plan_id>/edit/', views.shift_schedule_daily_plan_edit, name='shift_schedule_daily_plan_edit'),
     path('shift-schedule-daily-plans/<int:daily_plan_id>/delete/', views.shift_schedule_daily_plan_delete, name='shift_schedule_daily_plan_delete'),
+    
+    # Public Holiday URLs
+    path('public-holidays/', views.public_holiday_list, name='public_holiday_list'),
+    path('public-holidays/create/', views.public_holiday_create, name='public_holiday_create'),
+    path('public-holidays/<int:pk>/', views.public_holiday_detail, name='public_holiday_detail'),
+    path('public-holidays/<int:pk>/edit/', views.public_holiday_edit, name='public_holiday_edit'),
+    path('public-holidays/<int:pk>/delete/', views.public_holiday_delete, name='public_holiday_delete'),
 ]

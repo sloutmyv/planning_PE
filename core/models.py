@@ -449,3 +449,38 @@ class ShiftScheduleDailyPlan(models.Model):
         verbose_name = "Plan Quotidien de Planning"
         verbose_name_plural = "Plans Quotidiens de Planning"
         ordering = ['week', 'weekday']
+
+
+class PublicHoliday(models.Model):
+    designation = models.CharField(
+        max_length=200,
+        help_text="Nom du jour férié (ex: 'Fête du Travail', 'Noël')"
+    )
+    date = models.DateField(
+        help_text="Date du jour férié"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Check for duplicate holidays on the same date
+        if self.date:
+            existing_holidays = PublicHoliday.objects.filter(date=self.date)
+            if self.pk:
+                existing_holidays = existing_holidays.exclude(pk=self.pk)
+            
+            if existing_holidays.exists():
+                raise ValidationError({
+                    'date': f'Un jour férié existe déjà pour cette date ({existing_holidays.first().designation}).'
+                })
+    
+    def __str__(self):
+        return f"{self.designation} - {self.date.strftime('%d/%m/%Y')}"
+    
+    class Meta:
+        verbose_name = "Jour Férié"
+        verbose_name_plural = "Jours Fériés"
+        ordering = ['date']
+        unique_together = ['date']

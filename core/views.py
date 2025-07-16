@@ -10,9 +10,9 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday)
 from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
-                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet)
+                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm)
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -1790,3 +1790,166 @@ def shift_schedule_daily_plan_delete(request, daily_plan_id):
         })
     
     return redirect('shift_schedule_list')
+
+
+# Public Holiday Views
+@admin_required
+def public_holiday_list(request):
+    """List all public holidays with search, sorting and pagination"""
+    search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'date')
+    order = request.GET.get('order', 'asc')
+    
+    holidays = PublicHoliday.objects.all()
+    
+    if search_query:
+        holidays = holidays.filter(
+            Q(designation__icontains=search_query) |
+            Q(date__icontains=search_query)
+        )
+    
+    # Apply sorting
+    valid_sorts = ['designation', 'date']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        holidays = holidays.order_by(sort_by)
+    else:
+        holidays = holidays.order_by('date')
+    
+    paginator = Paginator(holidays, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'date')
+    current_order = request.GET.get('order', 'asc')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/public_holidays/public_holiday_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order
+        })
+    
+    return render(request, 'core/public_holidays/public_holiday_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order
+    })
+
+
+@admin_required
+def public_holiday_create(request):
+    """Create new public holiday"""
+    if request.method == 'POST':
+        form = PublicHolidayForm(request.POST)
+        if form.is_valid():
+            holiday = form.save()
+            messages.success(request, f'Jour férié "{holiday.designation}" créé avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Jour férié "{holiday.designation}" créé avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("public-holiday-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('public_holiday_list')
+    else:
+        form = PublicHolidayForm()
+    
+    template = 'core/public_holidays/public_holiday_form_htmx.html' if request.headers.get('HX-Request') else 'core/public_holidays/public_holiday_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': 'Créer un Jour Férié',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+def public_holiday_detail(request, pk):
+    """Public holiday detail view"""
+    holiday = get_object_or_404(PublicHoliday, pk=pk)
+    return render(request, 'core/public_holidays/public_holiday_detail.html', {'holiday': holiday})
+
+
+@admin_required
+def public_holiday_edit(request, pk):
+    """Edit existing public holiday"""
+    holiday = get_object_or_404(PublicHoliday, pk=pk)
+    
+    if request.method == 'POST':
+        form = PublicHolidayForm(request.POST, instance=holiday)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Jour férié "{holiday.designation}" modifié avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Jour férié "{holiday.designation}" modifié avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("public-holiday-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('public_holiday_list')
+    else:
+        form = PublicHolidayForm(instance=holiday)
+    
+    template = 'core/public_holidays/public_holiday_form_htmx.html' if request.headers.get('HX-Request') else 'core/public_holidays/public_holiday_form.html'
+    return render(request, template, {
+        'form': form,
+        'holiday': holiday,
+        'title': f'Modifier "{holiday.designation}"',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+@require_http_methods(["DELETE"])
+def public_holiday_delete(request, pk):
+    """Delete public holiday"""
+    holiday = get_object_or_404(PublicHoliday, pk=pk)
+    designation = holiday.designation
+    holiday.delete()
+    
+    if request.headers.get('HX-Request'):
+        # Return updated holiday list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'date')
+        order = request.GET.get('order', 'asc')
+        
+        holidays = PublicHoliday.objects.all()
+            
+        if search_query:
+            holidays = holidays.filter(
+                Q(designation__icontains=search_query) |
+                Q(date__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['designation', 'date']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            holidays = holidays.order_by(sort_by)
+        else:
+            holidays = holidays.order_by('date')
+        
+        paginator = Paginator(holidays, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        return render(request, 'core/public_holidays/public_holiday_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'date'),
+            'current_order': request.GET.get('order', 'asc'),
+            'success_message': f'Jour férié "{designation}" supprimé avec succès.'
+        })
+    
+    messages.success(request, f'Jour férié "{designation}" supprimé avec succès.')
+    return redirect('public_holiday_list')
+
+
+@admin_required
+def public_holiday_count(request):
+    """HTMX endpoint for public holiday count"""
+    count = PublicHoliday.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="public-holiday-count">{count}</p>')

@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ holiday.designation }} - Planning PE{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">{{ holiday.designation }}</h1>
+        <a href="{% url 'public_holiday_list' %}" 
+           class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+            Retour à la liste
+        </a>
+    </div>
+
+    <!-- Holiday Details -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Nom du jour férié</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ holiday.designation }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Date</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ holiday.date|date:"d/m/Y" }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Date de création</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ holiday.created_at|date:"d/m/Y H:i" }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Dernière modification</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ holiday.updated_at|date:"d/m/Y H:i" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex space-x-3">
+        <a href="{% url 'public_holiday_edit' holiday.pk %}" 
+           class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+            Modifier
+        </a>
+        <button onclick="if(confirm('Êtes-vous sûr de vouloir supprimer ce jour férié ?')) { window.location.href = '{% url 'public_holiday_delete' holiday.pk %}'; }"
+                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+            Supprimer
+        </button>
+    </div>
+</div>
+{% endblock %}

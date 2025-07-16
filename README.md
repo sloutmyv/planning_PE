@@ -79,6 +79,18 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Mise à jour temps réel** : Actualisation immédiate des données sans rechargement de page
 - **Duplication de périodes** : Fonction de copie complète des périodes avec toutes leurs semaines et rythmes quotidiens
 
+### Gestion des jours fériés
+- **CRUD complet** : Création, lecture, modification, suppression des jours fériés
+- **Recherche en temps réel** : Recherche par nom ou date avec délai de 300ms
+- **Tri multi-colonnes** : Tri par nom ou date (ASC/DESC)
+- **Pagination** : Navigation par pages avec conservation des filtres
+- **Modales HTMX** : Formulaires de création/modification sans navigation
+- **Validation métier** : Prévention des doublons sur la même date
+- **Interface cohérente** : Même design et expérience utilisateur que les autres modules d'administration
+- **Accès sécurisé** : Réservé aux administrateurs uniquement
+- **Affichage français** : Format de date français (jj/mm/aaaa)
+- **Messages informatifs** : Notifications de succès et erreurs en français
+
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
@@ -229,6 +241,7 @@ L'interface principale propose :
   - Types d'Horaire
   - Rythmes Quotidien
   - Roulements Hebdomadaires
+  - Jours Fériés
   - Interface d'Administration Django
 
 ## Tests
@@ -300,6 +313,14 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **daily_rotation_plan** : Rythme quotidien assigné (clé étrangère vers DailyRotationPlan)
 - **Méthodes utilitaires** : `get_weekday_display_french()` pour affichage des jours en français
 - **Contrainte unique** : Combinaison semaine + jour de la semaine unique
+
+### PublicHoliday (Jour Férié)
+- **designation** : Nom du jour férié (ex: "Fête du Travail", "Noël")
+- **date** : Date du jour férié (format DateField)
+- **Validation métier** : Prévention des doublons sur la même date avec message d'erreur informatif
+- **Méthodes calculées** : `__str__()` retourne "Nom - dd/mm/yyyy" pour affichage français
+- **Contrainte unique** : Une seule déclaration de jour férié par date
+- **Champs d'audit** : created_at et updated_at pour traçabilité
 
 ### Gestion des roulements hebdomadaires
 - **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien

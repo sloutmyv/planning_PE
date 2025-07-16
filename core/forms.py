@@ -1,6 +1,6 @@
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday)
 
 
 class AgentForm(forms.ModelForm):
@@ -394,3 +394,23 @@ WeeklyPlanFormSet = forms.formset_factory(
     validate_max=True,
     validate_min=False
 )
+
+
+class PublicHolidayForm(forms.ModelForm):
+    class Meta:
+        model = PublicHoliday
+        fields = ['designation', 'date']
+        widgets = {
+            'designation': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Ex: Fête du Travail, Noël'
+            }),
+            'date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+        }
+        labels = {
+            'designation': 'Nom du jour férié',
+            'date': 'Date',
+        }

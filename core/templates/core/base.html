@@ -127,6 +127,10 @@
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                                                 Roulements Hebdomadaires
                                             </a>
+                                            <a href="{% url 'public_holiday_list' %}" 
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                                Jours Fériés
+                                            </a>
                                             {% if current_agent.is_super_admin %}
                                                 <div class="border-t border-gray-100"></div>
                                                 <a href="/admin/" 
