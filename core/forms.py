@@ -1,6 +1,6 @@
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department)
 
 
 class AgentForm(forms.ModelForm):
@@ -429,3 +429,53 @@ class PublicHolidayForm(forms.ModelForm):
                     f'Un jour férié existe déjà pour cette date : "{existing_holiday.designation}" ({date.strftime("%d/%m/%Y")})'
                 )
         return date
+
+
+class DepartmentForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set suggested next order value for new departments
+        if not self.instance.pk:
+            next_order = Department.get_next_order()
+            self.fields['order'].widget.attrs['placeholder'] = f'Par défaut : {next_order}'
+            # Make order field not required so it can be auto-filled
+            self.fields['order'].required = False
+    
+    class Meta:
+        model = Department
+        fields = ['name', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Ex: Ressources Humaines, Informatique'
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'min': '1',
+                'step': '1'
+            }),
+        }
+        labels = {
+            'name': 'Nom du département',
+            'order': 'Ordre d\'affichage',
+        }
+    
+    def clean_order(self):
+        order = self.cleaned_data.get('order')
+        
+        # If order is not provided, use the next available order
+        if order is None or order == '':
+            order = Department.get_next_order()
+        
+        # Check for duplicate order values
+        existing_departments = Department.objects.filter(order=order)
+        if self.instance.pk:
+            existing_departments = existing_departments.exclude(pk=self.instance.pk)
+        
+        if existing_departments.exists():
+            raise forms.ValidationError(
+                f'Un département avec l\'ordre {order} existe déjà.'
+            )
+        
+        return order

@@ -17,6 +17,7 @@ urlpatterns = [
     path('daily-rotation-plan-count/', views.daily_rotation_plan_count, name='daily_rotation_plan_count'),
     path('rotation-period-count/', views.rotation_period_count, name='rotation_period_count'),
     path('public-holiday-count/', views.public_holiday_count, name='public_holiday_count'),
+    path('department-count/', views.department_count, name='department_count'),
     
     # Agent URLs
     path('agents/', views.agent_list, name='agent_list'),
@@ -95,4 +96,11 @@ urlpatterns = [
     path('public-holidays/<int:pk>/edit/', views.public_holiday_edit, name='public_holiday_edit'),
     path('public-holidays/<int:pk>/duplicate/', views.public_holiday_duplicate, name='public_holiday_duplicate'),
     path('public-holidays/<int:pk>/delete/', views.public_holiday_delete, name='public_holiday_delete'),
+    
+    # Department URLs
+    path('departments/', views.department_list, name='department_list'),
+    path('departments/create/', views.department_create, name='department_create'),
+    path('departments/<int:pk>/', views.department_detail, name='department_detail'),
+    path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
+    path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
 ]

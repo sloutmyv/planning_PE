@@ -10,9 +10,9 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department)
 from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
-                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm)
+                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm, DepartmentForm)
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -2021,3 +2021,164 @@ def public_holiday_count(request):
     """HTMX endpoint for public holiday count"""
     count = PublicHoliday.objects.count()
     return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="public-holiday-count">{count}</p>')
+
+
+# Department Views
+@admin_required
+def department_count(request):
+    """HTMX endpoint for department count"""
+    count = Department.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="department-count">{count}</p>')
+
+
+@admin_required
+def department_list(request):
+    """List all departments with search, sorting and pagination"""
+    search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort', 'order')
+    order = request.GET.get('order', 'asc')
+    
+    departments = Department.objects.all()
+    
+    if search_query:
+        departments = departments.filter(
+            Q(name__icontains=search_query)
+        )
+    
+    # Apply sorting
+    valid_sorts = ['name', 'order']
+    if sort_by in valid_sorts:
+        if order == 'desc':
+            sort_by = f'-{sort_by}'
+        departments = departments.order_by(sort_by)
+    else:
+        departments = departments.order_by('order', 'name')
+    
+    paginator = Paginator(departments, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get current sort order for template
+    current_sort = request.GET.get('sort', 'order')
+    current_order = request.GET.get('order', 'asc')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/departments/department_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': current_sort,
+            'current_order': current_order
+        })
+    
+    return render(request, 'core/departments/department_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'current_sort': current_sort,
+        'current_order': current_order
+    })
+
+
+@admin_required
+def department_create(request):
+    """Create new department"""
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            department = form.save()
+            messages.success(request, f'Département "{department.name}" créé avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Département "{department.name}" créé avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("department-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('department_list')
+    else:
+        form = DepartmentForm()
+    
+    template = 'core/departments/department_form_htmx.html' if request.headers.get('HX-Request') else 'core/departments/department_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': 'Créer un Département',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+def department_detail(request, pk):
+    """Department detail view"""
+    department = get_object_or_404(Department, pk=pk)
+    return render(request, 'core/departments/department_detail.html', {'department': department})
+
+
+@admin_required
+def department_edit(request, pk):
+    """Edit existing department"""
+    department = get_object_or_404(Department, pk=pk)
+    
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST, instance=department)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Département "{department.name}" modifié avec succès.')
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Département "{department.name}" modifié avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("department-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('department_list')
+    else:
+        form = DepartmentForm(instance=department)
+    
+    template = 'core/departments/department_form_htmx.html' if request.headers.get('HX-Request') else 'core/departments/department_form.html'
+    return render(request, template, {
+        'form': form,
+        'department': department,
+        'title': f'Modifier "{department.name}"',
+        'is_htmx': request.headers.get('HX-Request')
+    })
+
+
+@admin_required
+@require_http_methods(["DELETE"])
+def department_delete(request, pk):
+    """Delete department"""
+    department = get_object_or_404(Department, pk=pk)
+    name = department.name
+    department.delete()
+    
+    if request.headers.get('HX-Request'):
+        # Return updated department list with same filters and sorting
+        search_query = request.GET.get('search', '')
+        sort_by = request.GET.get('sort', 'order')
+        order = request.GET.get('order', 'asc')
+        
+        departments = Department.objects.all()
+            
+        if search_query:
+            departments = departments.filter(
+                Q(name__icontains=search_query)
+            )
+        
+        # Apply same sorting
+        valid_sorts = ['name', 'order']
+        if sort_by in valid_sorts:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            departments = departments.order_by(sort_by)
+        else:
+            departments = departments.order_by('order', 'name')
+        
+        paginator = Paginator(departments, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        return render(request, 'core/departments/department_list_partial.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+            'current_sort': request.GET.get('sort', 'order'),
+            'current_order': request.GET.get('order', 'asc'),
+            'success_message': f'Département "{name}" supprimé avec succès.'
+        })
+    
+    messages.success(request, f'Département "{name}" supprimé avec succès.')
+    return redirect('department_list')

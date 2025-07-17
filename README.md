@@ -94,6 +94,22 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Messages informatifs** : Notifications de succès et erreurs en français
 - **Mise à jour dynamique** : Les compteurs par année se mettent à jour automatiquement lors des suppressions
 
+### Gestion des départements
+- **CRUD complet** : Création, lecture, modification, suppression des départements
+- **Recherche en temps réel** : Recherche par nom de département avec délai de 300ms
+- **Tri multi-colonnes** : Tri par nom ou ordre d'affichage (ASC/DESC)
+- **Pagination** : Navigation par pages avec conservation des filtres
+- **Modales HTMX** : Formulaires de création/modification sans navigation
+- **Ordre hiérarchique intelligent** : Auto-incrémentation par 10 (10, 20, 30, etc.) pour faciliter les réorganisations
+- **Validation anti-doublons** : Prévention stricte des doublons d'ordre avec messages d'erreur informatifs
+- **Suggestions automatiques** : Placeholder montrant l'ordre suggéré pour les nouveaux départements
+- **Champ optionnel** : Ordre peut être laissé vide pour attribution automatique
+- **Interface cohérente** : Même design et expérience utilisateur que les autres modules d'administration
+- **Accès sécurisé** : Réservé aux administrateurs uniquement
+- **Affichage français** : Format de date français (jj/mm/aaaa) pour les dates de création
+- **Messages informatifs** : Notifications de succès et erreurs en français
+- **Mise à jour dynamique** : Interface HTMX pour des interactions fluides
+
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
@@ -245,6 +261,7 @@ L'interface principale propose :
   - Rythmes Quotidien
   - Roulements Hebdomadaires
   - Jours Fériés
+  - Départements
   - Interface d'Administration Django
 
 ## Tests
@@ -326,6 +343,17 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Champs d'audit** : created_at et updated_at pour traçabilité
 - **Fonction de duplication** : Vue dédiée pour copier un jour férié existant avec pré-remplissage du nom
 - **Tri intelligent** : Tri automatique par année (descendante) puis par date pour une organisation chronologique optimale
+
+### Department (Département)
+- **name** : Nom du département (format CharField, contrainte unique au niveau base de données)
+- **order** : Ordre d'affichage hiérarchique (PositiveIntegerField, contrainte unique)
+- **Auto-incrémentation intelligente** : Ordre automatique par incréments de 10 (10, 20, 30, etc.) si non spécifié
+- **Validation métier** : Prévention des doublons d'ordre avec messages d'erreur informatifs détaillés
+- **Méthodes calculées** : `get_next_order()` classe method pour calculer le prochain ordre suggéré
+- **Contrainte unique** : Un seul département par ordre d'affichage (base de données + formulaire)
+- **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Tri par défaut** : Tri par ordre puis par nom pour affichage hiérarchique cohérent
+- **Flexibilité** : Possibilité de modifier l'ordre manuellement pour réorganiser la hiérarchie
 
 ### Gestion des roulements hebdomadaires
 - **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien

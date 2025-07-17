@@ -487,3 +487,56 @@ class PublicHoliday(models.Model):
         verbose_name = "Jour Férié"
         verbose_name_plural = "Jours Fériés"
         ordering = ['date']
+
+
+class Department(models.Model):
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text="Nom du département (ex: 'Ressources Humaines', 'Informatique')"
+    )
+    order = models.PositiveIntegerField(
+        help_text="Ordre d'affichage hiérarchique (incréments de 10 recommandés)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Check for duplicate order values
+        if self.order:
+            existing_departments = Department.objects.filter(order=self.order)
+            if self.pk:
+                existing_departments = existing_departments.exclude(pk=self.pk)
+            
+            if existing_departments.exists():
+                raise ValidationError({
+                    'order': f'Un département avec l\'ordre {self.order} existe déjà.'
+                })
+    
+    def save(self, *args, **kwargs):
+        # Auto-increment order by 10 if not set or is None
+        if self.order is None:
+            last_department = Department.objects.order_by('-order').first()
+            if last_department:
+                self.order = last_department.order + 10
+            else:
+                self.order = 10
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_next_order(cls):
+        """Get the next suggested order value"""
+        last_department = cls.objects.order_by('-order').first()
+        if last_department:
+            return last_department.order + 10
+        return 10
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "Département"
+        verbose_name_plural = "Départements"
+        ordering = ['order', 'name']
