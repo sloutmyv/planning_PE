@@ -93,5 +93,6 @@ urlpatterns = [
     path('public-holidays/create/', views.public_holiday_create, name='public_holiday_create'),
     path('public-holidays/<int:pk>/', views.public_holiday_detail, name='public_holiday_detail'),
     path('public-holidays/<int:pk>/edit/', views.public_holiday_edit, name='public_holiday_edit'),
+    path('public-holidays/<int:pk>/duplicate/', views.public_holiday_duplicate, name='public_holiday_duplicate'),
     path('public-holidays/<int:pk>/delete/', views.public_holiday_delete, name='public_holiday_delete'),
 ]

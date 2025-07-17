@@ -82,14 +82,17 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 ### Gestion des jours fériés
 - **CRUD complet** : Création, lecture, modification, suppression des jours fériés
 - **Recherche en temps réel** : Recherche par nom ou date avec délai de 300ms
-- **Tri multi-colonnes** : Tri par nom ou date (ASC/DESC)
+- **Tri intelligent par année** : Tri automatique par année puis par date lors du tri par date (ASC/DESC)
 - **Pagination** : Navigation par pages avec conservation des filtres
 - **Modales HTMX** : Formulaires de création/modification sans navigation
-- **Validation métier** : Prévention des doublons sur la même date
+- **Fonction de duplication** : Bouton de copie pour créer rapidement des jours fériés récurrents avec même nom mais nouvelle date
+- **Validation anti-doublons** : Prévention stricte des doublons sur la même date avec messages d'erreur informatifs
+- **Compteurs par année** : Badges d'affichage du nombre de jours fériés par année, triés du plus récent au plus ancien
 - **Interface cohérente** : Même design et expérience utilisateur que les autres modules d'administration
 - **Accès sécurisé** : Réservé aux administrateurs uniquement
-- **Affichage français** : Format de date français (jj/mm/aaaa)
+- **Affichage français** : Format de date français (jj/mm/aaaa) avec indication de l'année sous chaque date
 - **Messages informatifs** : Notifications de succès et erreurs en français
+- **Mise à jour dynamique** : Les compteurs par année se mettent à jour automatiquement lors des suppressions
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
@@ -316,11 +319,13 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 
 ### PublicHoliday (Jour Férié)
 - **designation** : Nom du jour férié (ex: "Fête du Travail", "Noël")
-- **date** : Date du jour férié (format DateField)
-- **Validation métier** : Prévention des doublons sur la même date avec message d'erreur informatif
+- **date** : Date du jour férié (format DateField, contrainte unique au niveau base de données)
+- **Validation métier** : Prévention des doublons sur la même date avec messages d'erreur informatifs détaillés
 - **Méthodes calculées** : `__str__()` retourne "Nom - dd/mm/yyyy" pour affichage français
-- **Contrainte unique** : Une seule déclaration de jour férié par date
+- **Contrainte unique** : Une seule déclaration de jour férié par date (base de données + formulaire)
 - **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Fonction de duplication** : Vue dédiée pour copier un jour férié existant avec pré-remplissage du nom
+- **Tri intelligent** : Tri automatique par année (descendante) puis par date pour une organisation chronologique optimale
 
 ### Gestion des roulements hebdomadaires
 - **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien

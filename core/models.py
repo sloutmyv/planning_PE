@@ -457,7 +457,11 @@ class PublicHoliday(models.Model):
         help_text="Nom du jour férié (ex: 'Fête du Travail', 'Noël')"
     )
     date = models.DateField(
-        help_text="Date du jour férié"
+        unique=True,
+        help_text="Date du jour férié",
+        error_messages={
+            'unique': 'Un jour férié existe déjà pour cette date.'
+        }
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -483,4 +487,3 @@ class PublicHoliday(models.Model):
         verbose_name = "Jour Férié"
         verbose_name_plural = "Jours Fériés"
         ordering = ['date']
-        unique_together = ['date']

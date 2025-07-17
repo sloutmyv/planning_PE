@@ -1796,6 +1796,9 @@ def shift_schedule_daily_plan_delete(request, daily_plan_id):
 @admin_required
 def public_holiday_list(request):
     """List all public holidays with search, sorting and pagination"""
+    from django.db.models import Count
+    from django.db.models.functions import Extract
+    
     search_query = request.GET.get('search', '')
     sort_by = request.GET.get('sort', 'date')
     order = request.GET.get('order', 'asc')
@@ -1808,14 +1811,28 @@ def public_holiday_list(request):
             Q(date__icontains=search_query)
         )
     
-    # Apply sorting
+    # Apply sorting with automatic year sorting when sorting by date
     valid_sorts = ['designation', 'date']
     if sort_by in valid_sorts:
-        if order == 'desc':
-            sort_by = f'-{sort_by}'
-        holidays = holidays.order_by(sort_by)
+        if sort_by == 'date':
+            # Sort by year first, then by date within year
+            if order == 'desc':
+                holidays = holidays.order_by('-date__year', '-date')
+            else:
+                holidays = holidays.order_by('date__year', 'date')
+        else:
+            if order == 'desc':
+                sort_by = f'-{sort_by}'
+            holidays = holidays.order_by(sort_by)
     else:
-        holidays = holidays.order_by('date')
+        holidays = holidays.order_by('date__year', 'date')
+    
+    # Get count by year for display
+    holidays_by_year = PublicHoliday.objects.values(
+        year=Extract('date', 'year')
+    ).annotate(
+        count=Count('id')
+    ).order_by('-year')
     
     paginator = Paginator(holidays, 10)
     page_number = request.GET.get('page')
@@ -1830,14 +1847,16 @@ def public_holiday_list(request):
             'page_obj': page_obj,
             'search_query': search_query,
             'current_sort': current_sort,
-            'current_order': current_order
+            'current_order': current_order,
+            'holidays_by_year': holidays_by_year
         })
     
     return render(request, 'core/public_holidays/public_holiday_list.html', {
         'page_obj': page_obj,
         'search_query': search_query,
         'current_sort': current_sort,
-        'current_order': current_order
+        'current_order': current_order,
+        'holidays_by_year': holidays_by_year
     })
 
 
@@ -1905,6 +1924,9 @@ def public_holiday_edit(request, pk):
 @require_http_methods(["DELETE"])
 def public_holiday_delete(request, pk):
     """Delete public holiday"""
+    from django.db.models import Count
+    from django.db.models.functions import Extract
+    
     holiday = get_object_or_404(PublicHoliday, pk=pk)
     designation = holiday.designation
     holiday.delete()
@@ -1923,14 +1945,28 @@ def public_holiday_delete(request, pk):
                 Q(date__icontains=search_query)
             )
         
-        # Apply same sorting
+        # Apply sorting with automatic year sorting when sorting by date
         valid_sorts = ['designation', 'date']
         if sort_by in valid_sorts:
-            if order == 'desc':
-                sort_by = f'-{sort_by}'
-            holidays = holidays.order_by(sort_by)
+            if sort_by == 'date':
+                # Sort by year first, then by date within year
+                if order == 'desc':
+                    holidays = holidays.order_by('-date__year', '-date')
+                else:
+                    holidays = holidays.order_by('date__year', 'date')
+            else:
+                if order == 'desc':
+                    sort_by = f'-{sort_by}'
+                holidays = holidays.order_by(sort_by)
         else:
-            holidays = holidays.order_by('date')
+            holidays = holidays.order_by('date__year', 'date')
+        
+        # Get count by year for display
+        holidays_by_year = PublicHoliday.objects.values(
+            year=Extract('date', 'year')
+        ).annotate(
+            count=Count('id')
+        ).order_by('-year')
         
         paginator = Paginator(holidays, 10)
         page_number = request.GET.get('page')
@@ -1941,11 +1977,43 @@ def public_holiday_delete(request, pk):
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'date'),
             'current_order': request.GET.get('order', 'asc'),
+            'holidays_by_year': holidays_by_year,
             'success_message': f'Jour férié "{designation}" supprimé avec succès.'
         })
     
     messages.success(request, f'Jour férié "{designation}" supprimé avec succès.')
     return redirect('public_holiday_list')
+
+
+@admin_required
+def public_holiday_duplicate(request, pk):
+    """Duplicate public holiday with same name but different date"""
+    original_holiday = get_object_or_404(PublicHoliday, pk=pk)
+    
+    if request.method == 'POST':
+        form = PublicHolidayForm(request.POST)
+        if form.is_valid():
+            new_holiday = form.save()
+            if request.headers.get('HX-Request'):
+                return HttpResponse(
+                    f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Jour férié "{new_holiday.designation}" dupliqué avec succès.</div>'
+                    '<script>setTimeout(() => { document.getElementById("public-holiday-modal").style.display = "none"; location.reload(); }, 1000)</script>'
+                )
+            return redirect('public_holiday_list')
+    else:
+        # Pre-populate form with original holiday's data but clear the date
+        form = PublicHolidayForm(initial={
+            'designation': original_holiday.designation,
+            'date': None  # User must set a new date
+        })
+    
+    template = 'core/public_holidays/public_holiday_form_htmx.html' if request.headers.get('HX-Request') else 'core/public_holidays/public_holiday_form.html'
+    return render(request, template, {
+        'form': form,
+        'title': f'Dupliquer "{original_holiday.designation}"',
+        'is_htmx': request.headers.get('HX-Request'),
+        'is_duplicate': True
+    })
 
 
 @admin_required

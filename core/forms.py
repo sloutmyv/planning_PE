@@ -414,3 +414,18 @@ class PublicHolidayForm(forms.ModelForm):
             'designation': 'Nom du jour férié',
             'date': 'Date',
         }
+    
+    def clean_date(self):
+        date = self.cleaned_data.get('date')
+        if date:
+            # Check for duplicate dates, excluding the current instance if editing
+            existing_holidays = PublicHoliday.objects.filter(date=date)
+            if self.instance.pk:
+                existing_holidays = existing_holidays.exclude(pk=self.instance.pk)
+            
+            if existing_holidays.exists():
+                existing_holiday = existing_holidays.first()
+                raise forms.ValidationError(
+                    f'Un jour férié existe déjà pour cette date : "{existing_holiday.designation}" ({date.strftime("%d/%m/%Y")})'
+                )
+        return date

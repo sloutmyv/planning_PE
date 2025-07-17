@@ -89,12 +89,57 @@ function clearModalAndEditPublicHoliday(editUrl) {
         contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
     }
 }
+
+function clearModalAndDuplicatePublicHoliday(duplicateUrl) {
+    console.log('clearModalAndDuplicatePublicHoliday called with URL:', duplicateUrl);
+    
+    // Check if HTMX is loaded
+    if (typeof htmx === 'undefined') {
+        console.error('HTMX is not loaded!');
+        alert('HTMX is not loaded. Please refresh the page.');
+        return;
+    }
+    
+    // Clear modal content
+    const contentDiv = document.getElementById('public-holiday-create-form-content');
+    if (!contentDiv) {
+        console.error('public-holiday-create-form-content element not found!');
+        return;
+    }
+    
+    contentDiv.innerHTML = `
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = document.getElementById('public-holiday-modal');
+    if (!modal) {
+        console.error('public-holiday-modal element not found!');
+        return;
+    }
+    modal.style.display = 'block';
+    
+    // Load duplicate form
+    console.log('Loading duplicate form...');
+    try {
+        htmx.ajax('GET', duplicateUrl, '#public-holiday-create-form-content');
+    } catch (error) {
+        console.error('HTMX ajax failed:', error);
+        contentDiv.innerHTML = '<p style="color: red;">Error loading form. Please refresh and try again.</p>';
+    }
+}
 </script>
 <div class="space-y-6" x-data="{ showCreateForm: false }" @closePublicHolidayCreateForm.document="showCreateForm = false">
     {% csrf_token %}
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Jours Fériés</h1>
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Jours Fériés</h1>
+        </div>
         <button onclick="clearModalAndCreatePublicHoliday()" 
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
