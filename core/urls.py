@@ -25,6 +25,7 @@ urlpatterns = [
     path('agents/<int:pk>/', views.agent_detail, name='agent_detail'),
     path('agents/<int:pk>/edit/', views.agent_edit, name='agent_edit'),
     path('agents/<int:pk>/delete/', views.agent_delete, name='agent_delete'),
+    # Export/Import URLs are now handled by Django admin interface only
     
     # Function URLs
     path('functions/', views.function_list, name='function_list'),

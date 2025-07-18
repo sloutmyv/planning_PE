@@ -1,6 +1,23 @@
 from django.contrib import admin
+from django.urls import path, reverse
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db import transaction
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
                      ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
+from .views import agent_export, agent_import
+import json
+
+
+def is_superuser(user):
+    """Check if user is a superuser"""
+    return user.is_authenticated and user.is_superuser
 
 
 @admin.register(Agent)
@@ -10,6 +27,45 @@ class AgentAdmin(admin.ModelAdmin):
     search_fields = ('matricule', 'first_name', 'last_name')
     ordering = ('matricule',)
     date_hierarchy = 'hire_date'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_agents), name='core_agent_export'),
+            path('import/', self.admin_site.admin_view(self.import_agents), name='core_agent_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_agents(self, request):
+        """Export agents to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les agents.')
+            return redirect('admin:core_agent_changelist')
+        return agent_export(request)
+    
+    def import_agents(self, request):
+        """Import agents from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les agents.')
+            return redirect('admin:core_agent_changelist')
+            
+        if request.method == 'POST':
+            return agent_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/agent/import_form.html', {
+            'title': 'Importer des agents',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'agent_count': Agent.objects.count(),
+        })
 
 
 @admin.register(Function)

@@ -9,6 +9,16 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.db import transaction
 from django import forms
+from django.core.serializers import serialize
+from django.contrib.auth.models import User
+from django.utils import timezone
+import json
+import datetime
+
+
+def is_superuser(user):
+    """Check if user is a superuser"""
+    return user.is_authenticated and user.is_superuser
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
                      ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department)
 from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
@@ -275,6 +285,181 @@ def agent_delete(request, pk):
         })
     
     messages.success(request, f'Agent {matricule} supprimé avec succès.')
+    return redirect('agent_list')
+
+
+@user_passes_test(is_superuser)
+def agent_export(request):
+    """Export agents to JSON file - only accessible to superusers"""
+    agents = Agent.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for agent in agents:
+        agent_data = {
+            'matricule': agent.matricule,
+            'first_name': agent.first_name,
+            'last_name': agent.last_name,
+            'grade': agent.grade,
+            'hire_date': agent.hire_date.isoformat() if agent.hire_date else None,
+            'departure_date': agent.departure_date.isoformat() if agent.departure_date else None,
+            'permission_level': agent.permission_level,
+            'password_changed': agent.password_changed,
+            'created_at': agent.created_at.isoformat() if hasattr(agent, 'created_at') and agent.created_at else None,
+            'updated_at': agent.updated_at.isoformat() if hasattr(agent, 'updated_at') and agent.updated_at else None,
+        }
+        export_data.append(agent_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_agents.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def agent_import(request):
+    """Import agents from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        confirm_overwrite = request.POST.get('confirm_overwrite', False)
+        confirm_action = request.POST.get('confirm_action', False)
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('agent_list')
+        
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('agent_list')
+        
+        if not confirm_overwrite or not confirm_action:
+            messages.error(request, 'Confirmation requise pour remplacer la base de données.')
+            return redirect('agent_list')
+        
+        try:
+            # Read and parse JSON data
+            file_content = import_file.read().decode('utf-8')
+            import_data = json.loads(file_content)
+            
+            if not isinstance(import_data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste d\'agents.')
+                return redirect('agent_list')
+            
+            # Count existing agents before deletion
+            existing_count = Agent.objects.count()
+            
+            # STEP 1: Delete ALL existing agents and their user accounts
+            messages.info(request, f'Suppression de {existing_count} agents existants...')
+            
+            # Get all agents with their user accounts
+            agents_with_users = Agent.objects.select_related('user').all()
+            deleted_users = 0
+            preserved_superusers = []
+            
+            for agent in agents_with_users:
+                if agent.user and agent.user.is_superuser:
+                    # Preserve superuser info for recreation
+                    preserved_superusers.append({
+                        'matricule': agent.matricule,
+                        'username': agent.user.username,
+                        'email': agent.user.email,
+                        'first_name': agent.user.first_name,
+                        'last_name': agent.user.last_name,
+                        'is_staff': agent.user.is_staff,
+                        'is_superuser': agent.user.is_superuser,
+                    })
+                    # Delete the agent but keep the user account
+                    agent.user = None
+                    agent.save()
+                    agent.delete()
+                else:
+                    # Delete both user and agent for non-superusers
+                    if agent.user:
+                        agent.user.delete()
+                        deleted_users += 1
+                    else:
+                        agent.delete()
+            
+            # Delete any remaining agents (those without users)
+            Agent.objects.all().delete()
+            
+            # Also delete any orphaned users that might have the same matricule as imported agents
+            import_matricules = [agent_data.get('matricule') for agent_data in import_data if agent_data.get('matricule')]
+            for matricule in import_matricules:
+                # Delete any existing user with this matricule (except preserved superusers)
+                preserved_usernames = [su['username'] for su in preserved_superusers]
+                User.objects.filter(username=matricule).exclude(username__in=preserved_usernames).delete()
+            
+            # STEP 2: Import new agents
+            imported_count = 0
+            errors = []
+            
+            for agent_data in import_data:
+                try:
+                    matricule = agent_data.get('matricule')
+                    if not matricule:
+                        errors.append('Matricule manquant dans un enregistrement.')
+                        continue
+                    
+                    # Check if this matricule corresponds to a preserved superuser
+                    existing_superuser = None
+                    for su in preserved_superusers:
+                        if su['matricule'] == matricule:
+                            existing_superuser = User.objects.get(username=su['username'])
+                            break
+                    
+                    # Create new agent
+                    agent = Agent.objects.create(
+                        matricule=matricule,
+                        first_name=agent_data.get('first_name', ''),
+                        last_name=agent_data.get('last_name', ''),
+                        grade=agent_data.get('grade', 'Agent'),
+                        hire_date=datetime.datetime.fromisoformat(agent_data['hire_date']).date() if agent_data.get('hire_date') else timezone.now().date(),
+                        departure_date=datetime.datetime.fromisoformat(agent_data['departure_date']).date() if agent_data.get('departure_date') else None,
+                        permission_level=agent_data.get('permission_level', 'R'),
+                        password_changed=False,  # Force password reset
+                    )
+                    
+                    # If this is a preserved superuser, link them back
+                    if existing_superuser:
+                        agent.user = existing_superuser
+                        agent.save()
+                        # Update user info from import data
+                        existing_superuser.first_name = agent.first_name
+                        existing_superuser.last_name = agent.last_name
+                        existing_superuser.save()
+                    
+                    imported_count += 1
+                    
+                except Exception as e:
+                    errors.append(f'Erreur pour l\'agent {matricule}: {str(e)}')
+            
+            # Show results
+            messages.success(request, f'✅ Base de données remplacée avec succès!')
+            messages.success(request, f'📊 {existing_count} agents supprimés, {imported_count} agents importés.')
+            messages.warning(request, f'🔐 Tous les mots de passe ont été réinitialisés à "azerty".')
+            
+            if errors:
+                messages.error(request, f'❌ {len(errors)} erreurs lors de l\'importation:')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
     return redirect('agent_list')
 
 

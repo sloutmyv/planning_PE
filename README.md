@@ -23,6 +23,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Statuts visuels** : Badges colorés pour les grades et statuts (actif/parti)
 - **Gestion des permissions** : Modification des niveaux de permission directement dans la liste
 - **Permissions intégrées** : Création d'utilisateurs automatique avec comptes Django liés
+- **Export/Import sécurisé** : Fonctionnalités d'export et import JSON pour superutilisateurs uniquement via Django Admin
 
 ### Gestion des postes
 - **CRUD complet** : Création, lecture, modification, suppression
@@ -117,10 +118,12 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
-  - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application
+  - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application + export/import
   - **A (Administrateur)** : Gestion agents/postes + modification permissions
   - **E (Éditeur)** : Édition du planning (à implémenter)
   - **R (Lecteur)** : Visualisation seulement
+- **Navigation intelligente** : Menu Administration adaptatif selon le niveau de permission utilisateur
+- **Accès superutilisateur** : Interface d'administration complète accessible via dropdown pour les superutilisateurs
 - **Connexion personnalisée** : Interface de login moderne avec logo d'entreprise centré
 - **Changement de mot de passe obligatoire** : Premier login force la mise à jour du mot de passe
 - **Comptes automatiques** : Création automatique d'utilisateurs Django pour chaque agent
@@ -147,6 +150,15 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Workflow accéléré** : Possibilité de créer/dupliquer plusieurs semaines rapidement en succession
 - **Numérotation intelligente** : Auto-incrémentation des numéros de semaine (S1 → S2 → S3, etc.) sans intervention manuelle
 - **Tooltips de validation** : Survol des rythmes quotidiens affiche nom et description pour vérification rapide
+
+### Gestion des données et sécurité (Juillet 2025)
+- **Export JSON sécurisé** : Export complet de la base d'agents au format JSON avec datage automatique (YYYY-MM-DD_agents.json)
+- **Import avec remplacement** : Import JSON avec remplacement complet de la base de données et confirmations multiples
+- **Protection superutilisateur** : Préservation automatique des comptes superutilisateurs lors des imports
+- **Interface Django Admin** : Fonctionnalités d'export/import accessibles uniquement via l'interface d'administration Django
+- **Validation anti-conflit** : Résolution automatique des conflits UNIQUE constraint lors des imports
+- **Réinitialisation sécurisée** : Tous les mots de passe sont réinitialisés à "azerty" lors des imports
+- **Navigation superutilisateur** : Menu Administration unifié pour accès rapide aux fonctionnalités app et Django Admin
 
 ### Corrections techniques
 - **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes
@@ -269,7 +281,7 @@ python manage.py runserver
 
 L'interface principale propose :
 - **Accueil** : Vue d'ensemble avec placeholder pour le planning
-- **Administration** (menu déroulant pour les utilisateurs staff) :
+- **Administration** (menu déroulant adaptatif selon les permissions) :
   - Gestion des Agents
   - Gestion des Postes
   - Types d'Horaire
@@ -277,7 +289,16 @@ L'interface principale propose :
   - Roulements Hebdomadaires
   - Jours Fériés
   - Départements
-  - Interface d'Administration Django
+  - Interface d'Administration Django (pour superutilisateurs)
+
+### Fonctionnalités spéciales superutilisateur
+
+**Export/Import d'agents** (accessible via Django Admin uniquement) :
+1. Se connecter à l'interface Django Admin : http://127.0.0.1:8000/admin/
+2. Naviguer vers **Core > Agents**
+3. Utiliser les boutons **📊 Exporter JSON** et **⚠️ Importer JSON**
+4. L'export génère un fichier `YYYY-MM-DD_agents.json`
+5. L'import remplace complètement la base d'agents avec confirmations de sécurité
 
 ## Tests
 
