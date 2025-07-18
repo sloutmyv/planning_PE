@@ -164,11 +164,13 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Navigation superutilisateur** : Menu Administration unifié pour accès rapide aux fonctionnalités app et Django Admin
 
 ### Améliorations interface et documentation (Juillet 2025)
-- **Manuel utilisateur intégré** : Guide complet accessible via menu Administration avec sommaire interactif et navigation par ancres
+- **Manuel utilisateur métier** : Guide complet refondu pour administrateurs métier avec contenu spécialisé et workflow détaillé
 - **Navigation iconographique** : Ajout d'icônes thématiques pour tous les menus (📖 Manuel, 🗃️ Bases de données, ⚙️ Administration)
 - **Footer corporate unifié** : Pied de page avec identité "🚀 CCORP 2025" sur toutes les pages
-- **Documentation séquence création** : Guide détaillé de l'ordre obligatoire pour éviter les erreurs de dépendances
-- **Amélioration UX menu** : Manuel utilisateur positionné en premier pour accès prioritaire aux instructions
+- **Ordre logique des menus** : Réorganisation selon la séquence de création recommandée (Départements → Postes → Agents → Jours fériés → Types → Rythmes → Roulements)
+- **Documentation workflow** : Explication détaillée des deux fonctions principales et des 6 étapes critiques de création
+- **Cas d'usage automatiques** : Documentation complète des comportements système selon configuration des postes
+- **Amélioration visuelle** : Listes hiérarchiques avec puces visuelles et meilleure typography pour la lisibilité
 - **Design cohérent** : Harmonisation visuelle avec icônes et codes couleur dans toute l'interface
 
 ### Corrections techniques
@@ -292,31 +294,38 @@ python manage.py runserver
 
 L'interface principale propose :
 - **Accueil** : Vue d'ensemble avec placeholder pour le planning
-- **Administration** (menu déroulant adaptatif selon les permissions) :
-  - 📖 Manuel Utilisateur (guide complet avec sommaire interactif)
-  - 🗃️ Gestion des Agents
-  - 🗃️ Gestion des Postes
-  - 🗃️ Types d'Horaire
-  - 🗃️ Rythmes Quotidien
-  - 🗃️ Roulements Hebdomadaires
-  - 🗃️ Jours Fériés
-  - 🗃️ Départements
+- **Administration** (menu déroulant adaptatif selon les permissions, ordre logique de création) :
+  - 📖 Manuel Utilisateur (guide métier complet avec sommaire interactif)
+  - 🗃️ Départements (base hiérarchique obligatoire)
+  - 🗃️ Liste des Postes (fonctions de l'organisation)
+  - 🗃️ Liste des Agents (personnel avec permissions)
+  - 🗃️ Jours Fériés (dates exceptionnelles)
+  - 🗃️ Types d'Horaires (catégories de travail)
+  - 🗃️ Rythmes Quotidien (modèles d'horaires quotidiens)
+  - 🗃️ Roulements Hebdomadaires (plannings récurrents)
   - ⚙️ Interface d'Administration Django (pour superutilisateurs)
 
 ### Manuel utilisateur intégré
 
-**Guide complet accessible depuis le menu Administration** :
-- **📋 Sommaire interactif** : Navigation rapide vers les différentes sections
-- **🏠 Vue d'ensemble** : Introduction et objectifs de l'application
-- **📋 Séquence de création** : Ordre obligatoire pour éviter les erreurs de dépendances
-  1. Types d'horaire (base pour les rythmes quotidiens)
-  2. Rythmes quotidiens (avec périodes de validité)
-  3. Roulements hebdomadaires (structure hiérarchique complète)
-  4. Données support optionnelles (agents, postes, jours fériés, départements)
-- **📚 Guide détaillé par module** : Explication approfondie de chaque fonctionnalité
-- **💡 Conseils et bonnes pratiques** : Recommandations et pièges à éviter
-- **⌨️ Interface et navigation** : Fonctionnalités de recherche et d'interaction
-- **🆘 Support et dépannage** : Aide pour résoudre les problèmes courants
+**Guide métier complet pour administrateurs** accessible depuis le menu Administration :
+- **📋 Sommaire interactif** : Navigation rapide par ancres vers les différentes sections
+- **🏠 Introduction** : Présentation de Planning PE et objectifs pour administrateurs métier
+- **⚙️ Deux fonctions principales** : 
+  1. Création d'équipes et gestion des affectations (départements → équipes → postes → agents/plans/règles)
+  2. Création de plans de roulement (rythmes hebdomadaires réutilisables)
+- **📋 Ordre recommandé de création** : Séquence critique en 6 étapes pour éviter les erreurs de dépendances
+  1. Départements (obligatoire, base hiérarchique)
+  2. Équipes (rattachées aux départements)
+  3. Postes (avec affectation agent/plan/règles jours fériés)
+  4. Types d'horaires (catégories de travail)
+  5. Rythmes quotidiens (compositions journalières + types d'horaire)
+  6. Plans de roulement (séquences hebdomadaires de rythmes quotidiens)
+- **🔄 Cas particuliers** : Comportements automatiques du système selon la configuration des postes
+  - Poste avec plan mais sans agent → "Poste Vacant" (PV)
+  - Poste avec agent mais sans plan → Planning vide
+  - Poste avec agent et plan → Génération automatique
+  - Gestion des jours fériés (inclusion/exclusion)
+  - Principe de préservation des données manuelles
 
 ### Fonctionnalités spéciales superutilisateur
 

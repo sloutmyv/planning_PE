@@ -8,10 +8,10 @@
         <!-- Header -->
         <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
             <h1 class="text-2xl font-bold flex items-center">
-                📖 Manuel Utilisateur
+                📖 Manuel Utilisateur – Administration Métier
                 <span class="ml-3 text-sm font-normal bg-blue-500 px-2 py-1 rounded">Planning PE</span>
             </h1>
-            <p class="text-blue-100 mt-1">Guide complet pour utiliser l'application de planification</p>
+            <p class="text-blue-100 mt-1">Guide pour les administrateurs métier - Configuration et maintien des données</p>
         </div>
 
         <!-- Content -->
@@ -27,17 +27,15 @@
                             <div>
                                 <h3 class="font-semibold text-gray-700 mb-2">Guide principal</h3>
                                 <ul class="space-y-1">
-                                    <li><a href="#vue-ensemble" class="text-blue-600 hover:text-blue-800 hover:underline">🏠 Vue d'ensemble</a></li>
-                                    <li><a href="#sequence-creation" class="text-blue-600 hover:text-blue-800 hover:underline">📋 Séquence de création des données</a></li>
-                                    <li><a href="#guide-detaille" class="text-blue-600 hover:text-blue-800 hover:underline">📚 Guide détaillé par module</a></li>
+                                    <li><a href="#introduction" class="text-blue-600 hover:text-blue-800 hover:underline">🏠 Introduction</a></li>
+                                    <li><a href="#fonctions-principales" class="text-blue-600 hover:text-blue-800 hover:underline">⚙️ Les deux fonctions principales</a></li>
+                                    <li><a href="#ordre-creation" class="text-blue-600 hover:text-blue-800 hover:underline">📋 Ordre recommandé de création</a></li>
                                 </ul>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">Informations pratiques</h3>
+                                <h3 class="font-semibold text-gray-700 mb-2">Informations avancées</h3>
                                 <ul class="space-y-1">
-                                    <li><a href="#conseils" class="text-blue-600 hover:text-blue-800 hover:underline">💡 Conseils et bonnes pratiques</a></li>
-                                    <li><a href="#interface" class="text-blue-600 hover:text-blue-800 hover:underline">⌨️ Interface et navigation</a></li>
-                                    <li><a href="#support" class="text-blue-600 hover:text-blue-800 hover:underline">🆘 Support et dépannage</a></li>
+                                    <li><a href="#cas-particuliers" class="text-blue-600 hover:text-blue-800 hover:underline">🔄 Cas particuliers - Comportements automatiques</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -45,38 +43,102 @@
                 </div>
             </section>
 
-            <!-- Vue d'ensemble -->
-            <section id="vue-ensemble">
+            <!-- Introduction -->
+            <section id="introduction">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    🏠 Vue d'ensemble
+                    🏠 Introduction
                 </h2>
                 <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
                     <p class="text-blue-800">
-                        L'application Planning PE vous permet de créer et gérer des plannings complexes pour votre organisation. 
-                        Elle utilise une architecture hiérarchique qui nécessite de suivre un ordre spécifique lors de la création des données.
+                        Planning PE est une application dédiée à la gestion et génération automatique des plannings d'équipes.</br> 
+                        Ce manuel s'adresse aux administrateurs métier chargés de la configuration initiale et du maintien des données de l'application.
                     </p>
                 </div>
                 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-700 mb-2">🎯 Objectif principal</h3>
-                        <p class="text-sm text-gray-600">Créer des roulements hebdomadaires complets avec assignation de rythmes quotidiens pour chaque jour de la semaine.</p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <h3 class="font-semibold text-yellow-800 mb-2">🎯 Objectif</h3>
+                    <p class="text-yellow-800">
+                        Décrire l'ordre logique de création des éléments afin de garantir un fonctionnement cohérent de l'application 
+                        et une génération correcte des plannings.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Les deux fonctions principales -->
+            <section id="fonctions-principales">
+                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
+                    ⚙️ Les Deux Fonctions Principales
+                </h2>
+
+                <div class="space-y-6">
+                    <!-- Fonction 1 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</span>
+                            <h3 class="text-lg font-semibold text-gray-800">Création d'équipe et gestion des affectations</h3>
+                        </div>
+                        <div class="ml-11">
+                            <p class="text-gray-600 mb-4">Cette fonction permet :</p>
+                            <div class="space-y-3">
+                                <div class="flex items-start space-x-3">
+                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
+                                    <p class="text-sm text-gray-600">De créer des équipes, rattachées à un département</p>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
+                                    <p class="text-sm text-gray-600">D'ajouter ou non à chaque équipe des postes</p>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-600 mb-2">D'associer ou non à chaque poste :</p>
+                                        <div class="ml-4 space-y-2">
+                                            <div class="flex items-start space-x-2">
+                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
+                                                <p class="text-xs text-gray-500">Un agent sur une période donnée</p>
+                                            </div>
+                                            <div class="flex items-start space-x-2">
+                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
+                                                <p class="text-xs text-gray-500">Un plan de roulement (planning récurrent)</p>
+                                            </div>
+                                            <div class="flex items-start space-x-2">
+                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
+                                                <p class="text-xs text-gray-500">Une règle d'application des jours fériés</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-700 mb-2">🔑 Prérequis</h3>
-                        <p class="text-sm text-gray-600">Avoir les permissions administrateur (niveau A ou S) pour accéder aux fonctionnalités de gestion.</p>
+
+                    <!-- Fonction 2 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</span>
+                            <h3 class="text-lg font-semibold text-gray-800">Création de plans de roulement</h3>
+                        </div>
+                        <div class="ml-11">
+                            <p class="text-gray-600 mb-3">
+                                Les plans de roulement permettent de préconfigurer un rythme de travail hebdomadaire, 
+                                réutilisable par poste ou par équipe, sur une période donnée.
+                            </p>
+                            <p class="text-gray-600">
+                                Ils simplifient ainsi la génération automatique du planning.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Séquence de création -->
-            <section id="sequence-creation">
+            <!-- Ordre recommandé de création -->
+            <section id="ordre-creation">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    📋 Séquence de création des données
+                    📋 Ordre Recommandé de Création des Données
                 </h2>
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                    <p class="text-yellow-800 font-medium">
-                        ⚠️ Important : Respectez cet ordre pour éviter les erreurs de dépendances !
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <p class="text-red-800 font-medium">
+                        ⚠️ Fondamental : L'ordre de création est fondamental pour garantir la cohérence des données et éviter les erreurs lors de la génération du planning.
                     </p>
                 </div>
 
@@ -85,14 +147,13 @@
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <div class="flex items-center mb-4">
                             <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Types d'horaire</h3>
+                            <h3 class="text-lg font-semibold text-gray-800">Départements</h3>
                         </div>
                         <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Créez d'abord les types d'horaire qui définiront les différentes équipes.</p>
+                            <p class="text-gray-600 mb-3">Les départements doivent être créés en premier, car une équipe doit obligatoirement être rattachée à un département.</p>
                             <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → Types d'horaires<br>
-                                <strong>Exemples :</strong> Matin (MAT), Après-midi (APM), Nuit (NUIT), Jour (JT), etc.<br>
-                                <strong>Conseil :</strong> Assignez des couleurs distinctes pour faciliter l'identification visuelle.
+                                <strong>Navigation :</strong> Administration → 🗃️ Départements<br>
+                                <strong>Priorité :</strong> Création obligatoire avant les équipes
                             </div>
                         </div>
                     </div>
@@ -101,14 +162,13 @@
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <div class="flex items-center mb-4">
                             <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Rythmes quotidiens</h3>
+                            <h3 class="text-lg font-semibold text-gray-800">Équipes</h3>
                         </div>
                         <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Créez les rythmes quotidiens en les associant aux types d'horaire.</p>
+                            <p class="text-gray-600 mb-3">Une fois les départements créés, vous pouvez créer une ou plusieurs équipes, en les rattachant à un département existant.</p>
                             <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → Rythmes Quotidien<br>
-                                <strong>Dépendance :</strong> Nécessite les types d'horaire (étape 1)<br>
-                                <strong>Action :</strong> Ajoutez des périodes avec dates et heures pour chaque rythme
+                                <strong>Dépendance :</strong> Nécessite les départements (étape 1)<br>
+                                <strong>Principe :</strong> Chaque équipe doit être rattachée à un département
                             </div>
                         </div>
                     </div>
@@ -117,14 +177,41 @@
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <div class="flex items-center mb-4">
                             <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">3</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Roulements hebdomadaires</h3>
+                            <h3 class="text-lg font-semibold text-gray-800">Postes</h3>
                         </div>
                         <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Créez le planning principal et organisez-le par périodes et semaines.</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → Roulements Hebdomadaires<br>
-                                <strong>Dépendance :</strong> Nécessite les rythmes quotidiens (étape 2)<br>
-                                <strong>Structure :</strong> Planning → Période → Semaine → Assignation quotidienne
+                            <p class="text-gray-600 mb-3">Chaque équipe peut comporter un ou plusieurs postes.</p>
+                            <div class="bg-orange-50 p-3 rounded text-sm mb-3">
+                                <strong>⚠️ Important :</strong> Les postes sont créés dans un menu à part entière (Administration → 🗃️ Liste des Postes). C'est seulement au moment de la création de l'équipe qu'il est possible de leur affecter un agent, un plan de roulement et une règle de jour férié.
+                            </div>
+                            <p class="text-gray-600 mb-3">Pour chaque poste d'une équipe, vous pouvez définir les éléments suivants :</p>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 p-3 rounded">
+                                    <h4 class="font-semibold text-blue-800 mb-2">➤ Affectation d'un agent</h4>
+                                    <ul class="text-sm text-blue-700 space-y-1">
+                                        <li>• L'agent est affecté à sa fonction sur une période précise</li>
+                                        <li>• Si aucun agent n'est affecté, mais qu'un plan de roulement est défini, le poste sera traité comme "Poste Vacant" (type d'horaire : PV) lors de la génération du planning</li>
+                                        <li>• <strong>Prérequis :</strong> Pour affecter un agent, l'agent doit être créé au préalable (Administration → 🗃️ Liste des Agents)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-green-50 p-3 rounded">
+                                    <h4 class="font-semibold text-green-800 mb-2">➤ Plan de roulement associé</h4>
+                                    <ul class="text-sm text-green-700 space-y-1">
+                                        <li>• Le plan s'appliquera automatiquement à ce poste sur la période définie</li>
+                                        <li>• <strong>Prérequis :</strong> Pour affecter un plan, le plan doit être créé au préalable (Administration → 🗃️ Roulements Hedbomadaires)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-purple-50 p-3 rounded">
+                                    <h4 class="font-semibold text-purple-800 mb-2">➤ Règle sur les jours fériés</h4>
+                                    <ul class="text-sm text-purple-700 space-y-1">
+                                        <li>• Il est possible d'indiquer si le poste bénéficie ou non des jours fériés</li>
+                                        <li>• Cela influence la génération du planning : les jours fériés peuvent annuler ou modifier les jours de travail issus du plan de roulement</li>
+                                        <li>• <strong>Prérequis :</strong> Pour affecter la liste des jours fériés, elle doit comporter des jours fériés au préalable (Administration → 🗃️ Jours Fériés)</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -132,176 +219,150 @@
                     <!-- Étape 4 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <div class="flex items-center mb-4">
-                            <span class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Données support (optionnel)</h3>
+                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</span>
+                            <h3 class="text-lg font-semibold text-gray-800">Types d'horaires</h3>
                         </div>
                         <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Ajoutez les données complémentaires selon vos besoins.</p>
-                            <div class="grid md:grid-cols-2 gap-4 text-sm">
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <strong>Agents :</strong> Personnel avec permissions<br>
-                                    <span class="text-gray-600">Administration → Liste des Agents</span>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <strong>Postes :</strong> Fonctions de l'organisation<br>
-                                    <span class="text-gray-600">Administration → Liste des Postes</span>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <strong>Jours fériés :</strong> Dates exceptionnelles<br>
-                                    <span class="text-gray-600">Administration → Jours Fériés</span>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded">
-                                    <strong>Départements :</strong> Organisation hiérarchique<br>
-                                    <span class="text-gray-600">Administration → Départements</span>
-                                </div>
+                            <p class="text-gray-600 mb-3">Les types d'horaires sont des catégories de travail (ex : Jour travaillé, Congé payé, Astreinte sur site...).</p>
+                            <div class="bg-gray-50 p-3 rounded text-sm">
+                                <strong>Navigation :</strong> Administration → 🗃️ Types d'horaires<br>
+                                <strong>Priorité :</strong> Ils doivent être créés avant les rythmes quotidiens, car ces derniers en dépendent
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 5 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">5</span>
+                            <h3 class="text-lg font-semibold text-gray-800">Rythmes quotidiens</h3>
+                        </div>
+                        <div class="ml-11">
+                            <p class="text-gray-600 mb-3">Les rythmes quotidiens représentent la composition d'une journée de travail (ex : 7h-19h) associé à un type d'horaire.</p>
+                            <div class="bg-gray-50 p-3 rounded text-sm">
+                                <strong>Navigation :</strong> Administration → 🗃️ Rythmes Quotidien<br>
+                                <strong>Dépendance :</strong> Nécessite les types d'horaire (étape 4)<br>
+                                <strong>Usage :</strong> Ces rythmes sont les briques de base des plans de roulement
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Étape 6 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">6</span>
+                            <h3 class="text-lg font-semibold text-gray-800">Plans de roulement</h3>
+                        </div>
+                        <div class="ml-11">
+                            <p class="text-gray-600 mb-3">Un plan de roulement est une séquence hebdomadaire (ou multi-hebdomadaire) de rythmes quotidiens.</p>
+                            <div class="bg-gray-50 p-3 rounded text-sm">
+                                <strong>Navigation :</strong> Administration → 🗃️ Roulements Hebdomadaires<br>
+                                <strong>Dépendance :</strong> Nécessite les rythmes quotidiens (étape 5)<br>
+                                <strong>Application :</strong> Il pourra ensuite être appliqué à un poste ou à une équipe
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Guide détaillé -->
-            <section id="guide-detaille">
+            <!-- Cas particuliers -->
+            <section id="cas-particuliers">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    📚 Guide détaillé par module
-                </h2>
-
-                <div class="space-y-6">
-                    <!-- Types d'horaire -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                            🕐 Types d'horaire
-                        </h3>
-                        <div class="space-y-3 text-sm">
-                            <div><strong>Objectif :</strong> Définir les différents créneaux horaires (matin, après-midi, nuit, etc.)</div>
-                            <div><strong>Champs obligatoires :</strong> Désignation (nom complet), Couleur (code hexadécimal)</div>
-                            <div><strong>Champs optionnels :</strong> Abréviation (2-3 lettres majuscules)</div>
-                            <div><strong>Exemple :</strong> Désignation "Équipe de Matin", Abréviation "MAT", Couleur "#3B82F6"</div>
-                            <div class="bg-blue-50 p-2 rounded">
-                                <strong>💡 Conseil :</strong> Utilisez des couleurs contrastées pour faciliter la lecture des plannings
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Rythmes quotidiens -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                            📅 Rythmes quotidiens
-                        </h3>
-                        <div class="space-y-3 text-sm">
-                            <div><strong>Objectif :</strong> Créer des modèles d'horaires quotidiens avec leurs périodes de validité</div>
-                            <div><strong>Étapes :</strong>
-                                <ol class="list-decimal list-inside ml-4 space-y-1">
-                                    <li>Créer le rythme quotidien avec un nom et une description</li>
-                                    <li>Associer un type d'horaire existant</li>
-                                    <li>Ajouter des périodes avec dates de début/fin et heures de travail</li>
-                                </ol>
-                            </div>
-                            <div class="bg-yellow-50 p-2 rounded">
-                                <strong>⚠️ Attention :</strong> Les périodes ne peuvent pas se chevaucher pour un même rythme
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Roulements hebdomadaires -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                            📊 Roulements hebdomadaires
-                        </h3>
-                        <div class="space-y-3 text-sm">
-                            <div><strong>Architecture hiérarchique :</strong></div>
-                            <div class="ml-4 space-y-2">
-                                <div>1. <strong>Roulement :</strong> Container principal (ex: "Planning Été 2024")</div>
-                                <div>2. <strong>Période :</strong> Tranche temporelle avec dates de début/fin</div>
-                                <div>3. <strong>Semaine :</strong> Unité de planification numérotée (S1, S2, S3...)</div>
-                                <div>4. <strong>Assignation :</strong> Rythme quotidien pour chaque jour de la semaine</div>
-                            </div>
-                            <div class="bg-green-50 p-2 rounded">
-                                <strong>🚀 Fonctionnalités avancées :</strong> Duplication de périodes et semaines, assignation multiple par jour
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Conseils et bonnes pratiques -->
-            <section id="conseils">
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    💡 Conseils et bonnes pratiques
+                    🔄 Cas particuliers – Comportements automatiques
                 </h2>
                 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-green-800 mb-2">✅ À faire</h4>
-                            <ul class="text-sm text-green-700 space-y-1">
-                                <li>• Nommez clairement vos types d'horaire</li>
-                                <li>• Utilisez des abréviations cohérentes</li>
-                                <li>• Testez avec une période courte d'abord</li>
-                                <li>• Sauvegardez régulièrement vos données</li>
-                                <li>• Documentez vos conventions de nommage</li>
-                            </ul>
+                <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-6">
+                    <h3 class="font-semibold text-indigo-800 mb-2">Comportement du système</h3>
+                    <p class="text-indigo-700 text-sm">
+                        Le système adopte des comportements automatiques selon la configuration des postes. 
+                        Voici les différents scenarios possibles :
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Scenario 1 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-1">1</span>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-2">Poste avec plan de roulement mais sans agent</h4>
+                                <p class="text-sm text-gray-600">
+                                    → <strong>Génération automatique</strong> de planning avec "Poste Vacant" (PV) comme type d'horaire 
+                                    en lieu et place du type d'horaire préexistant.
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-red-800 mb-2">❌ À éviter</h4>
-                            <ul class="text-sm text-red-700 space-y-1">
-                                <li>• Supprimer des types d'horaire utilisés</li>
-                                <li>• Créer des périodes qui se chevauchent</li>
-                                <li>• Modifier des données en cours d'utilisation</li>
-                                <li>• Utiliser des couleurs trop similaires</li>
-                                <li>• Ignorer les messages de validation</li>
-                            </ul>
+
+                    <!-- Scenario 2 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-1">2</span>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-2">Poste avec agent mais sans plan de roulement</h4>
+                                <p class="text-sm text-gray-600">
+                                    → <strong>La ligne de planning de l'agent reste vide</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 3 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-1">3</span>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-2">Poste avec agent et plan de roulement</h4>
+                                <p class="text-sm text-gray-600">
+                                    → <strong>Planning généré automatiquement</strong> avec les rythmes définis
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 4 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-1">4</span>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-2">Poste exclu des jours fériés</h4>
+                                <p class="text-sm text-gray-600">
+                                    → <strong>Le roulement s'applique sans tenir compte des jours fériés</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 5 -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-1">5</span>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 mb-2">Poste inclus dans les jours fériés</h4>
+                                <p class="text-sm text-gray-600 mb-2">
+                                    → <strong>Le planning est modifié ou annulé selon les jours fériés</strong>
+                                </p>
+                                <div class="bg-purple-50 p-2 rounded text-xs text-purple-700">
+                                    <strong>Exemple :</strong> Si le lundi est férié mais initialement associé à un rythme quotidien 
+                                    dans le plan de roulement, alors le rythme de ce jour est supprimé.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Raccourcis clavier -->
-            <section id="interface">
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    ⌨️ Interface et navigation
-                </h2>
-                
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="grid md:grid-cols-2 gap-6 text-sm">
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">🔍 Fonctionnalités de recherche</h4>
-                            <ul class="space-y-1 text-gray-600">
-                                <li>• Recherche en temps réel (délai 300ms)</li>
-                                <li>• Tri par colonnes (clic sur en-têtes)</li>
-                                <li>• Pagination avec conservation des filtres</li>
-                                <li>• Filtres spécialisés par module</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">🎨 Interface moderne</h4>
-                            <ul class="space-y-1 text-gray-600">
-                                <li>• Modales HTMX sans rechargement</li>
-                                <li>• Interface accordion pour navigation</li>
-                                <li>• Badges colorés pour les statuts</li>
-                                <li>• Actions regroupées par split buttons</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Support -->
-            <section id="support">
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    🆘 Support et dépannage
-                </h2>
-                
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 class="font-semibold text-blue-800 mb-2">En cas de problème</h4>
-                    <div class="text-sm text-blue-700 space-y-2">
-                        <div>1. <strong>Vérifiez les dépendances :</strong> Assurez-vous que les données requises existent</div>
-                        <div>2. <strong>Consultez les messages d'erreur :</strong> Ils indiquent souvent la solution</div>
-                        <div>3. <strong>Respectez l'ordre de création :</strong> Suivez la séquence recommandée</div>
-                        <div>4. <strong>Sauvegardez avant modification :</strong> Utilisez l'export JSON pour les agents</div>
+                <!-- Note importante -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+                    <h4 class="font-semibold text-yellow-800 mb-2">💡 Principe important de préservation des données</h4>
+                    <p class="text-sm text-yellow-700 mb-2">
+                        Il faut bien comprendre que ce qui est généré remplit automatiquement le planning mais reste "en dessous" 
+                        de ce que les utilisateurs imputent au planning manuellement.
+                    </p>
+                    <div class="bg-yellow-100 p-3 rounded text-xs text-yellow-800">
+                        <strong>Exemple concret :</strong> Si dans une équipe j'associe un poste et un agent mais sans plan de roulement, 
+                        je peux alors imputer un rythme quotidien associé à un type d'horaire sur un jour particulier à un agent. 
+                        Mais si j'associe dans un second temps à ce poste un roulement, le roulement se génère sur le planning 
+                        mais <strong>sans écraser les jours déjà définis en amont</strong>. Ceci pour ne pas perdre de données.
                     </div>
                 </div>
             </section>
