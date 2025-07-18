@@ -82,6 +82,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Duplication de semaines instantanée** : Copie complète des semaines avec tous leurs rythmes quotidiens assignés, sans confirmation
 - **Actions silencieuses** : Création et duplication sans interruption, avec mise à jour immédiate de l'interface
 - **Préservation du contexte** : Maintien de la position dans les accordéons et de l'état des dropdowns lors des opérations
+- **Tooltips informatifs** : Survol des rythmes quotidiens affiche leur description complète dans une infobulle
 
 ### Gestion des jours fériés
 - **CRUD complet** : Création, lecture, modification, suppression des jours fériés
@@ -145,6 +146,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Préservation de l'état** : Maintien de la position dans les accordéons et de l'état d'expansion des dropdowns
 - **Workflow accéléré** : Possibilité de créer/dupliquer plusieurs semaines rapidement en succession
 - **Numérotation intelligente** : Auto-incrémentation des numéros de semaine (S1 → S2 → S3, etc.) sans intervention manuelle
+- **Tooltips de validation** : Survol des rythmes quotidiens affiche nom et description pour vérification rapide
 
 ### Corrections techniques
 - **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes

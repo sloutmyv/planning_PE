@@ -1222,6 +1222,8 @@ def api_shift_schedule_period_weeks(request, period_id):
                 'id': daily_plan.pk,
                 'short_name': daily_plan.daily_rotation_plan.designation[:3] if daily_plan.daily_rotation_plan else '?',
                 'full_name': daily_plan.daily_rotation_plan.designation if daily_plan.daily_rotation_plan else 'Non défini',
+                'designation': daily_plan.daily_rotation_plan.designation if daily_plan.daily_rotation_plan else 'Non défini',
+                'description': daily_plan.daily_rotation_plan.description if daily_plan.daily_rotation_plan else '',
                 'weekday': daily_plan.weekday,
                 'plan_id': daily_plan.daily_rotation_plan.id if daily_plan.daily_rotation_plan else None,
                 'schedule_type_color': daily_plan.daily_rotation_plan.schedule_type.color if daily_plan.daily_rotation_plan and daily_plan.daily_rotation_plan.schedule_type else '#6B7280',

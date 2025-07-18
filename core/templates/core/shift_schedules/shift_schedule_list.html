@@ -994,11 +994,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[1] && week.daily_plans[1].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[1]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1021,11 +1025,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[2] && week.daily_plans[2].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[2]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1048,11 +1056,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[3] && week.daily_plans[3].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[3]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1075,11 +1087,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[4] && week.daily_plans[4].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[4]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1102,11 +1118,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[5] && week.daily_plans[5].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[5]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1129,11 +1149,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[6] && week.daily_plans[6].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[6]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
@@ -1156,11 +1180,15 @@ function clearModalAndAddWeek(periodId) {
                                                                                 <template x-if="week.daily_plans && week.daily_plans[7] && week.daily_plans[7].length > 0">
                                                                                     <div class="flex flex-col items-center space-y-1 w-full">
                                                                                         <template x-for="plan in week.daily_plans[7]" :key="plan.id">
-                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium"
+                                                                                            <div class="inline-flex items-center px-1 py-0.5 text-xs rounded-full w-full max-w-20 justify-center font-medium relative group"
                                                                                                  :style="`background-color: ${plan.schedule_type_color || '#6B7280'}; color: ${getContrastColor(plan.schedule_type_color || '#6B7280')}`">
                                                                                                 <span x-text="plan.full_name" class="truncate text-xs"></span>
                                                                                                 <button @click="removeDailyPlan(plan.id)" 
                                                                                                         class="ml-1 hover:opacity-70 flex-shrink-0 text-xs">×</button>
+                                                                                                <!-- Custom tooltip -->
+                                                                                                <div class="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50"
+                                                                                                     x-text="plan.description ? `${plan.designation} - ${plan.description}` : plan.designation">
+                                                                                                </div>
                                                                                             </div>
                                                                                         </template>
                                                                                     </div>
