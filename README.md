@@ -402,3 +402,51 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Flexibilité** : Possibilité d'avoir plusieurs semaines avec des rythmes différents
 - **Intégration complète** : Utilisation des rythmes quotidiens existants
 - **Recherche simplifiée** : Barre de recherche HTMX sans boutons ni filtres, cohérente avec les autres modules
+
+## Relations et interactions entre les modèles
+
+### Architecture des données
+Le système de planification repose sur une architecture relationnelle hiérarchique permettant de créer des plannings complexes et flexibles :
+
+#### 1. Gestion des utilisateurs et permissions
+- **Agent ↔ User Django** : Relation OneToOne obligatoire. Chaque agent possède automatiquement un compte utilisateur Django avec authentification
+- **Permissions cascadées** : Les niveaux de permission Agent (V/E/A/S) déterminent les droits d'accès aux fonctionnalités de l'application
+- **Intégrité transactionnelle** : Création/modification/suppression d'agents synchronisée avec les comptes utilisateurs Django
+
+#### 2. Types d'horaire et rythmes quotidiens
+- **ScheduleType → DailyRotationPlan** : Relation ForeignKey. Un type d'horaire peut être utilisé par plusieurs rythmes quotidiens
+- **DailyRotationPlan → RotationPeriod** : Relation OneToMany. Un rythme quotidien peut avoir plusieurs périodes de validité dans le temps
+- **Validation temporelle** : Les périodes ne peuvent pas se chevaucher pour un même rythme quotidien
+- **Statut calculé** : Les périodes expirées (end_date < aujourd'hui) sont automatiquement identifiées
+
+#### 3. Roulements hebdomadaires - Architecture en cascade
+L'organisation hiérarchique permet une planification flexible sur plusieurs niveaux :
+
+**ShiftSchedule (Roulement) → ShiftSchedulePeriod (Période) → ShiftScheduleWeek (Semaine) → ShiftScheduleDailyPlan (Plan quotidien)**
+
+- **Niveau 1** : Un roulement hebdomadaire contient plusieurs périodes (ex: "Planning Été", "Planning Hiver")
+- **Niveau 2** : Chaque période définit des dates de validité et contient plusieurs semaines
+- **Niveau 3** : Chaque semaine est numérotée (S1, S2, S3...) et contient jusqu'à 7 plans quotidiens
+- **Niveau 4** : Chaque plan quotidien lie un jour de la semaine à un rythme quotidien existant
+
+#### 4. Contraintes d'intégrité et validation
+- **Unicité temporelle** : 
+  - Un agent ne peut avoir qu'un seul matricule
+  - Une date ne peut avoir qu'un seul jour férié
+  - Un département ne peut avoir qu'un seul ordre d'affichage
+- **Cohérence relationnelle** :
+  - Une semaine ne peut avoir qu'un plan par jour (contrainte unique semaine + jour)
+  - Les périodes d'un même roulement ne peuvent se chevaucher
+  - Les rythmes quotidiens référencés doivent exister
+- **Validation métier** :
+  - Les dates de départ d'agents doivent être postérieures aux dates d'embauche
+  - Les périodes de rythmes quotidiens doivent avoir des horaires cohérents
+  - Les horaires de nuit (22h-6h) sont automatiquement détectés
+
+#### 5. Flux de données et dépendances
+- **Création en cascade** : La création d'un agent génère automatiquement un utilisateur Django avec mot de passe par défaut
+- **Suppression protégée** : 
+  - Les types d'horaire liés à des rythmes quotidiens ne peuvent être supprimés
+  - Les rythmes quotidiens assignés à des roulements sont protégés
+- **Mise à jour propagée** : Les modifications de permissions d'agents se répercutent sur les comptes utilisateurs Django
+- **Export/Import transactionnel** : Les opérations d'export/import préservent l'intégrité référentielle et les contraintes d'unicité
