@@ -83,6 +83,7 @@ urlpatterns = [
     path('shift-schedule-periods/<int:period_id>/weeks/create/', views.shift_schedule_week_create, name='shift_schedule_week_create'),
     path('shift-schedule-weeks/<int:week_id>/edit/', views.shift_schedule_week_edit, name='shift_schedule_week_edit'),
     path('shift-schedule-weeks/<int:week_id>/delete/', views.shift_schedule_week_delete, name='shift_schedule_week_delete'),
+    path('shift-schedule-weeks/<int:week_id>/duplicate/', views.shift_schedule_week_duplicate, name='shift_schedule_week_duplicate'),
     
     # Shift Schedule Daily Plan URLs
     path('shift-schedule-weeks/<int:week_id>/daily-plans/create/<int:weekday>/', views.shift_schedule_daily_plan_create, name='shift_schedule_daily_plan_create'),

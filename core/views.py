@@ -1542,54 +1542,28 @@ def shift_schedule_period_duplicate(request, period_id):
 
 @login_required
 @admin_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def shift_schedule_week_create(request, period_id):
-    """Create a new week for a shift schedule period"""
+    """Create a new week for a shift schedule period instantly"""
     period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
     
-    if request.method == 'POST':
-        form = ShiftScheduleWeekForm(request.POST)
-        if form.is_valid():
-            with transaction.atomic():
-                week = form.save(commit=False)
-                week.period = period
-                week.save()
-                messages.success(request, f'Semaine {week.week_number} créée avec succès.')
-                
-                # Handle HTMX requests
-                if request.headers.get('HX-Request'):
-                    return HttpResponse("""
-                        <script>
-                            document.getElementById('week-modal').style.display = 'none';
-                            // Refresh the period weeks if we're in the list view
-                            if (typeof refreshPeriodWeeks === 'function') {
-                                refreshPeriodWeeks(%d);
-                            }
-                            // Also refresh schedule periods to update weeks count
-                            if (typeof refreshSchedulePeriods === 'function') {
-                                refreshSchedulePeriods(%d);
-                            }
-                            // Show success message
-                            if (typeof showSuccessMessage === 'function') {
-                                showSuccessMessage('Semaine %d créée avec succès.');
-                            }
-                        </script>
-                    """ % (period.id, period.shift_schedule.id, week.week_number))
-                
-                return redirect('shift_schedule_list')
-    else:
+    with transaction.atomic():
         # Auto-generate next week number
         existing_weeks = period.weeks.all()
         next_week_number = existing_weeks.count() + 1
-        form = ShiftScheduleWeekForm(initial={'period': period, 'week_number': next_week_number})
-        form.fields['period'].widget = forms.HiddenInput()
-    
-    return render(request, 'core/shift_schedules/shift_schedule_week_form_htmx.html', {
-        'form': form,
-        'period': period,
-        'week': None,
-        'current_agent': get_agent_from_user(request.user),
-    })
+        
+        # Create the week directly
+        week = ShiftScheduleWeek.objects.create(
+            period=period,
+            week_number=next_week_number
+        )
+        
+        # Handle HTMX requests - return the period ID
+        if request.headers.get('HX-Request'):
+            return HttpResponse(str(period.id), status=200)
+        
+        messages.success(request, f'Semaine S{week.week_number} créée avec succès.')
+        return redirect('shift_schedule_list')
 
 
 @login_required
@@ -1662,6 +1636,41 @@ def shift_schedule_week_delete(request, week_id):
         return HttpResponse('', status=200)
     
     return redirect('shift_schedule_list')
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def shift_schedule_week_duplicate(request, week_id):
+    """Duplicate a shift schedule week with all its daily plans instantly"""
+    original_week = get_object_or_404(ShiftScheduleWeek, id=week_id)
+    
+    with transaction.atomic():
+        # Duplicate to the same period and calculate next week number
+        target_period = original_week.period
+        existing_weeks = ShiftScheduleWeek.objects.filter(period=target_period)
+        next_week_number = existing_weeks.count() + 1
+        
+        # Create new week
+        new_week = ShiftScheduleWeek.objects.create(
+            period=target_period,
+            week_number=next_week_number
+        )
+        
+        # Copy all daily plans from original week
+        original_daily_plans = original_week.daily_plans.all()
+        for original_daily_plan in original_daily_plans:
+            ShiftScheduleDailyPlan.objects.create(
+                week=new_week,
+                weekday=original_daily_plan.weekday,
+                daily_rotation_plan=original_daily_plan.daily_rotation_plan
+            )
+        
+        if request.headers.get('HX-Request'):
+            return HttpResponse(str(target_period.id), status=200)
+        
+        messages.success(request, f'Semaine S{original_week.week_number} dupliquée avec succès comme S{next_week_number} avec {original_daily_plans.count()} rythmes quotidiens.')
+        return redirect('shift_schedule_list')
 
 
 

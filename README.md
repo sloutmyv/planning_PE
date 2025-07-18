@@ -78,6 +78,10 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Validation anti-doublons** : Prévention de l'assignation du même rythme plusieurs fois sur un même jour
 - **Mise à jour temps réel** : Actualisation immédiate des données sans rechargement de page
 - **Duplication de périodes** : Fonction de copie complète des périodes avec toutes leurs semaines et rythmes quotidiens
+- **Création de semaines instantanée** : Ajout de nouvelles semaines sans formulaire avec numérotation automatique (S1, S2, S3, etc.)
+- **Duplication de semaines instantanée** : Copie complète des semaines avec tous leurs rythmes quotidiens assignés, sans confirmation
+- **Actions silencieuses** : Création et duplication sans interruption, avec mise à jour immédiate de l'interface
+- **Préservation du contexte** : Maintien de la position dans les accordéons et de l'état des dropdowns lors des opérations
 
 ### Gestion des jours fériés
 - **CRUD complet** : Création, lecture, modification, suppression des jours fériés
@@ -132,6 +136,15 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Correction de l'édition des périodes** : Résolution du bug empêchant la modification des dates de fin de période
 - **Mise à jour temps réel optimisée** : Actualisation immédiate des données via API sans rechargement complet
 - **Gestion d'erreurs améliorée** : Affichage approprié des erreurs de validation dans les modales HTMX
+
+### Gestion instantanée des semaines (Juillet 2025)
+- **Actions directes sans formulaire** : Suppression complète des modales de confirmation pour la création et duplication de semaines
+- **Création instantanée** : Bouton "Ajouter une semaine" exécute l'action immédiatement avec numérotation automatique
+- **Duplication instantanée** : Bouton de duplication copie immédiatement la semaine avec tous ses rythmes quotidiens assignés
+- **Interface fluide** : Aucune interruption, alerte ou rechargement de page - les semaines apparaissent instantanément
+- **Préservation de l'état** : Maintien de la position dans les accordéons et de l'état d'expansion des dropdowns
+- **Workflow accéléré** : Possibilité de créer/dupliquer plusieurs semaines rapidement en succession
+- **Numérotation intelligente** : Auto-incrémentation des numéros de semaine (S1 → S2 → S3, etc.) sans intervention manuelle
 
 ### Corrections techniques
 - **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes
