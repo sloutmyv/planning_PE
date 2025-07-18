@@ -10,6 +10,9 @@ urlpatterns = [
     # Homepage
     path('', views.index, name='index'),
     
+    # User Manual
+    path('user-manual/', views.user_manual, name='user_manual'),
+    
     # HTMX endpoints for dashboard stats
     path('agent-count/', views.agent_count, name='agent_count'),
     path('function-count/', views.function_count, name='function_count'),

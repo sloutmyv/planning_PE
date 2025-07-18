@@ -95,6 +95,12 @@ def index(request):
     return render(request, 'core/index.html')
 
 
+@admin_required
+def user_manual(request):
+    """User manual explaining how to use the application"""
+    return render(request, 'core/user_manual.html')
+
+
 def is_staff_user(user):
     """Check if user is staff member (for Django admin compatibility)"""
     return user.is_authenticated and user.is_staff

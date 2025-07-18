@@ -12,6 +12,9 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Modales HTMX** : Formulaires de création/modification sans navigation
 - **Design harmonisé** : Boutons de création avec palette de couleurs bleue unifiée
 - **Indicateurs visuels** : Statuts actif/expiré pour les périodes avec codes couleur
+- **Navigation iconographique** : Menus avec icônes thématiques (📖 Manuel, 🗃️ Bases de données, ⚙️ Administration)
+- **Footer corporate** : Pied de page unifié avec identité "🚀 CCORP 2025"
+- **Manuel utilisateur intégré** : Guide complet accessible depuis le menu Administration avec sommaire interactif
 
 ### Gestion des agents
 - **CRUD complet** : Création, lecture, modification, suppression
@@ -160,6 +163,14 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Réinitialisation sécurisée** : Tous les mots de passe sont réinitialisés à "azerty" lors des imports
 - **Navigation superutilisateur** : Menu Administration unifié pour accès rapide aux fonctionnalités app et Django Admin
 
+### Améliorations interface et documentation (Juillet 2025)
+- **Manuel utilisateur intégré** : Guide complet accessible via menu Administration avec sommaire interactif et navigation par ancres
+- **Navigation iconographique** : Ajout d'icônes thématiques pour tous les menus (📖 Manuel, 🗃️ Bases de données, ⚙️ Administration)
+- **Footer corporate unifié** : Pied de page avec identité "🚀 CCORP 2025" sur toutes les pages
+- **Documentation séquence création** : Guide détaillé de l'ordre obligatoire pour éviter les erreurs de dépendances
+- **Amélioration UX menu** : Manuel utilisateur positionné en premier pour accès prioritaire aux instructions
+- **Design cohérent** : Harmonisation visuelle avec icônes et codes couleur dans toute l'interface
+
 ### Corrections techniques
 - **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes
 - **Validation côté serveur** : Amélioration de la gestion des erreurs de validation avec retour approprié des formulaires
@@ -282,14 +293,30 @@ python manage.py runserver
 L'interface principale propose :
 - **Accueil** : Vue d'ensemble avec placeholder pour le planning
 - **Administration** (menu déroulant adaptatif selon les permissions) :
-  - Gestion des Agents
-  - Gestion des Postes
-  - Types d'Horaire
-  - Rythmes Quotidien
-  - Roulements Hebdomadaires
-  - Jours Fériés
-  - Départements
-  - Interface d'Administration Django (pour superutilisateurs)
+  - 📖 Manuel Utilisateur (guide complet avec sommaire interactif)
+  - 🗃️ Gestion des Agents
+  - 🗃️ Gestion des Postes
+  - 🗃️ Types d'Horaire
+  - 🗃️ Rythmes Quotidien
+  - 🗃️ Roulements Hebdomadaires
+  - 🗃️ Jours Fériés
+  - 🗃️ Départements
+  - ⚙️ Interface d'Administration Django (pour superutilisateurs)
+
+### Manuel utilisateur intégré
+
+**Guide complet accessible depuis le menu Administration** :
+- **📋 Sommaire interactif** : Navigation rapide vers les différentes sections
+- **🏠 Vue d'ensemble** : Introduction et objectifs de l'application
+- **📋 Séquence de création** : Ordre obligatoire pour éviter les erreurs de dépendances
+  1. Types d'horaire (base pour les rythmes quotidiens)
+  2. Rythmes quotidiens (avec périodes de validité)
+  3. Roulements hebdomadaires (structure hiérarchique complète)
+  4. Données support optionnelles (agents, postes, jours fériés, départements)
+- **📚 Guide détaillé par module** : Explication approfondie de chaque fonctionnalité
+- **💡 Conseils et bonnes pratiques** : Recommandations et pièges à éviter
+- **⌨️ Interface et navigation** : Fonctionnalités de recherche et d'interaction
+- **🆘 Support et dépannage** : Aide pour résoudre les problèmes courants
 
 ### Fonctionnalités spéciales superutilisateur
 

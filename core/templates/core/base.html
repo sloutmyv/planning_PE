@@ -64,7 +64,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-lg border-b border-gray-200" x-data="{ adminOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,39 +107,44 @@
                                          x-transition:leave-end="transform opacity-0 scale-95"
                                          class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                                         <div class="py-1">
+                                            <a href="{% url 'user_manual' %}" 
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                                📖 Manuel Utilisateur
+                                            </a>
+                                            <div class="border-t border-gray-100"></div>
                                             <a href="{% url 'agent_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                    Liste des Agents
+                                                🗃️ Liste des Agents
                                             </a>
                                             <a href="{% url 'function_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Liste des Postes
+                                                🗃️ Liste des Postes
                                             </a>
                                             <a href="{% url 'schedule_type_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Types d'horaires
+                                                🗃️ Types d'horaires
                                             </a>
                                             <a href="{% url 'daily_rotation_plan_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Rythmes Quotidien
+                                                🗃️ Rythmes Quotidien
                                             </a>
                                             <a href="{% url 'shift_schedule_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Roulements Hebdomadaires
+                                                🗃️ Roulements Hebdomadaires
                                             </a>
                                             <a href="{% url 'public_holiday_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Jours Fériés
+                                                🗃️ Jours Fériés
                                             </a>
                                             <a href="{% url 'department_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Départements
+                                                🗃️ Départements
                                             </a>
                                             {% if current_agent.is_super_admin %}
                                                 <div class="border-t border-gray-100"></div>
                                                 <a href="/admin/" 
                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                    Interface d'Administration Django
+                                                    ⚙️ Administration Django
                                                 </a>
                                             {% endif %}
                                         </div>
@@ -170,38 +175,43 @@
                                          x-transition:leave-end="transform opacity-0 scale-95"
                                          class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                                         <div class="py-1">
+                                            <a href="{% url 'user_manual' %}" 
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                                📖 Manuel Utilisateur
+                                            </a>
+                                            <div class="border-t border-gray-100"></div>
                                             <a href="{% url 'agent_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Liste des Agents
+                                                🗃️ Liste des Agents
                                             </a>
                                             <a href="{% url 'function_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Liste des Postes
+                                                🗃️ Liste des Postes
                                             </a>
                                             <a href="{% url 'schedule_type_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Types d'horaires
+                                                🗃️ Types d'horaires
                                             </a>
                                             <a href="{% url 'daily_rotation_plan_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Rythmes Quotidien
+                                                🗃️ Rythmes Quotidien
                                             </a>
                                             <a href="{% url 'shift_schedule_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Roulements Hebdomadaires
+                                                🗃️ Roulements Hebdomadaires
                                             </a>
                                             <a href="{% url 'public_holiday_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Jours Fériés
+                                                🗃️ Jours Fériés
                                             </a>
                                             <a href="{% url 'department_list' %}" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Départements
+                                                🗃️ Départements
                                             </a>
                                             <div class="border-t border-gray-100"></div>
                                             <a href="/admin/" 
                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                                Interface d'Administration Django
+                                                ⚙️ Administration Django
                                             </a>
                                         </div>
                                     </div>
@@ -210,7 +220,7 @@
                                 <!-- Regular staff users get only Django admin -->
                                 <a href="/admin/" 
                                    class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                    Administration Django
+                                    ⚙️ Administration Django
                                 </a>
                             {% endif %}
                         {% endif %}
@@ -240,10 +250,21 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex-grow">
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <span class="text-gray-600 text-sm flex items-center justify-center">
+                    🚀 CCORP 2025
+                </span>
+            </div>
+        </div>
+    </footer>
 
     <!-- Wait for HTMX to load then configure -->
     <script>
