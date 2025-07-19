@@ -185,6 +185,8 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Validation des chevauchements** : Prévention des périodes qui se chevauchent pour les rythmes quotidiens et roulements hebdomadaires
 - **Couleurs dynamiques des rythmes** : Badges de rythmes quotidiens avec couleurs correspondant aux types d'horaire
 - **Contraste automatique** : Adaptation du texte (blanc/noir) selon la luminosité des couleurs de fond
+- **Suppression de la pagination** : Toutes les pages d'administration affichent maintenant les listes complètes sur une seule page pour une navigation simplifiée
+- **Optimisation de la largeur des pages** : Ajustement de la largeur des pages pour une meilleure cohérence visuelle entre les modules d'administration
 
 ## Architecture technique
 

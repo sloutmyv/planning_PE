@@ -640,8 +640,8 @@ function clearModalAndAddWeek(periodId) {
         <div id="shift-schedule-list-content">
             <!-- Shift Schedule Accordion -->
             <div class="space-y-4">
-                {% if page_obj.object_list %}
-                    {% for schedule in page_obj.object_list %}
+                {% if schedules %}
+                    {% for schedule in schedules %}
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200" x-data="{ 
                         expanded: false, 
                         scheduleId: {{ schedule.pk }},
@@ -1259,74 +1259,6 @@ function clearModalAndAddWeek(periodId) {
                 {% endif %}
             </div>
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg mt-6">
-                <div class="flex-1 flex justify-between sm:hidden">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Précédent
-                        </a>
-                    {% endif %}
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" 
-                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Suivant
-                        </a>
-                    {% endif %}
-                </div>
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Affichage de 
-                            <span class="font-medium">{{ page_obj.start_index }}</span>
-                            à 
-                            <span class="font-medium">{{ page_obj.end_index }}</span>
-                            sur 
-                            <span class="font-medium">{{ page_obj.paginator.count }}</span>
-                            résultats
-                        </p>
-                    </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            {% if page_obj.has_previous %}
-                                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" 
-                                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Précédent</span>
-                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            {% endif %}
-                            
-                            {% for page_num in page_obj.paginator.page_range %}
-                                {% if page_num == page_obj.number %}
-                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
-                                        {{ page_num }}
-                                    </span>
-                                {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
-                                    <a href="?page={{ page_num }}&search={{ search_query }}" 
-                                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                        {{ page_num }}
-                                    </a>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {% if page_obj.has_next %}
-                                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" 
-                                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Suivant</span>
-                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            {% endif %}
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
         </div>
     </div>
 </div>

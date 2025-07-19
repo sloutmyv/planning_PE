@@ -28,6 +28,7 @@
                                 <h3 class="font-semibold text-gray-700 mb-2">Guide principal</h3>
                                 <ul class="space-y-1">
                                     <li><a href="#introduction" class="text-blue-600 hover:text-blue-800 hover:underline">🏠 Introduction</a></li>
+                                    <li><a href="#architecture-donnees" class="text-blue-600 hover:text-blue-800 hover:underline">🗄️ Architecture des données</a></li>
                                     <li><a href="#fonctions-principales" class="text-blue-600 hover:text-blue-800 hover:underline">⚙️ Les deux fonctions principales</a></li>
                                     <li><a href="#ordre-creation" class="text-blue-600 hover:text-blue-800 hover:underline">📋 Ordre recommandé de création</a></li>
                                 </ul>
@@ -61,6 +62,305 @@
                         Décrire l'ordre logique de création des éléments afin de garantir un fonctionnement cohérent de l'application 
                         et une génération correcte des plannings.
                     </p>
+                </div>
+            </section>
+
+            <!-- Architecture des données -->
+            <section id="architecture-donnees">
+                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
+                    🗄️ Architecture des Données - Interconnexions
+                </h2>
+                
+                <div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-6">
+                    <p class="text-gray-800">
+                        Voici un schéma illustrant les relations entre les principales entités de l'application. 
+                        Les flèches indiquent les dépendances : une entité doit exister avant celles qui en dépendent.
+                    </p>
+                </div>
+
+                <!-- Database Schema Diagram -->
+                <div class="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6 overflow-x-auto">
+                    <div class="min-w-max">
+                        <svg viewBox="0 0 1200 850" class="w-full h-auto" style="max-height: 600px;">
+                            <!-- Background -->
+                            <rect width="1200" height="850" fill="#f8fafc"/>
+                            
+                            <!-- Legend -->
+                            <g transform="translate(20, 20)">
+                                <text x="0" y="0" class="text-sm font-bold" fill="#374151">Légende :</text>
+                                <line x1="0" y1="15" x2="30" y2="15" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="35" y="19" class="text-xs" fill="#374151">Clé étrangère (A → B : B.field_id → A.id)</text>
+                                <rect x="0" y="30" width="15" height="15" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                                <text x="20" y="42" class="text-xs" fill="#374151">Table de données</text>
+                                <text x="0" y="58" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="20" y="58" class="text-xs" fill="#374151">= Clé primaire</text>
+                                <text x="80" y="58" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="100" y="58" class="text-xs" fill="#374151">= Clé étrangère</text>
+                            </g>
+                            
+                            <!-- Arrow marker definition -->
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                        refX="10" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                                </marker>
+                            </defs>
+                            
+                            <!-- Departments (Top level) -->
+                            <g transform="translate(450, 100)">
+                                <rect width="160" height="85" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#1e40af">Department</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#1e40af" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#1e40af">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#1e40af">name</text>
+                                <text x="12" y="62" class="text-xs" fill="#1e40af">order</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 1</text>
+                            </g>
+                            
+                            <!-- Schedule Types -->
+                            <g transform="translate(120, 220)">
+                                <rect width="160" height="85" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#15803d">ScheduleType</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#15803d" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#15803d">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#15803d">designation</text>
+                                <text x="12" y="62" class="text-xs" fill="#15803d">color</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 4</text>
+                            </g>
+                            
+                            <!-- Public Holidays -->
+                            <g transform="translate(800, 220)">
+                                <rect width="160" height="85" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#d97706">PublicHoliday</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#d97706" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#d97706">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#d97706">designation</text>
+                                <text x="12" y="62" class="text-xs" fill="#d97706">date</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">OPTIONNEL</text>
+                            </g>
+                            
+                            <!-- Functions/Postes -->
+                            <g transform="translate(40, 360)">
+                                <rect width="160" height="85" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#4338ca">Function</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#4338ca" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#4338ca">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#4338ca">designation</text>
+                                <text x="12" y="62" class="text-xs" fill="#4338ca">status</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 3</text>
+                            </g>
+                            
+                            <!-- Agents -->
+                            <g transform="translate(240, 360)">
+                                <rect width="160" height="85" fill="#fce7f3" stroke="#ec4899" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#be185d">Agent</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#be185d" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#be185d">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#be185d">first_name, last_name</text>
+                                <text x="12" y="62" class="text-xs" fill="#be185d">matricule</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 3</text>
+                            </g>
+                            
+                            <!-- Daily Rotation Plans -->
+                            <g transform="translate(440, 360)">
+                                <rect width="160" height="100" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#15803d">DailyRotationPlan</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#15803d" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#15803d">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#15803d">designation</text>
+                                <text x="12" y="62" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="62" class="text-xs" fill="#15803d">schedule_type_id</text>
+                                <text x="80" y="95" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 5</text>
+                            </g>
+                            
+                            <!-- Rotation Periods -->
+                            <g transform="translate(640, 360)">
+                                <rect width="160" height="115" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#15803d">RotationPeriod</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#15803d" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#15803d">id</text>
+                                <text x="12" y="49" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="49" class="text-xs" fill="#15803d">daily_rotation_plan_id</text>
+                                <text x="12" y="62" class="text-xs" fill="#15803d">start_date, end_date</text>
+                                <text x="12" y="75" class="text-xs" fill="#15803d">start_time, end_time</text>
+                            </g>
+                            
+                            <!-- Shift Schedules -->
+                            <g transform="translate(300, 540)">
+                                <rect width="160" height="85" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#7c3aed">ShiftSchedule</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#7c3aed" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#7c3aed">id</text>
+                                <text x="12" y="49" class="text-xs" fill="#7c3aed">name</text>
+                                <text x="12" y="62" class="text-xs" fill="#7c3aed">type</text>
+                                <text x="80" y="79" text-anchor="middle" class="text-xs font-bold" fill="#dc2626">ÉTAPE 6</text>
+                            </g>
+                            
+                            <!-- Shift Schedule Periods -->
+                            <g transform="translate(520, 540)">
+                                <rect width="160" height="100" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#7c3aed">ShiftSchedulePeriod</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#7c3aed" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#7c3aed">id</text>
+                                <text x="12" y="49" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="49" class="text-xs" fill="#7c3aed">shift_schedule_id</text>
+                                <text x="12" y="62" class="text-xs" fill="#7c3aed">start_date, end_date</text>
+                            </g>
+                            
+                            <!-- Shift Schedule Weeks -->
+                            <g transform="translate(300, 690)">
+                                <rect width="160" height="100" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#7c3aed">ShiftScheduleWeek</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#7c3aed" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#7c3aed">id</text>
+                                <text x="12" y="49" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="49" class="text-xs" fill="#7c3aed">period_id</text>
+                                <text x="12" y="62" class="text-xs" fill="#7c3aed">week_number</text>
+                            </g>
+                            
+                            <!-- Shift Schedule Daily Plans -->
+                            <g transform="translate(520, 690)">
+                                <rect width="160" height="115" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" rx="8"/>
+                                <text x="80" y="18" text-anchor="middle" class="text-sm font-bold" fill="#7c3aed">ShiftScheduleDailyPlan</text>
+                                <line x1="10" y1="23" x2="150" y2="23" stroke="#7c3aed" stroke-width="1"/>
+                                <text x="12" y="36" class="text-xs font-bold" fill="#dc2626">PK</text>
+                                <text x="30" y="36" class="text-xs" fill="#7c3aed">id</text>
+                                <text x="12" y="49" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="49" class="text-xs" fill="#7c3aed">week_id</text>
+                                <text x="12" y="62" class="text-xs font-bold" fill="#059669">FK</text>
+                                <text x="30" y="62" class="text-xs" fill="#7c3aed">daily_rotation_plan_id</text>
+                                <text x="12" y="75" class="text-xs" fill="#7c3aed">weekday</text>
+                            </g>
+                            
+                            <!-- Foreign Key Relationships with field labels -->
+                            
+                            <!-- ScheduleType → DailyRotationPlan -->
+                            <line x1="280" y1="262" x2="440" y2="390" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <text x="340" y="320" class="text-xs font-semibold" fill="#3b82f6" transform="rotate(-25 340 320)">schedule_type_id</text>
+                            
+                            <!-- DailyRotationPlan → RotationPeriod -->
+                            <line x1="600" y1="410" x2="640" y2="410" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <text x="605" y="403" class="text-xs font-semibold" fill="#3b82f6">daily_rotation_plan_id</text>
+                            
+                            <!-- ShiftSchedule → ShiftSchedulePeriod -->
+                            <line x1="460" y1="582" x2="520" y2="582" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <text x="475" y="575" class="text-xs font-semibold" fill="#3b82f6">shift_schedule_id</text>
+                            
+                            <!-- ShiftSchedulePeriod → ShiftScheduleWeek -->
+                            <line x1="560" y1="640" x2="420" y2="690" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <text x="470" y="660" class="text-xs font-semibold" fill="#3b82f6" transform="rotate(-15 470 660)">period_id</text>
+                            
+                            <!-- ShiftScheduleWeek → ShiftScheduleDailyPlan -->
+                            <line x1="460" y1="740" x2="520" y2="740" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <text x="475" y="733" class="text-xs font-semibold" fill="#3b82f6">week_id</text>
+                            
+                            <!-- DailyRotationPlan → ShiftScheduleDailyPlan -->
+                            <path d="M 520 460 Q 750 550 600 690" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                            <text x="670" y="580" class="text-xs font-semibold" fill="#3b82f6" transform="rotate(45 670 580)">daily_rotation_plan_id</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Explanation -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-blue-800 mb-3">🔗 Relations entre tables (clés étrangères)</h3>
+                        <div class="space-y-2 text-sm text-blue-700">
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>DailyRotationPlan.schedule_type_id</strong> → ScheduleType.id</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>RotationPeriod.daily_rotation_plan_id</strong> → DailyRotationPlan.id</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>ShiftSchedulePeriod.shift_schedule_id</strong> → ShiftSchedule.id</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>ShiftScheduleWeek.period_id</strong> → ShiftSchedulePeriod.id</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>ShiftScheduleDailyPlan.week_id</strong> → ShiftScheduleWeek.id</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                                <p><strong>ShiftScheduleDailyPlan.daily_rotation_plan_id</strong> → DailyRotationPlan.id</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-orange-800 mb-3">⚡ Points clés de structure</h3>
+                        <div class="space-y-2 text-sm text-orange-700">
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></span>
+                                <p><strong>PK</strong> = Clé primaire (identifiant unique)</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></span>
+                                <p><strong>FK</strong> = Clé étrangère (référence vers autre table)</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></span>
+                                <p>Les flèches montrent le sens des dépendances</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></span>
+                                <p>Une table "enfant" ne peut exister sans sa table "parent"</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></span>
+                                <p>Respecter l'ordre évite les erreurs de contraintes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Field Reference Table -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">📋 Référence des champs principaux</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-xs">
+                        <div>
+                            <h4 class="font-semibold text-blue-700 mb-2">🗄️ Tables de base</h4>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><strong>Department:</strong> name, order</li>
+                                <li><strong>Function:</strong> designation, status</li>
+                                <li><strong>Agent:</strong> first_name, last_name, matricule</li>
+                                <li><strong>PublicHoliday:</strong> designation, date</li>
+                                <li><strong>ScheduleType:</strong> designation, color</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-green-700 mb-2">⏰ Rythmes et périodes</h4>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><strong>DailyRotationPlan:</strong> id (PK), designation, schedule_type_id (FK)</li>
+                                <li><strong>RotationPeriod:</strong> id (PK), daily_rotation_plan_id (FK), start_date, end_date, start_time, end_time</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-purple-700 mb-2">📅 Roulements hebdomadaires</h4>
+                            <ul class="space-y-1 text-gray-600">
+                                <li><strong>ShiftSchedule:</strong> id (PK), name, type</li>
+                                <li><strong>ShiftSchedulePeriod:</strong> id (PK), shift_schedule_id (FK), start_date, end_date</li>
+                                <li><strong>ShiftScheduleWeek:</strong> id (PK), period_id (FK), week_number</li>
+                                <li><strong>ShiftScheduleDailyPlan:</strong> id (PK), week_id (FK), daily_rotation_plan_id (FK), weekday</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </section>
 

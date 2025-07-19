@@ -5,7 +5,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
-from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.db import transaction
 from django import forms
@@ -158,17 +157,13 @@ def agent_list(request):
     else:
         agents = agents.order_by('matricule')
     
-    paginator = Paginator(agents, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'matricule')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/agents/agent_list_partial.html', {
-            'page_obj': page_obj,
+            'agents': agents,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order,
@@ -176,7 +171,7 @@ def agent_list(request):
         })
     
     return render(request, 'core/agents/agent_list.html', {
-        'page_obj': page_obj,
+        'agents': agents,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order,
@@ -278,13 +273,9 @@ def agent_delete(request, pk):
         else:
             agents = agents.order_by('matricule')
         
-        paginator = Paginator(agents, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         messages.success(request, f'Agent {matricule} supprimé avec succès.')
         return render(request, 'core/agents/agent_list_partial.html', {
-            'page_obj': page_obj,
+            'agents': agents,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'matricule'),
             'current_order': request.GET.get('order', 'asc')
@@ -499,17 +490,13 @@ def function_list(request):
     else:
         functions = functions.order_by('designation')
     
-    paginator = Paginator(functions, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'designation')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/functions/function_list_partial.html', {
-            'page_obj': page_obj,
+            'functions': functions,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order,
@@ -517,7 +504,7 @@ def function_list(request):
         })
     
     return render(request, 'core/functions/function_list.html', {
-        'page_obj': page_obj,
+        'functions': functions,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order,
@@ -621,13 +608,9 @@ def function_delete(request, pk):
         else:
             functions = functions.order_by('designation')
         
-        paginator = Paginator(functions, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         messages.success(request, f'Fonction "{designation}" supprimée avec succès.')
         return render(request, 'core/functions/function_list_partial.html', {
-            'page_obj': page_obj,
+            'functions': functions,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'designation'),
             'current_order': request.GET.get('order', 'asc'),
@@ -710,24 +693,20 @@ def schedule_type_list(request):
     else:
         schedule_types = schedule_types.order_by('designation')
     
-    paginator = Paginator(schedule_types, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'designation')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/schedule_types/schedule_type_list_partial.html', {
-            'page_obj': page_obj,
+            'schedule_types': schedule_types,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order
         })
     
     return render(request, 'core/schedule_types/schedule_type_list.html', {
-        'page_obj': page_obj,
+        'schedule_types': schedule_types,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order
@@ -853,13 +832,9 @@ def schedule_type_delete(request, pk):
         else:
             schedule_types = schedule_types.order_by('designation')
         
-        paginator = Paginator(schedule_types, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         messages.success(request, f'Type de planning "{designation}" supprimé avec succès.')
         return render(request, 'core/schedule_types/schedule_type_list_partial.html', {
-            'page_obj': page_obj,
+            'schedule_types': schedule_types,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'designation'),
             'current_order': request.GET.get('order', 'asc')
@@ -895,24 +870,20 @@ def daily_rotation_plan_list(request):
     else:
         plans = plans.order_by('designation')
     
-    paginator = Paginator(plans, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'designation')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list_partial.html', {
-            'page_obj': page_obj,
+            'plans': plans,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order
         })
     
     return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list.html', {
-        'page_obj': page_obj,
+        'plans': plans,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order
@@ -1036,13 +1007,9 @@ def daily_rotation_plan_delete(request, pk):
         else:
             plans = plans.order_by('designation')
         
-        paginator = Paginator(plans, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         messages.success(request, f'Plan de rotation "{designation}" supprimé avec succès.')
         return render(request, 'core/daily_rotation_plans/daily_rotation_plan_list_partial.html', {
-            'page_obj': page_obj,
+            'plans': plans,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'designation'),
             'current_order': request.GET.get('order', 'asc')
@@ -1081,10 +1048,6 @@ def rotation_period_list(request):
     else:
         periods = periods.order_by('start_date', 'start_time')
     
-    paginator = Paginator(periods, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get plans for filter dropdown
     plans = DailyRotationPlan.objects.all().order_by('designation')
     
@@ -1094,7 +1057,7 @@ def rotation_period_list(request):
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/rotation_periods/rotation_period_list_partial.html', {
-            'page_obj': page_obj,
+            'periods': periods,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order,
@@ -1103,7 +1066,7 @@ def rotation_period_list(request):
         })
     
     return render(request, 'core/rotation_periods/rotation_period_list.html', {
-        'page_obj': page_obj,
+        'periods': periods,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order,
@@ -1247,16 +1210,12 @@ def rotation_period_delete(request, pk):
         else:
             periods = periods.order_by('start_date', 'start_time')
         
-        paginator = Paginator(periods, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         # Get plans for filter dropdown
         plans = DailyRotationPlan.objects.all().order_by('designation')
         
         messages.success(request, f'Période de rotation supprimée avec succès.')
         return render(request, 'core/rotation_periods/rotation_period_list_partial.html', {
-            'page_obj': page_obj,
+            'periods': periods,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'start_date'),
             'current_order': request.GET.get('order', 'asc'),
@@ -1472,13 +1431,8 @@ def shift_schedule_list(request):
     # Order by name
     schedules = schedules.order_by('name')
     
-    # Pagination
-    paginator = Paginator(schedules, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     context = {
-        'page_obj': page_obj,
+        'schedules': schedules,
         'search_query': search_query,
         'type_filter': type_filter,
         'type_choices': ShiftSchedule.TYPE_CHOICES,
@@ -2050,17 +2004,13 @@ def public_holiday_list(request):
         count=Count('id')
     ).order_by('-year')
     
-    paginator = Paginator(holidays, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'date')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/public_holidays/public_holiday_list_partial.html', {
-            'page_obj': page_obj,
+            'holidays': holidays,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order,
@@ -2068,7 +2018,7 @@ def public_holiday_list(request):
         })
     
     return render(request, 'core/public_holidays/public_holiday_list.html', {
-        'page_obj': page_obj,
+        'holidays': holidays,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order,
@@ -2184,12 +2134,8 @@ def public_holiday_delete(request, pk):
             count=Count('id')
         ).order_by('-year')
         
-        paginator = Paginator(holidays, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         return render(request, 'core/public_holidays/public_holiday_list_partial.html', {
-            'page_obj': page_obj,
+            'holidays': holidays,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'date'),
             'current_order': request.GET.get('order', 'asc'),
@@ -2270,24 +2216,20 @@ def department_list(request):
     else:
         departments = departments.order_by('order', 'name')
     
-    paginator = Paginator(departments, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     # Get current sort order for template
     current_sort = request.GET.get('sort', 'order')
     current_order = request.GET.get('order', 'asc')
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/departments/department_list_partial.html', {
-            'page_obj': page_obj,
+            'departments': departments,
             'search_query': search_query,
             'current_sort': current_sort,
             'current_order': current_order
         })
     
     return render(request, 'core/departments/department_list.html', {
-        'page_obj': page_obj,
+        'departments': departments,
         'search_query': search_query,
         'current_sort': current_sort,
         'current_order': current_order
@@ -2384,12 +2326,8 @@ def department_delete(request, pk):
         else:
             departments = departments.order_by('order', 'name')
         
-        paginator = Paginator(departments, 10)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
         return render(request, 'core/departments/department_list_partial.html', {
-            'page_obj': page_obj,
+            'departments': departments,
             'search_query': search_query,
             'current_sort': request.GET.get('sort', 'order'),
             'current_order': request.GET.get('order', 'asc'),
