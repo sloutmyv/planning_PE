@@ -187,6 +187,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Contraste automatique** : Adaptation du texte (blanc/noir) selon la luminosité des couleurs de fond
 - **Suppression de la pagination** : Toutes les pages d'administration affichent maintenant les listes complètes sur une seule page pour une navigation simplifiée
 - **Optimisation de la largeur des pages** : Ajustement de la largeur des pages pour une meilleure cohérence visuelle entre les modules d'administration
+- **Validation des rythmes quotidiens** : Protection complète empêchant l'assignation de rythmes quotidiens sans période définie aux roulements hebdomadaires
 
 ## Architecture technique
 

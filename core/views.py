@@ -1708,6 +1708,11 @@ def shift_schedule_week_create(request, period_id):
     """Create a new week for a shift schedule period instantly"""
     period = get_object_or_404(ShiftSchedulePeriod, id=period_id)
     
+    # Validate that the period belongs to a shift schedule
+    if not hasattr(period, 'shift_schedule') or not period.shift_schedule:
+        messages.error(request, "Cette période n'appartient à aucun roulement hebdomadaire valide.")
+        return redirect('shift_schedule_list')
+    
     with transaction.atomic():
         # Auto-generate next week number
         existing_weeks = period.weeks.all()
@@ -1845,14 +1850,85 @@ def shift_schedule_daily_plan_create(request, week_id, weekday):
     """Create or update daily plans for a week"""
     week = get_object_or_404(ShiftScheduleWeek, id=week_id)
     
+    # Validate that the week belongs to a period and shift schedule has periods
+    if not hasattr(week, 'period') or not week.period:
+        messages.error(request, "Cette semaine n'appartient à aucune période définie.")
+        return redirect('shift_schedule_list')
+    
+    # Validate that the period still exists and belongs to a valid shift schedule
+    try:
+        period = week.period
+        period.refresh_from_db()
+        if not period.pk:
+            messages.error(request, "La période de cette semaine n'existe plus.")
+            return redirect('shift_schedule_list')
+            
+        shift_schedule = period.shift_schedule
+        shift_schedule.refresh_from_db()
+        if not shift_schedule.pk:
+            messages.error(request, "Le roulement hebdomadaire de cette période n'existe plus.")
+            return redirect('shift_schedule_list')
+            
+        # Verify the period is still associated with the schedule
+        if not shift_schedule.periods.filter(id=period.id).exists():
+            messages.error(request, "La période de cette semaine n'est plus associée à son roulement hebdomadaire.")
+            return redirect('shift_schedule_list')
+            
+    except Exception as e:
+        messages.error(request, "Erreur de validation : impossible d'accéder aux données de cette semaine.")
+        return redirect('shift_schedule_list')
+    
     if request.method == 'POST':
         form = ShiftScheduleDailyPlanForm(request.POST)
         if form.is_valid():
+            # Validate that the selected daily rotation plan has periods defined
+            selected_daily_plan = form.cleaned_data['daily_rotation_plan']
+            if not selected_daily_plan.periods.exists():
+                form.add_error('daily_rotation_plan', 
+                    f'Impossible d\'assigner le rythme quotidien "{selected_daily_plan.designation}" : '
+                    'aucune période n\'est définie pour ce rythme. '
+                    'Veuillez d\'abord ajouter une période à ce rythme quotidien.')
+                
+                # Return form with error for HTMX
+                if request.headers.get('HX-Request'):
+                    return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+                        'form': form,
+                        'week': week,
+                        'daily_plan': None,
+                        'weekday': weekday,
+                        'current_agent': get_agent_from_user(request.user),
+                    })
+                    
             with transaction.atomic():
                 daily_plan = form.save(commit=False)
                 daily_plan.week = week
                 daily_plan.weekday = weekday
-                daily_plan.save()
+                
+                try:
+                    daily_plan.full_clean()  # This will call our clean() method
+                    daily_plan.save()
+                except ValidationError as e:
+                    # Handle validation errors
+                    for field, errors in e.message_dict.items():
+                        for error in errors:
+                            form.add_error(field if field != '__all__' else None, error)
+                    
+                    # Return form with errors for HTMX
+                    if request.headers.get('HX-Request'):
+                        return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+                            'form': form,
+                            'week': week,
+                            'daily_plan': None,
+                            'weekday': weekday,
+                            'current_agent': get_agent_from_user(request.user),
+                        })
+                    return render(request, 'core/shift_schedules/shift_schedule_daily_plan_form_htmx.html', {
+                        'form': form,
+                        'week': week,
+                        'daily_plan': None,
+                        'weekday': weekday,
+                        'current_agent': get_agent_from_user(request.user),
+                    })
                 
                 if request.headers.get('HX-Request'):
                     period_id = week.period.id

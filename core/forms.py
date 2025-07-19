@@ -362,6 +362,19 @@ class ShiftScheduleDailyPlanForm(forms.ModelForm):
             'daily_rotation_plan': 'Rythme quotidien',
         }
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter daily rotation plans to only show those with periods defined
+        self.fields['daily_rotation_plan'].queryset = DailyRotationPlan.objects.filter(
+            periods__isnull=False
+        ).distinct()
+        
+        # Add help text to explain the filtering
+        self.fields['daily_rotation_plan'].help_text = (
+            "Seuls les rythmes quotidiens ayant au moins une période définie sont disponibles."
+        )
+    
     def clean(self):
         cleaned_data = super().clean()
         week = cleaned_data.get('week')

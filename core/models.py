@@ -432,6 +432,75 @@ class ShiftScheduleDailyPlan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    def clean(self):
+        super().clean()
+        
+        # Validate that the week belongs to a period of a shift schedule
+        if self.week:
+            if not hasattr(self.week, 'period') or not self.week.period:
+                raise ValidationError({
+                    'week': 'Cette semaine doit appartenir à une période définie.'
+                })
+            
+            if not hasattr(self.week.period, 'shift_schedule') or not self.week.period.shift_schedule:
+                raise ValidationError({
+                    'week': 'Cette semaine doit appartenir à une période d\'un roulement hebdomadaire valide.'
+                })
+            
+            # Validate that the period still exists and is not deleted
+            try:
+                period = self.week.period
+                period.refresh_from_db()
+                if not period.pk:
+                    raise ValidationError({
+                        'week': 'La période à laquelle appartient cette semaine n\'existe plus.'
+                    })
+            except Exception:
+                raise ValidationError({
+                    'week': 'La période à laquelle appartient cette semaine n\'existe plus ou n\'est plus accessible.'
+                })
+            
+            # Validate that the shift schedule still exists and has the period
+            try:
+                shift_schedule = period.shift_schedule
+                shift_schedule.refresh_from_db()
+                if not shift_schedule.pk:
+                    raise ValidationError({
+                        'week': 'Le roulement hebdomadaire de cette période n\'existe plus.'
+                    })
+                
+                # Verify the period is still associated with this schedule
+                if not shift_schedule.periods.filter(id=period.id).exists():
+                    raise ValidationError({
+                        'week': 'La période de cette semaine n\'est plus associée à son roulement hebdomadaire.'
+                    })
+                    
+            except Exception as e:
+                if 'période à laquelle appartient cette semaine' not in str(e):
+                    raise ValidationError({
+                        'week': 'Le roulement hebdomadaire de cette période n\'existe plus ou n\'est plus accessible.'
+                    })
+        
+        # Validate that the daily rotation plan has at least one period defined
+        if self.daily_rotation_plan:
+            if not self.daily_rotation_plan.periods.exists():
+                raise ValidationError({
+                    'daily_rotation_plan': f'Impossible d\'assigner le rythme quotidien "{self.daily_rotation_plan.designation}" : aucune période n\'est définie pour ce rythme.'
+                })
+        
+        # Validate uniqueness of weekday within the same week
+        if self.week and self.weekday:
+            existing_plan = ShiftScheduleDailyPlan.objects.filter(
+                week=self.week,
+                weekday=self.weekday
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            if existing_plan.exists():
+                weekday_name = self.get_weekday_display_french()
+                raise ValidationError({
+                    'daily_rotation_plan': f'Un rythme quotidien est déjà assigné au {weekday_name} pour cette semaine.'
+                })
+
     def get_weekday_display_french(self):
         """Return French weekday name"""
         weekday_names = {
@@ -452,6 +521,7 @@ class ShiftScheduleDailyPlan(models.Model):
         verbose_name = "Plan Quotidien de Planning"
         verbose_name_plural = "Plans Quotidiens de Planning"
         ordering = ['week', 'weekday']
+        unique_together = ['week', 'weekday']
 
 
 class PublicHoliday(models.Model):
