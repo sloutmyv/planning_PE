@@ -238,13 +238,16 @@ class RotationPeriod(models.Model):
         
         # Validate time consistency (except for night shifts)
         if self.start_time and self.end_time:
-            # Allow night shifts where end_time < start_time (e.g., 22:00-06:00)
-            # Only validate if it's not a night shift
             if self.start_time >= self.end_time:
                 # Check if this could be a valid night shift
-                if not (self.start_time >= time(18, 0) and self.end_time <= time(12, 0)):
+                # Night shifts are allowed if start_time >= 16:00 AND end_time <= 12:00
+                is_potential_night_shift = (
+                    self.start_time >= time(16, 0) and self.end_time <= time(12, 0)
+                )
+                
+                if not is_potential_night_shift:
                     raise ValidationError({
-                        'end_time': 'L\'heure de fin doit être postérieure à l\'heure de début, sauf pour les équipes de nuit (18h00-12h00).'
+                        'end_time': 'L\'heure de fin doit être postérieure à l\'heure de début, sauf pour les équipes de nuit. Les équipes de nuit sont automatiquement détectées (ex: 16:00-08:00, 22:00-06:00).'
                     })
         
         # Check for overlapping periods within the same plan

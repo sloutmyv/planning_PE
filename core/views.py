@@ -1125,9 +1125,15 @@ def rotation_period_create(request):
             messages.success(request, f'Période de rotation créée avec succès.')
             if request.headers.get('HX-Request'):
                 plan_id = period.daily_rotation_plan.pk
+                period_count = period.daily_rotation_plan.periods.count()
+                plural = '' if period_count == 1 else 's'
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Période de rotation créée avec succès.</div>'
-                    f'<script>refreshPlanPeriods({plan_id}); setTimeout(() => {{ document.querySelector("form[hx-post*=\'rotation_period\']").reset(); }}, 500);</script>'
+                    f'<script>'
+                    f'refreshPlanPeriods({plan_id}); '
+                    f'document.getElementById("period-count-{plan_id}").innerHTML = "{period_count} période{plural}"; '
+                    f'setTimeout(() => {{ document.querySelector("form[hx-post*=\'rotation_period\']").reset(); }}, 500);'
+                    f'</script>'
                 )
             # Redirect to plan detail if creating from plan view
             if plan_id:
@@ -1170,9 +1176,17 @@ def rotation_period_edit(request, pk):
             messages.success(request, f'Période de rotation modifiée avec succès.')
             if request.headers.get('HX-Request'):
                 plan_id = period.daily_rotation_plan.pk
+                period_count = period.daily_rotation_plan.periods.count()
+                plural = '' if period_count == 1 else 's'
                 return HttpResponse(
                     f'<div class="p-4 mb-4 text-green-800 bg-green-100 rounded-lg">Période de rotation modifiée avec succès.</div>'
-                    f'<script>setTimeout(() => {{ document.getElementById("period-modal").style.display = "none"; refreshPlanPeriods({plan_id}); }}, 1000)</script>'
+                    f'<script>'
+                    f'setTimeout(() => {{ '
+                    f'document.getElementById("period-modal").style.display = "none"; '
+                    f'refreshPlanPeriods({plan_id}); '
+                    f'document.getElementById("period-count-{plan_id}").innerHTML = "{period_count} période{plural}"; '
+                    f'}}, 1000)'
+                    f'</script>'
                 )
             return redirect('rotation_period_list')
         # If form is invalid and it's an HTMX request, return the form with errors

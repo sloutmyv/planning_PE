@@ -2,7 +2,8 @@
       hx-post="{% if period %}{% url 'rotation_period_edit' period.pk %}{% else %}{% url 'rotation_period_create' %}{% endif %}"
       hx-target="this"
       hx-swap="outerHTML"
-      class="space-y-6">
+      class="space-y-6"
+      novalidate>
     {% csrf_token %}
     
     <!-- Plan de rotation -->
@@ -10,9 +11,7 @@
         <label for="{{ form.daily_rotation_plan.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-2">
             {{ form.daily_rotation_plan.label }}
         </label>
-        <div class="max-w-md">
-            {{ form.daily_rotation_plan }}
-        </div>
+        {{ form.daily_rotation_plan }}
         {% if form.daily_rotation_plan.errors %}
             <div class="mt-1 text-sm text-red-600">
                 {% for error in form.daily_rotation_plan.errors %}
@@ -86,7 +85,7 @@
                 </div>
             {% endif %}
             <p class="mt-1 text-sm text-gray-500">
-                Les équipes de nuit sont supportées (ex: 22:00 - 06:00)
+                Les équipes de nuit sont automatiquement détectées (ex: 16:00-08:00, 22:00-06:00)
             </p>
         </div>
     </div>
@@ -171,3 +170,4 @@ document.addEventListener('htmx:afterSwap', function(evt) {
 // Apply styling immediately for current form
 applyFormStyling();
 </script>
+

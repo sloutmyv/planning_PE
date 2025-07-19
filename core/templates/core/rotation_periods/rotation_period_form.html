@@ -17,7 +17,7 @@
 
     <!-- Form -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
-        <form method="post" class="space-y-6">
+        <form method="post" class="space-y-6" novalidate>
             {% csrf_token %}
             
             <!-- Plan de rotation -->
@@ -101,7 +101,7 @@
                         </div>
                     {% endif %}
                     <p class="mt-1 text-sm text-gray-500">
-                        Les équipes de nuit sont supportées (ex: 22:00 - 06:00)
+                        Les équipes de nuit sont automatiquement détectées (ex: 16:00-08:00, 22:00-06:00)
                     </p>
                 </div>
             </div>

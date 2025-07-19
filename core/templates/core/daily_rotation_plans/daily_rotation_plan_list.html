@@ -3,6 +3,14 @@
 {% block title %}Gestion des plans de rotation - Planning PE{% endblock %}
 
 {% block content %}
+<style>
+/* Expand the main container for rhythm list */
+main.max-w-7xl {
+    max-width: none !important;
+    width: 95vw !important;
+    margin: 0 auto !important;
+}
+</style>
 <script>
 function clearModalAndCreatePlan() {
     console.log('clearModalAndCreatePlan called');
@@ -239,20 +247,22 @@ function clearModalAndEditPeriod(editUrl) {
 
     <!-- Period Modal -->
     <div id="period-modal" style="display: none;" class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900">Gérer la période</h2>
-            <button onclick="document.getElementById('period-modal').style.display = 'none'" 
-                    class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <div id="period-create-form-content">
-            <div class="animate-pulse">
-                <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Gérer la période</h2>
+                    <button onclick="document.getElementById('period-modal').style.display = 'none'" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="period-create-form-content">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

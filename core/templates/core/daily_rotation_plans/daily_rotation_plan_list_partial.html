@@ -58,7 +58,7 @@
                             <!-- Statistics Column -->
                             <div class="flex flex-col items-start space-y-2">
                                 <!-- Period Count -->
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                <span id="period-count-{{ plan.id }}" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                                     {{ plan.periods.count }} période{{ plan.periods.count|pluralize }}
                                 </span>
                                 
@@ -313,6 +313,8 @@ function deletePeriod(periodId, planId) {
             if (response.ok) {
                 // Reload periods for this specific plan
                 refreshPlanPeriods(planId);
+                // Update period count
+                updatePeriodCount(planId);
             } else {
                 alert('Erreur lors de la suppression de la période');
             }
@@ -335,5 +337,23 @@ function refreshPlanPeriods(planId) {
             break;
         }
     }
+}
+
+function updatePeriodCount(planId) {
+    // Fetch updated period count from server
+    fetch(`/api/plans/${planId}/periods/`)
+        .then(response => response.json())
+        .then(data => {
+            const periods = data.periods || [];
+            const count = periods.length;
+            const plural = count === 1 ? '' : 's';
+            const countElement = document.getElementById(`period-count-${planId}`);
+            if (countElement) {
+                countElement.innerHTML = `${count} période${plural}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error updating period count:', error);
+        });
 }
 </script>

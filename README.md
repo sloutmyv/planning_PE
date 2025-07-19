@@ -173,7 +173,11 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Amélioration visuelle** : Listes hiérarchiques avec puces visuelles et meilleure typography pour la lisibilité
 - **Design cohérent** : Harmonisation visuelle avec icônes et codes couleur dans toute l'interface
 
-### Corrections techniques
+### Corrections techniques récentes (Juillet 2025)
+- **Validation des équipes de nuit améliorée** : Support complet des équipes de nuit débutant dès 16:00 avec validation automatique (16:00-08:00, 22:00-06:00)
+- **Mise à jour dynamique des compteurs de périodes** : Les badges de nombre de périodes se mettent à jour automatiquement sans rechargement de page
+- **Stabilité de l'interface** : Amélioration de la stabilité visuelle de la liste des rythmes quotidiens lors de l'ouverture des modales
+- **Désactivation de la validation HTML5** : Suppression des conflits entre validation navigateur et validation Django pour les horaires de nuit
 - **Formulaires HTMX** : Correction des champs cachés manquants dans l'édition des périodes
 - **Validation côté serveur** : Amélioration de la gestion des erreurs de validation avec retour approprié des formulaires
 - **Actualisation des données** : Implémentation d'un système de refresh ciblé via Alpine.js et API REST

@@ -168,11 +168,13 @@ class RotationPeriodForm(forms.ModelForm):
             }),
             'start_time': forms.TimeInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
-                'type': 'time'
+                'type': 'time',
+                'data-allow-night-shift': 'true'
             }),
             'end_time': forms.TimeInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
-                'type': 'time'
+                'type': 'time',
+                'data-allow-night-shift': 'true'
             }),
         }
         labels = {
@@ -184,6 +186,7 @@ class RotationPeriodForm(forms.ModelForm):
         }
     
     def clean(self):
+        from datetime import time
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
@@ -194,6 +197,20 @@ class RotationPeriodForm(forms.ModelForm):
         # Basic date validation
         if start_date and end_date and start_date > end_date:
             raise forms.ValidationError('La date de fin doit être postérieure ou égale à la date de début.')
+        
+        # Time validation with automatic night shift detection
+        if start_time and end_time:
+            if start_time >= end_time:
+                # Check if this could be a valid night shift
+                # Night shifts are allowed if start_time >= 16:00 AND end_time <= 12:00
+                is_potential_night_shift = (
+                    start_time >= time(16, 0) and end_time <= time(12, 0)
+                )
+                
+                if not is_potential_night_shift:
+                    raise forms.ValidationError({
+                        'end_time': 'L\'heure de fin doit être postérieure à l\'heure de début, sauf pour les équipes de nuit. Les équipes de nuit sont automatiquement détectées (ex: 16:00-08:00, 22:00-06:00).'
+                    })
         
         # Check for overlapping periods within the same daily rotation plan
         if start_date and end_date and daily_rotation_plan:
