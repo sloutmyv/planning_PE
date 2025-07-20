@@ -37,6 +37,7 @@
                                 <h3 class="font-semibold text-gray-700 mb-2">Informations avancées</h3>
                                 <ul class="space-y-1">
                                     <li><a href="#cas-particuliers" class="text-blue-600 hover:text-blue-800 hover:underline">🔄 Cas particuliers - Comportements automatiques</a></li>
+                                    <li><a href="#import-export" class="text-blue-600 hover:text-blue-800 hover:underline">📦 Import/Export des données</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -664,6 +665,175 @@
                         Mais si j'associe dans un second temps à ce poste un roulement, le roulement se génère sur le planning 
                         mais <strong>sans écraser les jours déjà définis en amont</strong>. Ceci pour ne pas perdre de données.
                     </div>
+                </div>
+            </section>
+
+            <!-- Import/Export des données -->
+            <section id="import-export">
+                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
+                    📦 Import/Export des données
+                </h2>
+                
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Accès restreint - Superutilisateur uniquement</h3>
+                    <p class="text-red-700 text-sm">
+                        Les fonctionnalités d'import/export sont <strong>exclusivement réservées aux superutilisateurs</strong>. 
+                        Elles permettent de sauvegarder et restaurer l'intégralité des données de l'application via l'interface Django Admin.
+                    </p>
+                </div>
+
+                <!-- Export des données -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Export des données</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Export global -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-2">🗂️ Export global (recommandé)</h4>
+                            <p class="text-sm text-blue-700 mb-3">
+                                Exporte <strong>toutes les données</strong> de l'application en un seul fichier ZIP.
+                            </p>
+                            <div class="bg-blue-100 p-3 rounded text-sm text-blue-800">
+                                <p><strong>Accès :</strong> Django Admin → Core (page principale) → Bouton "📊 Exporter Toutes les Données"</p>
+                                <p><strong>Fichier généré :</strong> <code>YYYY-MM-DD_HHMMSS_export_global_planning.zip</code></p>
+                                <p><strong>Contenu :</strong> 10 fichiers JSON avec tous les modèles de l'application</p>
+                            </div>
+                        </div>
+
+                        <!-- Export individuel -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-800 mb-2">📄 Export individuel par modèle</h4>
+                            <p class="text-sm text-green-700 mb-3">
+                                Exporte un seul type de données à la fois. Utile pour des sauvegardes partielles ou des transferts sélectifs.
+                            </p>
+                            <div class="bg-green-100 p-3 rounded text-sm text-green-800">
+                                <p><strong>Accès :</strong> Django Admin → Core → [Modèle] → Bouton "📊 Exporter JSON"</p>
+                                <p><strong>Fichier généré :</strong> <code>YYYY-MM-DD_[modele].json</code></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import des données -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📥 Import des données</h3>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-red-800 mb-2">🚨 ATTENTION - Remplacement complet</h4>
+                        <p class="text-sm text-red-700">
+                            L'import <strong>supprime définitivement</strong> toutes les données existantes du modèle et les remplace 
+                            par le contenu du fichier JSON. Cette action est <strong>irréversible</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Ordre d'importation obligatoire -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-yellow-800 mb-3">⚠️ Ordre d'importation OBLIGATOIRE</h4>
+                        <p class="text-sm text-yellow-700 mb-4">
+                            Les modèles ont des <strong>dépendances hiérarchiques</strong>. Il est impératif de respecter cet ordre 
+                            pour éviter les erreurs de clés étrangères :
+                        </p>
+                        
+                        <div class="bg-white border border-yellow-300 rounded p-3">
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                                <li><strong>Départements</strong> → <code>YYYY-MM-DD_departments.json</code></li>
+                                <li><strong>Agents</strong> → <code>YYYY-MM-DD_agents.json</code></li>
+                                <li><strong>Fonctions (Postes)</strong> → <code>YYYY-MM-DD_functions.json</code></li>
+                                <li><strong>Types d'horaire</strong> → <code>YYYY-MM-DD_schedule_types.json</code></li>
+                                <li><strong>Rythmes quotidiens</strong> → <code>YYYY-MM-DD_daily_rotation_plans.json</code></li>
+                                <li><strong>Périodes de rotation</strong> → <code>YYYY-MM-DD_rotation_periods.json</code></li>
+                                <li><strong>Plannings de poste</strong> → <code>YYYY-MM-DD_shift_schedules.json</code></li>
+                                <li><strong>Périodes de planning de poste</strong> → <code>YYYY-MM-DD_shift_schedule_periods.json</code></li>
+                                <li><strong>Semaines de planning</strong> → <code>YYYY-MM-DD_shift_schedule_weeks.json</code></li>
+                                <li><strong>Plans quotidiens de planning</strong> → <code>YYYY-MM-DD_shift_schedule_daily_plans.json</code></li>
+                            </ol>
+                        </div>
+                        
+                        <div class="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
+                            <strong>💡 Astuce :</strong> Si vous utilisez l'export global, tous les fichiers JSON sont déjà nommés 
+                            avec le bon préfixe de date et prêts à être importés dans l'ordre indiqué.
+                        </div>
+                    </div>
+
+                    <!-- Procédure d'import -->
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-indigo-800 mb-3">📋 Procédure d'import</h4>
+                        <div class="space-y-3 text-sm text-indigo-700">
+                            <div class="flex items-start">
+                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
+                                <div>
+                                    <strong>Accès :</strong> Django Admin → Core → [Modèle] → Bouton "⚠️ Importer JSON"
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
+                                <div>
+                                    <strong>Sélection :</strong> Choisir le fichier JSON correspondant au modèle
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
+                                <div>
+                                    <strong>Confirmation :</strong> Cocher la case de confirmation obligatoire
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">4</span>
+                                <div>
+                                    <strong>Validation :</strong> Le système vérifie automatiquement la structure et les dépendances
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">5</span>
+                                <div>
+                                    <strong>Import :</strong> Remplacement complet des données si validation réussie
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modèles supportés -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">🗃️ Modèles supportés</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Modèles de base -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">📊 Données de base</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• Départements</li>
+                                <li>• Agents</li>
+                                <li>• Fonctions (Postes)</li>
+                                <li>• Types d'horaire</li>
+                            </ul>
+                        </div>
+
+                        <!-- Modèles de planification -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">📅 Données de planification</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li>• Rythmes quotidiens</li>
+                                <li>• Périodes de rotation</li>
+                                <li>• Plannings de poste</li>
+                                <li>• Périodes de planning</li>
+                                <li>• Semaines de planning</li>
+                                <li>• Plans quotidiens</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bonnes pratiques -->
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-3">✅ Bonnes pratiques</h4>
+                    <ul class="space-y-2 text-sm text-green-700">
+                        <li>• <strong>Sauvegarde préventive :</strong> Toujours exporter avant d'importer</li>
+                        <li>• <strong>Environnement de test :</strong> Tester d'abord sur une copie de la base</li>
+                        <li>• <strong>Vérification :</strong> Contrôler les données après import</li>
+                        <li>• <strong>Documentation :</strong> Noter la date et la raison de chaque import/export</li>
+                        <li>• <strong>Accès restreint :</strong> Seuls les superutilisateurs peuvent utiliser ces fonctions</li>
+                    </ul>
                 </div>
             </section>
         </div>

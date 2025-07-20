@@ -168,6 +168,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 
 ### Améliorations interface et documentation (Juillet 2025)
 - **Manuel utilisateur métier** : Guide complet refondu pour administrateurs métier avec contenu spécialisé et workflow détaillé
+- **Documentation Import/Export** : Section complète dans le manuel utilisateur expliquant les fonctionnalités d'import/export avec ordre d'importation obligatoire
 - **Navigation iconographique** : Ajout d'icônes thématiques pour tous les menus (📖 Manuel, 🗃️ Bases de données, ⚙️ Administration)
 - **Footer corporate unifié** : Pied de page avec identité "🚀 CCORP 2025" sur toutes les pages
 - **Ordre logique des menus** : Réorganisation selon la séquence de création recommandée (Départements → Postes → Agents → Jours fériés → Types → Rythmes → Roulements)
@@ -175,6 +176,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Cas d'usage automatiques** : Documentation complète des comportements système selon configuration des postes
 - **Amélioration visuelle** : Listes hiérarchiques avec puces visuelles et meilleure typography pour la lisibilité
 - **Design cohérent** : Harmonisation visuelle avec icônes et codes couleur dans toute l'interface
+- **Guide des dépendances** : Documentation détaillée de l'ordre d'importation en 10 étapes avec noms de fichiers JSON spécifiques
 
 ### Corrections techniques récentes (Juillet 2025)
 - **Validation des équipes de nuit améliorée** : Support complet des équipes de nuit débutant dès 16:00 avec validation automatique (16:00-08:00, 22:00-06:00)
