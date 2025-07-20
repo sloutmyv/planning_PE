@@ -6,71 +6,139 @@
 <div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-lg shadow-md">
         <!-- Header -->
-        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-            <h1 class="text-2xl font-bold flex items-center">
-                📖 Manuel Utilisateur – Administration Métier
-                <span class="ml-3 text-sm font-normal bg-blue-500 px-2 py-1 rounded">Planning PE</span>
+        <div class="bg-gray-800 text-white px-6 py-4 rounded-t-lg">
+            <h1 class="text-2xl font-bold">
+                Manuel Utilisateur – Administration Métier
+                <span class="ml-3 text-sm font-normal bg-gray-700 px-2 py-1 rounded">Planning PE</span>
             </h1>
-            <p class="text-blue-100 mt-1">Guide pour les administrateurs métier - Configuration et maintien des données</p>
+            <p class="text-gray-300 mt-1">Guide pour les administrateurs métier - Configuration et maintien des données</p>
         </div>
 
         <!-- Content -->
         <div class="p-6 space-y-8">
             <!-- Sommaire -->
             <section>
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    📋 Sommaire
+                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-300 pb-2 mb-4">
+                    Sommaire
                 </h2>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <nav class="space-y-2 text-sm">
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">Guide principal</h3>
-                                <ul class="space-y-1">
-                                    <li><a href="#introduction" class="text-blue-600 hover:text-blue-800 hover:underline">🏠 Introduction</a></li>
-                                    <li><a href="#architecture-donnees" class="text-blue-600 hover:text-blue-800 hover:underline">🗄️ Architecture des données</a></li>
-                                    <li><a href="#fonctions-principales" class="text-blue-600 hover:text-blue-800 hover:underline">⚙️ Les deux fonctions principales</a></li>
-                                    <li><a href="#ordre-creation" class="text-blue-600 hover:text-blue-800 hover:underline">📋 Ordre recommandé de création</a></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">Informations avancées</h3>
-                                <ul class="space-y-1">
-                                    <li><a href="#cas-particuliers" class="text-blue-600 hover:text-blue-800 hover:underline">🔄 Cas particuliers - Comportements automatiques</a></li>
-                                    <li><a href="#import-export" class="text-blue-600 hover:text-blue-800 hover:underline">📦 Import/Export des données</a></li>
-                                </ul>
-                            </div>
-                        </div>
+                <div class="bg-gray-100 rounded-lg p-4 border">
+                    <nav class="space-y-3 text-sm">
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li><a href="#introduction" class="text-gray-700 hover:text-gray-900 hover:underline font-medium">Introduction et objectifs</a></li>
+                            <li><a href="#architecture-systeme" class="text-gray-700 hover:text-gray-900 hover:underline font-medium">Architecture du système</a>
+                                <ol class="list-decimal list-inside ml-6 mt-1 space-y-1">
+                                    <li><a href="#fonctions-principales" class="text-gray-600 hover:text-gray-800 hover:underline">Fonctions principales</a></li>
+                                    <li><a href="#architecture-donnees" class="text-gray-600 hover:text-gray-800 hover:underline">Architecture des données</a></li>
+                                    <li><a href="#permissions-acces" class="text-gray-600 hover:text-gray-800 hover:underline">Système de permissions</a></li>
+                                </ol>
+                            </li>
+                            <li><a href="#guide-utilisation" class="text-gray-700 hover:text-gray-900 hover:underline font-medium">Guide d'utilisation</a>
+                                <ol class="list-decimal list-inside ml-6 mt-1 space-y-1">
+                                    <li><a href="#ordre-creation" class="text-gray-600 hover:text-gray-800 hover:underline">Ordre de création des données</a></li>
+                                    <li><a href="#gestion-modules" class="text-gray-600 hover:text-gray-800 hover:underline">Gestion des modules</a></li>
+                                    <li><a href="#cas-particuliers" class="text-gray-600 hover:text-gray-800 hover:underline">Comportements automatiques</a></li>
+                                </ol>
+                            </li>
+                            <li><a href="#administration-avancee" class="text-gray-700 hover:text-gray-900 hover:underline font-medium">Administration avancée</a>
+                                <ol class="list-decimal list-inside ml-6 mt-1 space-y-1">
+                                    <li><a href="#import-export" class="text-gray-600 hover:text-gray-800 hover:underline">Import/Export des données</a></li>
+                                    <li><a href="#interface-django" class="text-gray-600 hover:text-gray-800 hover:underline">Interface Django Admin</a></li>
+                                </ol>
+                            </li>
+                        </ol>
                     </nav>
                 </div>
             </section>
 
-            <!-- Introduction -->
+            <!-- I) Introduction -->
             <section id="introduction">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    🏠 Introduction
+                    I) Introduction et objectifs
                 </h2>
-                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-                    <p class="text-blue-800">
-                        Planning PE est une application dédiée à la gestion et génération automatique des plannings d'équipes.</br> 
-                        Ce manuel s'adresse aux administrateurs métier chargés de la configuration initiale et du maintien des données de l'application.
-                    </p>
-                </div>
                 
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                    <h3 class="font-semibold text-yellow-800 mb-2">🎯 Objectif</h3>
-                    <p class="text-yellow-800">
-                        Décrire l'ordre logique de création des éléments afin de garantir un fonctionnement cohérent de l'application 
-                        et une génération correcte des plannings.
-                    </p>
+                <div class="space-y-6">
+                    <!-- Présentation -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">I.1) Présentation de l'application</h3>
+                        <p class="text-gray-700">
+                            Planning PE est une application web dédiée à la gestion et génération automatique des plannings d'équipes. 
+                            Elle offre une interface utilisateur moderne pour l'administration des données de planification.
+                        </p>
+                    </div>
+                    
+                    <!-- Public cible -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">I.2) Public cible du manuel</h3>
+                        <p class="text-gray-700">
+                            Ce manuel s'adresse exclusivement aux <strong>administrateurs métier</strong> chargés de la configuration initiale 
+                            et du maintien des données de l'application. Il se concentre sur l'utilisation opérationnelle.
+                        </p>
+                    </div>
+                    
+                    <!-- Objectifs -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">I.3) Objectifs du manuel</h3>
+                        <div class="text-gray-700 space-y-1">
+                            <p>• Décrire l'ordre logique de création des éléments pour garantir la cohérence des données</p>
+                            <p>• Expliquer les fonctionnalités d'administration et leurs interactions</p>
+                            <p>• Documenter les procédures d'import/export et de sauvegarde</p>
+                            <p>• Présenter les comportements automatiques du système</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="bg-gray-50 border-l-4 border-gray-500 p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">I.4) Navigation dans l'application</h3>
+                        <div class="text-gray-700 space-y-1 text-sm">
+                            <p><strong>Accès principal :</strong> http://127.0.0.1:8000/</p>
+                            <p><strong>Menu Administration :</strong> Interface adaptative selon les permissions utilisateur</p>
+                            <p><strong>Interface Django Admin :</strong> http://127.0.0.1:8000/admin/ (superutilisateurs uniquement)</p>
+                            <p><strong>Ordre des menus :</strong> Organisé selon la séquence logique de création</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- Architecture des données -->
-            <section id="architecture-donnees">
+            <!-- II) Architecture du système -->
+            <section id="architecture-systeme">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    🗄️ Architecture des Données - Interconnexions
+                    II) Architecture du système
                 </h2>
+
+            <!-- II.1) Fonctions principales -->
+            <section id="fonctions-principales">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    II.1) Fonctions principales du système
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Fonction 1 -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">II.1.1) Gestion des équipes et affectations</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p>Cette fonction permet de structurer l'organisation en créant :</p>
+                            <p>• Des équipes rattachées à des départements</p>
+                            <p>• Des postes au sein de chaque équipe</p>
+                            <p>• L'affectation d'agents, plans de roulement et règles de jours fériés aux postes</p>
+                        </div>
+                    </div>
+
+                    <!-- Fonction 2 -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">II.1.2) Création de plans de roulement</h4>
+                        <div class="text-gray-700 text-sm">
+                            <p>Permet de préconfigurer des rythmes de travail hebdomadaires réutilisables, 
+                            simplifiant la génération automatique des plannings sur des périodes définies.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- II.2) Architecture des données -->
+            <section id="architecture-donnees">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    II.2) Architecture des données et interconnexions
+                </h3>
                 
                 <div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-6">
                     <p class="text-gray-800">
@@ -365,212 +433,279 @@
                 </div>
             </section>
 
-            <!-- Les deux fonctions principales -->
-            <section id="fonctions-principales">
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    ⚙️ Les Deux Fonctions Principales
-                </h2>
 
-                <div class="space-y-6">
-                    <!-- Fonction 1 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Création d'équipe et gestion des affectations</h3>
-                        </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-4">Cette fonction permet :</p>
-                            <div class="space-y-3">
-                                <div class="flex items-start space-x-3">
-                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
-                                    <p class="text-sm text-gray-600">De créer des équipes, rattachées à un département</p>
+            <!-- II.3) Système de permissions -->
+            <section id="permissions-acces">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    II.3) Système de permissions et accès
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Niveaux de permissions -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3">II.3.1) Niveaux de permissions</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="bg-white p-3 rounded border border-gray-300">
+                                    <p class="font-bold text-gray-700">SA</p>
+                                    <p class="text-xs text-gray-600">Super Administrateur</p>
+                                    <p class="text-xs text-gray-600">Accès complet Django Admin + application + export/import</p>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
-                                    <p class="text-sm text-gray-600">D'ajouter ou non à chaque équipe des postes</p>
+                                <div class="bg-white p-3 rounded border border-gray-300">
+                                    <p class="font-bold text-gray-700">A</p>
+                                    <p class="text-xs text-gray-600">Administrateur</p>
+                                    <p class="text-xs text-gray-600">Gestion agents/postes + modification permissions</p>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2"></span>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-600 mb-2">D'associer ou non à chaque poste :</p>
-                                        <div class="ml-4 space-y-2">
-                                            <div class="flex items-start space-x-2">
-                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
-                                                <p class="text-xs text-gray-500">Un agent sur une période donnée</p>
-                                            </div>
-                                            <div class="flex items-start space-x-2">
-                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
-                                                <p class="text-xs text-gray-500">Un plan de roulement (planning récurrent)</p>
-                                            </div>
-                                            <div class="flex items-start space-x-2">
-                                                <span class="flex-shrink-0 w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
-                                                <p class="text-xs text-gray-500">Une règle d'application des jours fériés</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="bg-white p-3 rounded border border-gray-300">
+                                    <p class="font-bold text-gray-700">E</p>
+                                    <p class="text-xs text-gray-600">Éditeur</p>
+                                    <p class="text-xs text-gray-600">Édition du planning (à implémenter)</p>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-gray-300">
+                                    <p class="font-bold text-gray-700">R</p>
+                                    <p class="text-xs text-gray-600">Lecteur</p>
+                                    <p class="text-xs text-gray-600">Visualisation seulement</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Fonction 2 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Création de plans de roulement</h3>
+                    <!-- Navigation adaptative -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">II.3.2) Navigation adaptative</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p>• Menu Administration adaptatif selon le niveau de permission utilisateur</p>
+                            <p>• Accès superutilisateur via dropdown pour l'interface Django Admin</p>
+                            <p>• Ordre des menus logique selon la séquence de création recommandée</p>
                         </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">
-                                Les plans de roulement permettent de préconfigurer un rythme de travail hebdomadaire, 
-                                réutilisable par poste ou par équipe, sur une période donnée.
-                            </p>
-                            <p class="text-gray-600">
-                                Ils simplifient ainsi la génération automatique du planning.
-                            </p>
+                    </div>
+
+                    <!-- Sécurité -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">II.3.3) Sécurité</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p>• Création automatique de comptes Django pour chaque agent</p>
+                            <p>• Changement de mot de passe obligatoire lors du premier login</p>
+                            <p>• Validation des permissions côté serveur pour toutes les opérations</p>
+                            <p>• Transactions atomiques pour les opérations critiques</p>
                         </div>
                     </div>
                 </div>
             </section>
+            </section>
 
-            <!-- Ordre recommandé de création -->
-            <section id="ordre-creation">
+            <!-- III) Guide d'utilisation -->
+            <section id="guide-utilisation">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    📋 Ordre Recommandé de Création des Données
+                    III) Guide d'utilisation
                 </h2>
-                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-                    <p class="text-red-800 font-medium">
-                        ⚠️ Fondamental : L'ordre de création est fondamental pour garantir la cohérence des données et éviter les erreurs lors de la génération du planning.
+
+            <!-- III.1) Ordre recommandé de création -->
+            <section id="ordre-creation">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    III.1) Ordre de création des données
+                </h3>
+                <div class="bg-gray-100 border-l-4 border-gray-500 p-4 mb-6">
+                    <p class="text-gray-800 font-medium">
+                        IMPORTANT : L'ordre de création est fondamental pour garantir la cohérence des données et éviter les erreurs lors de la génération du planning.
                     </p>
                 </div>
 
-                <div class="space-y-6">
+                <div class="space-y-4">
                     <!-- Étape 1 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Départements</h3>
-                        </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Les départements doivent être créés en premier, car une équipe doit obligatoirement être rattachée à un département.</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → 🗃️ Départements<br>
-                                <strong>Priorité :</strong> Création obligatoire avant les équipes
-                            </div>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.1) Départements</h4>
+                        <p class="text-gray-700 mb-2">Les départements doivent être créés en premier, car une équipe doit obligatoirement être rattachée à un département.</p>
+                        <div class="bg-white p-3 rounded border text-sm">
+                            <strong>Navigation :</strong> Administration → Départements<br>
+                            <strong>Priorité :</strong> Création obligatoire avant les équipes
                         </div>
                     </div>
 
                     <!-- Étape 2 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Équipes</h3>
-                        </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Une fois les départements créés, vous pouvez créer une ou plusieurs équipes, en les rattachant à un département existant.</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Dépendance :</strong> Nécessite les départements (étape 1)<br>
-                                <strong>Principe :</strong> Chaque équipe doit être rattachée à un département
-                            </div>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.2) Équipes</h4>
+                        <p class="text-gray-700 mb-2">Une fois les départements créés, vous pouvez créer une ou plusieurs équipes, en les rattachant à un département existant.</p>
+                        <div class="bg-white p-3 rounded border text-sm">
+                            <strong>Dépendance :</strong> Nécessite les départements (étape 1)<br>
+                            <strong>Principe :</strong> Chaque équipe doit être rattachée à un département
                         </div>
                     </div>
 
                     <!-- Étape 3 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">3</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Postes</h3>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.3) Postes</h4>
+                        <p class="text-gray-700 mb-2">Chaque équipe peut comporter un ou plusieurs postes.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm mb-3">
+                            <strong>Important :</strong> Les postes sont créés dans un menu à part entière (Administration → Liste des Postes). C'est seulement au moment de la création de l'équipe qu'il est possible de leur affecter un agent, un plan de roulement et une règle de jour férié.
                         </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Chaque équipe peut comporter un ou plusieurs postes.</p>
-                            <div class="bg-orange-50 p-3 rounded text-sm mb-3">
-                                <strong>⚠️ Important :</strong> Les postes sont créés dans un menu à part entière (Administration → 🗃️ Liste des Postes). C'est seulement au moment de la création de l'équipe qu'il est possible de leur affecter un agent, un plan de roulement et une règle de jour férié.
-                            </div>
-                            <p class="text-gray-600 mb-3">Pour chaque poste d'une équipe, vous pouvez définir les éléments suivants :</p>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-3 rounded">
-                                    <h4 class="font-semibold text-blue-800 mb-2">➤ Affectation d'un agent</h4>
-                                    <ul class="text-sm text-blue-700 space-y-1">
-                                        <li>• L'agent est affecté à sa fonction sur une période précise</li>
-                                        <li>• Si aucun agent n'est affecté, mais qu'un plan de roulement est défini, le poste sera traité comme "Poste Vacant" (type d'horaire : PV) lors de la génération du planning</li>
-                                        <li>• <strong>Prérequis :</strong> Pour affecter un agent, l'agent doit être créé au préalable (Administration → 🗃️ Liste des Agents)</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-green-50 p-3 rounded">
-                                    <h4 class="font-semibold text-green-800 mb-2">➤ Plan de roulement associé</h4>
-                                    <ul class="text-sm text-green-700 space-y-1">
-                                        <li>• Le plan s'appliquera automatiquement à ce poste sur la période définie</li>
-                                        <li>• <strong>Prérequis :</strong> Pour affecter un plan, le plan doit être créé au préalable (Administration → 🗃️ Roulements Hedbomadaires)</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-purple-50 p-3 rounded">
-                                    <h4 class="font-semibold text-purple-800 mb-2">➤ Règle sur les jours fériés</h4>
-                                    <ul class="text-sm text-purple-700 space-y-1">
-                                        <li>• Il est possible d'indiquer si le poste bénéficie ou non des jours fériés</li>
-                                        <li>• Cela influence la génération du planning : les jours fériés peuvent annuler ou modifier les jours de travail issus du plan de roulement</li>
-                                        <li>• <strong>Prérequis :</strong> Pour affecter la liste des jours fériés, elle doit comporter des jours fériés au préalable (Administration → 🗃️ Jours Fériés)</li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <p class="text-gray-700 mb-2 text-sm">Pour chaque poste d'une équipe, vous pouvez définir :</p>
+                        <div class="bg-white p-3 rounded border text-sm space-y-2">
+                            <p><strong>• Affectation d'un agent :</strong> Agent affecté sur une période précise</p>
+                            <p><strong>• Plan de roulement :</strong> Planning automatique appliqué au poste</p>
+                            <p><strong>• Règle jours fériés :</strong> Inclusion/exclusion des jours fériés</p>
                         </div>
                     </div>
 
                     <!-- Étape 4 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Types d'horaires</h3>
-                        </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Les types d'horaires sont des catégories de travail (ex : Jour travaillé, Congé payé, Astreinte sur site...).</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → 🗃️ Types d'horaires<br>
-                                <strong>Priorité :</strong> Ils doivent être créés avant les rythmes quotidiens, car ces derniers en dépendent
-                            </div>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.4) Types d'horaires</h4>
+                        <p class="text-gray-700 mb-2">Les types d'horaires sont des catégories de travail (ex : Jour travaillé, Congé payé, Astreinte sur site...).</p>
+                        <div class="bg-white p-3 rounded border text-sm">
+                            <strong>Navigation :</strong> Administration → Types d'horaires<br>
+                            <strong>Priorité :</strong> Ils doivent être créés avant les rythmes quotidiens, car ces derniers en dépendent
                         </div>
                     </div>
 
                     <!-- Étape 5 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">5</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Rythmes quotidiens</h3>
-                        </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Les rythmes quotidiens représentent la composition d'une journée de travail (ex : 7h-19h) associé à un type d'horaire.</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → 🗃️ Rythmes Quotidien<br>
-                                <strong>Dépendance :</strong> Nécessite les types d'horaire (étape 4)<br>
-                                <strong>Usage :</strong> Ces rythmes sont les briques de base des plans de roulement
-                            </div>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.5) Rythmes quotidiens</h4>
+                        <p class="text-gray-700 mb-2">Les rythmes quotidiens représentent la composition d'une journée de travail (ex : 7h-19h) associé à un type d'horaire.</p>
+                        <div class="bg-white p-3 rounded border text-sm">
+                            <strong>Navigation :</strong> Administration → Rythmes Quotidien<br>
+                            <strong>Dépendance :</strong> Nécessite les types d'horaire (étape 4)<br>
+                            <strong>Usage :</strong> Ces rythmes sont les briques de base des plans de roulement
                         </div>
                     </div>
 
                     <!-- Étape 6 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <span class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">6</span>
-                            <h3 class="text-lg font-semibold text-gray-800">Plans de roulement</h3>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">III.1.6) Plans de roulement</h4>
+                        <p class="text-gray-700 mb-2">Un plan de roulement est une séquence hebdomadaire (ou multi-hebdomadaire) de rythmes quotidiens.</p>
+                        <div class="bg-white p-3 rounded border text-sm">
+                            <strong>Navigation :</strong> Administration → Roulements Hebdomadaires<br>
+                            <strong>Dépendance :</strong> Nécessite les rythmes quotidiens (étape 5)<br>
+                            <strong>Application :</strong> Il pourra ensuite être appliqué à un poste ou à une équipe
                         </div>
-                        <div class="ml-11">
-                            <p class="text-gray-600 mb-3">Un plan de roulement est une séquence hebdomadaire (ou multi-hebdomadaire) de rythmes quotidiens.</p>
-                            <div class="bg-gray-50 p-3 rounded text-sm">
-                                <strong>Navigation :</strong> Administration → 🗃️ Roulements Hebdomadaires<br>
-                                <strong>Dépendance :</strong> Nécessite les rythmes quotidiens (étape 5)<br>
-                                <strong>Application :</strong> Il pourra ensuite être appliqué à un poste ou à une équipe
+                    </div>
+                </div>
+            </section>
+
+            <!-- III.2) Gestion des modules -->
+            <section id="gestion-modules">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    III.2) Gestion des modules d'administration
+                </h3>
+
+                <div class="space-y-6">
+                    <!-- Modules de base -->
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">III.2.1) Modules de données de base</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-blue-800 mb-2">🗃️ Départements</h5>
+                                <ul class="text-sm text-blue-700 space-y-1">
+                                    <li>• Base hiérarchique obligatoire</li>
+                                    <li>• Auto-incrémentation par 10 (10, 20, 30...)</li>
+                                    <li>• Recherche en temps réel par nom</li>
+                                    <li>• Ordre d'affichage intelligent</li>
+                                </ul>
+                            </div>
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-purple-800 mb-2">🗃️ Liste des Postes</h5>
+                                <ul class="text-sm text-purple-700 space-y-1">
+                                    <li>• Fonctions de l'organisation</li>
+                                    <li>• Statuts actif/inactif avec badges</li>
+                                    <li>• Descriptions complètes sans troncature</li>
+                                    <li>• Filtrage avancé par statut</li>
+                                </ul>
+                            </div>
+                            <div class="bg-pink-50 border border-pink-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-pink-800 mb-2">🗃️ Liste des Agents</h5>
+                                <ul class="text-sm text-pink-700 space-y-1">
+                                    <li>• Personnel avec permissions</li>
+                                    <li>• Recherche par matricule, nom, prénom</li>
+                                    <li>• Gestion des permissions intégrée</li>
+                                    <li>• Tri multi-colonnes avec conservation filtres</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-yellow-800 mb-2">🗃️ Jours Fériés</h5>
+                                <ul class="text-sm text-yellow-700 space-y-1">
+                                    <li>• Dates exceptionnelles</li>
+                                    <li>• Compteurs par année</li>
+                                    <li>• Fonction de duplication</li>
+                                    <li>• Validation anti-doublons</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modules de planification -->
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">III.2.2) Modules de planification</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-green-800 mb-2">🗃️ Types d'Horaires</h5>
+                                <ul class="text-sm text-green-700 space-y-1">
+                                    <li>• Catégories de travail avec couleurs</li>
+                                    <li>• Abréviations optionnelles (MAT, APM, NUIT)</li>
+                                    <li>• Validation automatique des formats</li>
+                                    <li>• Protection contre suppression si liés</li>
+                                </ul>
+                            </div>
+                            <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-teal-800 mb-2">🗃️ Rythmes Quotidiens</h5>
+                                <ul class="text-sm text-teal-700 space-y-1">
+                                    <li>• Modèles d'horaires quotidiens</li>
+                                    <li>• Interface accordion avec expansion</li>
+                                    <li>• Gestion des périodes intégrée</li>
+                                    <li>• Validation des équipes de nuit</li>
+                                </ul>
+                            </div>
+                            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                                <h5 class="font-semibold text-indigo-800 mb-2">🗃️ Roulements Hebdomadaires</h5>
+                                <ul class="text-sm text-indigo-700 space-y-1">
+                                    <li>• Plannings récurrents multi-semaines</li>
+                                    <li>• Tableau hebdomadaire interactif</li>
+                                    <li>• Assignation multiple de rythmes par jour</li>
+                                    <li>• Duplication instantanée de semaines</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fonctionnalités communes -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3">III.2.3) Fonctionnalités communes à tous les modules</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-2">🔍 Recherche et filtrage</h5>
+                                <ul class="text-gray-600 space-y-1">
+                                    <li>• Recherche en temps réel (délai 300ms)</li>
+                                    <li>• Tri multi-colonnes (ASC/DESC)</li>
+                                    <li>• Conservation des filtres lors navigation</li>
+                                    <li>• Filtres avancés par statut</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-2">🎨 Interface utilisateur</h5>
+                                <ul class="text-gray-600 space-y-1">
+                                    <li>• Modales HTMX sans rechargement</li>
+                                    <li>• Split buttons pour actions rapides</li>
+                                    <li>• Badges colorés pour statuts visuels</li>
+                                    <li>• Design harmonisé avec Tailwind CSS</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-2">⚡ Performance</h5>
+                                <ul class="text-gray-600 space-y-1">
+                                    <li>• Chargement à la demande</li>
+                                    <li>• Mise à jour temps réel</li>
+                                    <li>• Suppression de la pagination</li>
+                                    <li>• API REST dédiée</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Cas particuliers -->
+            <!-- III.3) Cas particuliers -->
             <section id="cas-particuliers">
-                <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    🔄 Cas particuliers – Comportements automatiques
-                </h2>
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    III.3) Comportements automatiques du système
+                </h3>
                 
                 <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-6">
                     <h3 class="font-semibold text-indigo-800 mb-2">Comportement du système</h3>
@@ -667,16 +802,23 @@
                     </div>
                 </div>
             </section>
+            </section>
 
-            <!-- Import/Export des données -->
-            <section id="import-export">
+            <!-- IV) Administration avancée -->
+            <section id="administration-avancee">
                 <h2 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
-                    📦 Import/Export des données
+                    IV) Administration avancée
                 </h2>
+
+            <!-- IV.1) Import/Export des données -->
+            <section id="import-export">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    IV.1) Import/Export des données
+                </h3>
                 
-                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Accès restreint - Superutilisateur uniquement</h3>
-                    <p class="text-red-700 text-sm">
+                <div class="bg-gray-100 border-l-4 border-gray-500 p-4 mb-6">
+                    <h4 class="font-semibold text-gray-800 mb-2">Accès restreint - Superutilisateur uniquement</h4>
+                    <p class="text-gray-700 text-sm">
                         Les fonctionnalités d'import/export sont <strong>exclusivement réservées aux superutilisateurs</strong>. 
                         Elles permettent de sauvegarder et restaurer l'intégralité des données de l'application via l'interface Django Admin.
                     </p>
@@ -684,30 +826,30 @@
 
                 <!-- Export des données -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Export des données</h3>
+                    <h4 class="font-semibold text-gray-800 mb-4">IV.1.1) Export des données</h4>
                     
                     <div class="space-y-4">
                         <!-- Export global -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-blue-800 mb-2">🗂️ Export global (recommandé)</h4>
-                            <p class="text-sm text-blue-700 mb-3">
+                        <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">Export global (recommandé)</h5>
+                            <p class="text-sm text-gray-700 mb-3">
                                 Exporte <strong>toutes les données</strong> de l'application en un seul fichier ZIP.
                             </p>
-                            <div class="bg-blue-100 p-3 rounded text-sm text-blue-800">
-                                <p><strong>Accès :</strong> Django Admin → Core (page principale) → Bouton "📊 Exporter Toutes les Données"</p>
+                            <div class="bg-white p-3 rounded border text-sm text-gray-700">
+                                <p><strong>Accès :</strong> Django Admin → Core → Bouton "Exporter Toutes les Données"</p>
                                 <p><strong>Fichier généré :</strong> <code>YYYY-MM-DD_HHMMSS_export_global_planning.zip</code></p>
                                 <p><strong>Contenu :</strong> 10 fichiers JSON avec tous les modèles de l'application</p>
                             </div>
                         </div>
 
                         <!-- Export individuel -->
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-green-800 mb-2">📄 Export individuel par modèle</h4>
-                            <p class="text-sm text-green-700 mb-3">
+                        <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">Export individuel par modèle</h5>
+                            <p class="text-sm text-gray-700 mb-3">
                                 Exporte un seul type de données à la fois. Utile pour des sauvegardes partielles ou des transferts sélectifs.
                             </p>
-                            <div class="bg-green-100 p-3 rounded text-sm text-green-800">
-                                <p><strong>Accès :</strong> Django Admin → Core → [Modèle] → Bouton "📊 Exporter JSON"</p>
+                            <div class="bg-white p-3 rounded border text-sm text-gray-700">
+                                <p><strong>Accès :</strong> Django Admin → Core → [Modèle] → Bouton "Exporter JSON"</p>
                                 <p><strong>Fichier généré :</strong> <code>YYYY-MM-DD_[modele].json</code></p>
                             </div>
                         </div>
@@ -716,26 +858,26 @@
 
                 <!-- Import des données -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📥 Import des données</h3>
+                    <h4 class="font-semibold text-gray-800 mb-4">IV.1.2) Import des données</h4>
                     
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                        <h4 class="font-semibold text-red-800 mb-2">🚨 ATTENTION - Remplacement complet</h4>
-                        <p class="text-sm text-red-700">
+                    <div class="bg-gray-100 border border-gray-400 rounded p-4 mb-6">
+                        <h5 class="font-semibold text-gray-800 mb-2">ATTENTION - Remplacement complet</h5>
+                        <p class="text-sm text-gray-700">
                             L'import <strong>supprime définitivement</strong> toutes les données existantes du modèle et les remplace 
                             par le contenu du fichier JSON. Cette action est <strong>irréversible</strong>.
                         </p>
                     </div>
 
                     <!-- Ordre d'importation obligatoire -->
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <h4 class="font-semibold text-yellow-800 mb-3">⚠️ Ordre d'importation OBLIGATOIRE</h4>
-                        <p class="text-sm text-yellow-700 mb-4">
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4 mb-6">
+                        <h5 class="font-semibold text-gray-800 mb-3">Ordre d'importation OBLIGATOIRE</h5>
+                        <p class="text-sm text-gray-700 mb-4">
                             Les modèles ont des <strong>dépendances hiérarchiques</strong>. Il est impératif de respecter cet ordre 
                             pour éviter les erreurs de clés étrangères :
                         </p>
                         
-                        <div class="bg-white border border-yellow-300 rounded p-3">
-                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                        <div class="bg-white border border-gray-300 rounded p-3">
+                            <ol class="list-decimal list-inside space-y-1 text-sm text-gray-800">
                                 <li><strong>Départements</strong> → <code>YYYY-MM-DD_departments.json</code></li>
                                 <li><strong>Agents</strong> → <code>YYYY-MM-DD_agents.json</code></li>
                                 <li><strong>Fonctions (Postes)</strong> → <code>YYYY-MM-DD_functions.json</code></li>
@@ -749,46 +891,21 @@
                             </ol>
                         </div>
                         
-                        <div class="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
-                            <strong>💡 Astuce :</strong> Si vous utilisez l'export global, tous les fichiers JSON sont déjà nommés 
+                        <div class="mt-3 p-2 bg-gray-100 rounded text-xs text-gray-700">
+                            <strong>Note :</strong> Si vous utilisez l'export global, tous les fichiers JSON sont déjà nommés 
                             avec le bon préfixe de date et prêts à être importés dans l'ordre indiqué.
                         </div>
                     </div>
 
                     <!-- Procédure d'import -->
-                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                        <h4 class="font-semibold text-indigo-800 mb-3">📋 Procédure d'import</h4>
-                        <div class="space-y-3 text-sm text-indigo-700">
-                            <div class="flex items-start">
-                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">1</span>
-                                <div>
-                                    <strong>Accès :</strong> Django Admin → Core → [Modèle] → Bouton "⚠️ Importer JSON"
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">2</span>
-                                <div>
-                                    <strong>Sélection :</strong> Choisir le fichier JSON correspondant au modèle
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">3</span>
-                                <div>
-                                    <strong>Confirmation :</strong> Cocher la case de confirmation obligatoire
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">4</span>
-                                <div>
-                                    <strong>Validation :</strong> Le système vérifie automatiquement la structure et les dépendances
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5">5</span>
-                                <div>
-                                    <strong>Import :</strong> Remplacement complet des données si validation réussie
-                                </div>
-                            </div>
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">Procédure d'import</h5>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <p><strong>1.</strong> Accès : Django Admin → Core → [Modèle] → Bouton "Importer JSON"</p>
+                            <p><strong>2.</strong> Sélection : Choisir le fichier JSON correspondant au modèle</p>
+                            <p><strong>3.</strong> Confirmation : Cocher la case de confirmation obligatoire</p>
+                            <p><strong>4.</strong> Validation : Le système vérifie automatiquement la structure et les dépendances</p>
+                            <p><strong>5.</strong> Import : Remplacement complet des données si validation réussie</p>
                         </div>
                     </div>
                 </div>
@@ -825,9 +942,9 @@
                 </div>
 
                 <!-- Bonnes pratiques -->
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 class="font-semibold text-green-800 mb-3">✅ Bonnes pratiques</h4>
-                    <ul class="space-y-2 text-sm text-green-700">
+                <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                    <h5 class="font-semibold text-gray-800 mb-3">Bonnes pratiques</h5>
+                    <ul class="space-y-1 text-sm text-gray-700">
                         <li>• <strong>Sauvegarde préventive :</strong> Toujours exporter avant d'importer</li>
                         <li>• <strong>Environnement de test :</strong> Tester d'abord sur une copie de la base</li>
                         <li>• <strong>Vérification :</strong> Contrôler les données après import</li>
@@ -835,6 +952,53 @@
                         <li>• <strong>Accès restreint :</strong> Seuls les superutilisateurs peuvent utiliser ces fonctions</li>
                     </ul>
                 </div>
+            </section>
+
+            <!-- IV.2) Interface Django Admin -->
+            <section id="interface-django">
+                <h3 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                    IV.2) Interface Django Admin
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Accès -->
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">IV.2.1) Accès à l'interface</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p><strong>URL :</strong> http://127.0.0.1:8000/admin/</p>
+                            <p><strong>Accès :</strong> Menu Administration → Interface d'Administration Django (superutilisateurs uniquement)</p>
+                            <p><strong>Identifiants par défaut :</strong></p>
+                            <ul class="ml-4 space-y-1">
+                                <li>• Utilisateur : azerty</li>
+                                <li>• Email : azerty@azerty.com</li>
+                                <li>• Mot de passe : azerty</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Fonctionnalités -->
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">IV.2.2) Fonctionnalités spécifiques</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p><strong>Export global :</strong> Bouton "Exporter Toutes les Données" sur la page Core</p>
+                            <p><strong>Export individuel :</strong> Boutons "Exporter JSON" sur chaque modèle</p>
+                            <p><strong>Import sécurisé :</strong> Boutons "Importer JSON" avec confirmations multiples</p>
+                            <p><strong>Gestion avancée :</strong> Configuration système et maintenance technique</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="bg-gray-50 border border-gray-300 rounded p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">IV.2.3) Navigation dans Django Admin</h4>
+                        <div class="text-gray-700 text-sm space-y-1">
+                            <p><strong>Page Core :</strong> Point d'entrée principal avec export global</p>
+                            <p><strong>Modèles supportés :</strong> 10 modèles avec fonctions import/export individuelles</p>
+                            <p><strong>Sécurité :</strong> Préservation automatique des comptes superutilisateurs lors des imports</p>
+                            <p><strong>Interface moderne :</strong> Templates personnalisés avec boutons d'action intégrés</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
             </section>
         </div>
     </div>
