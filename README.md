@@ -236,52 +236,6 @@ Effectuer les migrations :
 python manage.py migrate
 ```
 
-Générer des données de test (optionnel) :
-```bash
-python manage.py create_test_agents
-python manage.py create_test_agents --update
-python manage.py create_test_functions
-python manage.py create_test_functions --update
-python manage.py create_test_schedule_types
-python manage.py create_test_schedule_types --update
-```
-
-La commande **create_test_agents** charge les agents depuis une base de données JSON :
-- **Mode création** : Crée de nouveaux agents, ignore les existants
-- **Mode mise à jour** (`--update`) : Met à jour les agents existants si les données JSON ont changé
-- **Mode nettoyage** (`--clear`) : Supprime tous les agents existants avant de créer
-- Données réelles d'employés avec matricules, grades et permissions
-- Détection automatique des changements de données
-- Statistiques détaillées par grade et niveau de permission
-
-La commande **create_test_functions** charge les fonctions depuis une base de données JSON :
-- **Mode création** : Crée de nouvelles fonctions, ignore les existantes
-- **Mode mise à jour** (`--update`) : Met à jour les fonctions existantes si les données JSON ont changé
-- **Mode nettoyage** (`--clear`) : Supprime toutes les fonctions existantes avant de créer
-- Fonctions spécialisées pour une centrale électrique (exploitation, maintenance, logistique)
-- Détection automatique des changements de description et statut
-- Statistiques détaillées par statut (actif/inactif)
-
-La commande **create_test_schedule_types** charge les types d'horaire depuis une base de données JSON :
-- **Mode création** : Crée de nouveaux types d'horaire, ignore les existants
-- **Mode mise à jour** (`--update`) : Met à jour les types d'horaire existants si les données JSON ont changé
-- **Mode nettoyage** (`--clear`) : Supprime tous les types d'horaire existants avant de créer
-- Types d'horaire prédéfinis avec codes couleur (JT, CP, JTC, NTC, FE, FS, etc.)
-- Détection automatique des changements d'abréviation et couleur
-- Statistiques détaillées avec taux d'abréviations définies
-
-Réinitialiser la base de données (optionnel) :
-```bash
-python manage.py reset_database --confirm
-```
-
-La commande **reset_database** effectue une remise à zéro complète de la base de données :
-- **Suppression totale** : Tous les agents, fonctions et comptes utilisateurs
-- **Préservation des superutilisateurs** : Sauvegarde et restauration automatique
-- **Nettoyage complet** : Élimine tous les comptes utilisateurs réguliers
-- **Sécurité** : Nécessite le flag `--confirm` pour confirmation
-- **Restauration intégrale** : Recrée les superutilisateurs avec toutes leurs données
-
 ## Utilisation
 
 Lancer le serveur de développement :
