@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools %}
+    <div class="object-tools">
+        {% if show_export_import %}
+            <a href="{% url 'admin:core_shiftschedule_export' %}" class="button default" style="background-color: #28a745; color: white;">
+                📊 Exporter JSON
+            </a>
+            <a href="{% url 'admin:core_shiftschedule_import' %}" class="button default" style="background-color: #dc3545; color: white;">
+                ⚠️ Importer JSON
+            </a>
+        {% endif %}
+        {% if has_add_permission %}
+            <a href="{% url cl.opts|admin_urlname:'add' %}" class="addlink">
+                {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}

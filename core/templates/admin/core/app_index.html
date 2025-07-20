@@ -1,0 +1,25 @@
+{% extends "admin/app_index.html" %}
+{% load i18n %}
+
+{% block content %}
+    <!-- Global Export Button -->
+    {% if user.is_superuser %}
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+        <h3 style="margin-top: 0; color: #495057;">📦 Export Global</h3>
+        <p style="margin-bottom: 15px; color: #6c757d;">
+            Exportez toutes les données de l'application en un seul fichier ZIP contenant tous les modèles au format JSON.
+        </p>
+        <a href="{% url 'admin_global_export' %}" 
+           class="button default" 
+           style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+            📊 Exporter Toutes les Données
+        </a>
+        <p style="font-size: 12px; color: #6c757d; margin-top: 10px; margin-bottom: 0;">
+            <strong>Inclus :</strong> Agents, Départements, Fonctions, Types d'Horaires, Rythmes Quotidiens, Périodes de Rotation, Plannings de Poste, Périodes de Planning, Semaines de Planning, Plans Quotidiens de Planning
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Original admin content -->
+    {{ block.super }}
+{% endblock %}

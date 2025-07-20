@@ -108,4 +108,7 @@ urlpatterns = [
     path('departments/<int:pk>/', views.department_detail, name='department_detail'),
     path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
     path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    
+    # Global Export URL
+    path('global-export/', views.global_export, name='global_export'),
 ]

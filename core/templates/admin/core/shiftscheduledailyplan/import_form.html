@@ -1,0 +1,135 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:core_shiftscheduledailyplan_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Formulaire d'importation</h1>
+
+<div class="module aligned">
+    <div class="form-row">
+        <div class="field-box">
+            <div class="module">
+                <h2>⚠️ DANGER - Remplacement complet de la base de données</h2>
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px; margin: 10px 0; border-radius: 4px;">
+                    <p><strong>Cette opération va :</strong></p>
+                    <ul>
+                        <li><strong>Supprimer TOUS les {{ shiftscheduledailyplan_count }} plans quotidiens de planning existants</strong></li>
+                        <li><strong>Cette action est IRRÉVERSIBLE</strong></li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Format requis :</strong> Le fichier JSON doit contenir une liste de plans quotidiens avec les champs :</p>
+                    <ul>
+                        <li><code>"shift_schedule_name"</code> : Nom du planning de poste (texte obligatoire, doit exister)</li>
+                        <li><code>"period_start_date"</code> : Date de début de la période (obligatoire, format: YYYY-MM-DD)</li>
+                        <li><code>"period_end_date"</code> : Date de fin de la période (obligatoire, format: YYYY-MM-DD)</li>
+                        <li><code>"week_number"</code> : Numéro de la semaine (obligatoire, entier positif)</li>
+                        <li><code>"weekday"</code> : Jour de la semaine (obligatoire, entier de 1 à 7: 1=Lundi, 7=Dimanche)</li>
+                        <li><code>"daily_rotation_plan_designation"</code> : Nom du rythme quotidien (texte obligatoire, doit exister)</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>⚠️ PRÉREQUIS IMPORTANTS :</strong></p>
+                    <ul>
+                        <li>Les plannings de poste référencés doivent déjà exister dans la base de données</li>
+                        <li>Les périodes de planning référencées doivent déjà exister pour chaque planning de poste</li>
+                        <li>Les semaines référencées doivent déjà exister pour chaque période</li>
+                        <li>Les rythmes quotidiens référencés doivent déjà exister dans la base de données</li>
+                        <li>Assurez-vous d'avoir importé dans l'ordre : plannings → périodes → semaines → plans quotidiens</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Validations automatiques :</strong></p>
+                    <ul>
+                        <li>La date de fin de période doit être postérieure ou égale à la date de début</li>
+                        <li>Les dates doivent être au format ISO (YYYY-MM-DD)</li>
+                        <li>Le planning de poste référencé doit exister</li>
+                        <li>La période référencée doit exister pour le planning de poste</li>
+                        <li>La semaine référencée doit exister pour la période</li>
+                        <li>Le rythme quotidien référencé doit exister</li>
+                        <li>Le numéro de semaine doit être un entier positif</li>
+                        <li>Le jour de la semaine doit être entre 1 (Lundi) et 7 (Dimanche)</li>
+                        <li>Pas de doublons (même semaine + même jour)</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Correspondance des jours :</strong></p>
+                    <ul style="font-size: 12px;">
+                        <li>1 = Lundi, 2 = Mardi, 3 = Mercredi, 4 = Jeudi, 5 = Vendredi, 6 = Samedi, 7 = Dimanche</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Exemple de structure JSON :</strong></p>
+                    <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px;">
+[
+  {
+    "shift_schedule_name": "Planning Été 2024",
+    "period_start_date": "2024-07-01",
+    "period_end_date": "2024-08-31",
+    "week_number": 1,
+    "weekday": 1,
+    "daily_rotation_plan_designation": "Équipe A - Matin"
+  },
+  {
+    "shift_schedule_name": "Planning Été 2024",
+    "period_start_date": "2024-07-01",
+    "period_end_date": "2024-08-31",
+    "week_number": 1,
+    "weekday": 2,
+    "daily_rotation_plan_designation": "Équipe B - Après-midi"
+  }
+]</pre>
+                    <p style="margin-top: 10px;"><strong>⚠️ ATTENTION :</strong> Cette validation ne vérifie pas les chevauchements car tous les plans existants seront supprimés.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="confirm_overwrite" value="true">
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="import_file"><strong>Fichier JSON à importer :</strong></label>
+                <input type="file" name="import_file" id="import_file" accept=".json" required>
+                <p class="help">Sélectionnez un fichier JSON contenant les données de plans quotidiens de planning à importer.</p>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="confirm_action">
+                    <input type="checkbox" name="confirm_action" id="confirm_action" required>
+                    <strong>Je comprends que cette action supprimera définitivement tous les plans quotidiens de planning existants</strong>
+                </label>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <input type="submit" value="⚠️ CONFIRMER ET REMPLACER LA BASE DE DONNÉES" class="default" style="background-color: #dc3545; color: white;">
+            <a href="{% url 'admin:core_shiftscheduledailyplan_changelist' %}" class="button cancel-link">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('confirm_action').addEventListener('change', function() {
+    const submitButton = document.querySelector('input[type="submit"]');
+    if (this.checked) {
+        submitButton.disabled = false;
+        submitButton.style.opacity = '1';
+    } else {
+        submitButton.disabled = true;
+        submitButton.style.opacity = '0.5';
+    }
+});
+
+// Initially disable submit button
+document.addEventListener('DOMContentLoaded', function() {
+    const submitButton = document.querySelector('input[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.style.opacity = '0.5';
+});
+</script>
+{% endblock %}

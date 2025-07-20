@@ -18,8 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.views import global_export
+
+# Add custom admin URLs
+admin_patterns = [
+    path('global-export/', global_export, name='admin_global_export'),
+]
 
 urlpatterns = [
+    path('admin/', include(admin_patterns)),
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
 ]

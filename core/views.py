@@ -2412,3 +2412,1307 @@ def department_delete(request, pk):
     
     messages.success(request, f'Département "{name}" supprimé avec succès.')
     return redirect('department_list')
+
+
+@user_passes_test(is_superuser)
+def department_export(request):
+    """Export departments to JSON file - only accessible to superusers"""
+    departments = Department.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for department in departments:
+        department_data = {
+            'name': department.name,
+            'order': department.order,
+            'created_at': department.created_at.isoformat() if department.created_at else None,
+            'updated_at': department.updated_at.isoformat() if department.updated_at else None,
+        }
+        export_data.append(department_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_departments.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def department_import(request):
+    """Import departments from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_department_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_department_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de départements.')
+                return redirect('admin:core_department_changelist')
+            
+            # Validate required fields for each department
+            required_fields = ['name', 'order']
+            errors = []
+            
+            for i, department_data in enumerate(data):
+                for field in required_fields:
+                    if field not in department_data or department_data[field] is None:
+                        errors.append(f'Département {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate order is a positive integer
+                if 'order' in department_data:
+                    try:
+                        order_value = int(department_data['order'])
+                        if order_value < 1:
+                            errors.append(f'Département {i+1}: l\'ordre doit être un nombre positif')
+                    except (ValueError, TypeError):
+                        errors.append(f'Département {i+1}: l\'ordre doit être un nombre entier')
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_department_changelist')
+            
+            # Delete all existing departments
+            Department.objects.all().delete()
+            
+            # Import new departments
+            created_count = 0
+            for department_data in data:
+                Department.objects.create(
+                    name=department_data['name'],
+                    order=int(department_data['order'])
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} départements importés.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_department_changelist')
+
+
+@user_passes_test(is_superuser)
+def function_export(request):
+    """Export functions to JSON file - only accessible to superusers"""
+    functions = Function.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for function in functions:
+        function_data = {
+            'designation': function.designation,
+            'description': function.description,
+            'status': function.status,
+        }
+        export_data.append(function_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_functions.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def function_import(request):
+    """Import functions from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_function_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_function_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de fonctions.')
+                return redirect('admin:core_function_changelist')
+            
+            # Validate required fields for each function
+            required_fields = ['designation']
+            errors = []
+            
+            for i, function_data in enumerate(data):
+                for field in required_fields:
+                    if field not in function_data or not function_data[field]:
+                        errors.append(f'Fonction {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate status is boolean if provided
+                if 'status' in function_data and function_data['status'] is not None:
+                    if not isinstance(function_data['status'], bool):
+                        errors.append(f'Fonction {i+1}: le statut doit être true ou false')
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_function_changelist')
+            
+            # Delete all existing functions
+            Function.objects.all().delete()
+            
+            # Import new functions
+            created_count = 0
+            for function_data in data:
+                Function.objects.create(
+                    designation=function_data['designation'],
+                    description=function_data.get('description', ''),
+                    status=function_data.get('status', True)
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} fonctions importées.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_function_changelist')
+
+
+@user_passes_test(is_superuser)
+def scheduletype_export(request):
+    """Export schedule types to JSON file - only accessible to superusers"""
+    schedule_types = ScheduleType.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for schedule_type in schedule_types:
+        schedule_type_data = {
+            'designation': schedule_type.designation,
+            'short_designation': schedule_type.short_designation,
+            'color': schedule_type.color,
+        }
+        export_data.append(schedule_type_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_schedule_types.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def scheduletype_import(request):
+    """Import schedule types from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_scheduletype_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_scheduletype_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de types d\'horaires.')
+                return redirect('admin:core_scheduletype_changelist')
+            
+            # Validate required fields for each schedule type
+            required_fields = ['designation', 'color']
+            errors = []
+            
+            for i, schedule_type_data in enumerate(data):
+                for field in required_fields:
+                    if field not in schedule_type_data or not schedule_type_data[field]:
+                        errors.append(f'Type d\'horaire {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate color format (hexadecimal)
+                if 'color' in schedule_type_data and schedule_type_data['color']:
+                    import re
+                    if not re.match(r'^#[0-9A-Fa-f]{6}$', schedule_type_data['color']):
+                        errors.append(f'Type d\'horaire {i+1}: la couleur doit être au format hexadécimal (ex: #FF0000)')
+                
+                # Validate short_designation format if provided
+                if 'short_designation' in schedule_type_data and schedule_type_data['short_designation']:
+                    if not re.match(r'^[A-Z]{2,3}$', schedule_type_data['short_designation'].upper()):
+                        errors.append(f'Type d\'horaire {i+1}: l\'abréviation doit contenir 2 ou 3 lettres majuscules uniquement')
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_scheduletype_changelist')
+            
+            # Delete all existing schedule types
+            ScheduleType.objects.all().delete()
+            
+            # Import new schedule types
+            created_count = 0
+            for schedule_type_data in data:
+                ScheduleType.objects.create(
+                    designation=schedule_type_data['designation'],
+                    short_designation=schedule_type_data.get('short_designation', '').upper() if schedule_type_data.get('short_designation') else None,
+                    color=schedule_type_data['color']
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} types d\'horaires importés.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_scheduletype_changelist')
+
+
+@user_passes_test(is_superuser)
+def dailyrotationplan_export(request):
+    """Export daily rotation plans to JSON file - only accessible to superusers"""
+    daily_rotation_plans = DailyRotationPlan.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for plan in daily_rotation_plans:
+        plan_data = {
+            'designation': plan.designation,
+            'description': plan.description,
+            'schedule_type_designation': plan.schedule_type.designation,
+            'created_at': plan.created_at.isoformat() if plan.created_at else None,
+            'updated_at': plan.updated_at.isoformat() if plan.updated_at else None,
+        }
+        export_data.append(plan_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_daily_rotation_plans.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def dailyrotationplan_import(request):
+    """Import daily rotation plans from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_dailyrotationplan_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_dailyrotationplan_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de rythmes quotidiens.')
+                return redirect('admin:core_dailyrotationplan_changelist')
+            
+            # Validate required fields for each daily rotation plan
+            required_fields = ['designation', 'schedule_type_designation']
+            errors = []
+            
+            for i, plan_data in enumerate(data):
+                for field in required_fields:
+                    if field not in plan_data or not plan_data[field]:
+                        errors.append(f'Rythme quotidien {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate that schedule_type exists
+                if 'schedule_type_designation' in plan_data and plan_data['schedule_type_designation']:
+                    try:
+                        ScheduleType.objects.get(designation=plan_data['schedule_type_designation'])
+                    except ScheduleType.DoesNotExist:
+                        errors.append(f'Rythme quotidien {i+1}: type d\'horaire "{plan_data["schedule_type_designation"]}" introuvable')
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_dailyrotationplan_changelist')
+            
+            # Delete all existing daily rotation plans
+            DailyRotationPlan.objects.all().delete()
+            
+            # Import new daily rotation plans
+            created_count = 0
+            for plan_data in data:
+                schedule_type = ScheduleType.objects.get(designation=plan_data['schedule_type_designation'])
+                DailyRotationPlan.objects.create(
+                    designation=plan_data['designation'],
+                    description=plan_data.get('description', ''),
+                    schedule_type=schedule_type
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} rythmes quotidiens importés.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_dailyrotationplan_changelist')
+
+
+@user_passes_test(is_superuser)
+def shiftschedule_export(request):
+    """Export shift schedules to JSON file - only accessible to superusers"""
+    shift_schedules = ShiftSchedule.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for schedule in shift_schedules:
+        schedule_data = {
+            'name': schedule.name,
+            'type': schedule.type,
+            'break_times': schedule.break_times,
+            'created_at': schedule.created_at.isoformat() if schedule.created_at else None,
+            'updated_at': schedule.updated_at.isoformat() if schedule.updated_at else None,
+        }
+        export_data.append(schedule_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_shift_schedules.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def shiftschedule_import(request):
+    """Import shift schedules from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_shiftschedule_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_shiftschedule_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de plannings de poste.')
+                return redirect('admin:core_shiftschedule_changelist')
+            
+            # Validate required fields for each shift schedule
+            required_fields = ['name', 'type']
+            valid_types = ['day', 'shift']
+            errors = []
+            
+            for i, schedule_data in enumerate(data):
+                for field in required_fields:
+                    if field not in schedule_data or not schedule_data[field]:
+                        errors.append(f'Planning de poste {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate type choice
+                if 'type' in schedule_data and schedule_data['type']:
+                    if schedule_data['type'] not in valid_types:
+                        errors.append(f'Planning de poste {i+1}: type "{schedule_data["type"]}" invalide (doit être "day" ou "shift")')
+                
+                # Validate break_times is a positive integer if provided
+                if 'break_times' in schedule_data and schedule_data['break_times'] is not None:
+                    try:
+                        break_times = int(schedule_data['break_times'])
+                        if break_times < 0:
+                            errors.append(f'Planning de poste {i+1}: le nombre de pauses doit être positif')
+                    except (ValueError, TypeError):
+                        errors.append(f'Planning de poste {i+1}: le nombre de pauses doit être un nombre entier')
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_shiftschedule_changelist')
+            
+            # Delete all existing shift schedules
+            ShiftSchedule.objects.all().delete()
+            
+            # Import new shift schedules
+            created_count = 0
+            for schedule_data in data:
+                ShiftSchedule.objects.create(
+                    name=schedule_data['name'],
+                    type=schedule_data['type'],
+                    break_times=schedule_data.get('break_times', 2)
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} plannings de poste importés.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_shiftschedule_changelist')
+
+
+@user_passes_test(is_superuser)
+def shiftscheduleperiod_export(request):
+    """Export shift schedule periods to JSON file - only accessible to superusers"""
+    shift_schedule_periods = ShiftSchedulePeriod.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for period in shift_schedule_periods:
+        period_data = {
+            'shift_schedule_name': period.shift_schedule.name,
+            'start_date': period.start_date.isoformat() if period.start_date else None,
+            'end_date': period.end_date.isoformat() if period.end_date else None,
+            'created_at': period.created_at.isoformat() if period.created_at else None,
+            'updated_at': period.updated_at.isoformat() if period.updated_at else None,
+        }
+        export_data.append(period_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_shift_schedule_periods.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def shiftscheduleperiod_import(request):
+    """Import shift schedule periods from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_shiftscheduleperiod_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_shiftscheduleperiod_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de périodes de planning de poste.')
+                return redirect('admin:core_shiftscheduleperiod_changelist')
+            
+            # Validate required fields for each period
+            required_fields = ['shift_schedule_name', 'start_date', 'end_date']
+            errors = []
+            
+            for i, period_data in enumerate(data):
+                for field in required_fields:
+                    if field not in period_data or not period_data[field]:
+                        errors.append(f'Période {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate that shift_schedule exists
+                if 'shift_schedule_name' in period_data and period_data['shift_schedule_name']:
+                    try:
+                        ShiftSchedule.objects.get(name=period_data['shift_schedule_name'])
+                    except ShiftSchedule.DoesNotExist:
+                        errors.append(f'Période {i+1}: planning de poste "{period_data["shift_schedule_name"]}" introuvable')
+                
+                # Validate date formats
+                for date_field in ['start_date', 'end_date']:
+                    if date_field in period_data and period_data[date_field]:
+                        try:
+                            from datetime import datetime
+                            datetime.fromisoformat(period_data[date_field])
+                        except ValueError:
+                            errors.append(f'Période {i+1}: format de date invalide pour "{date_field}" (attendu: YYYY-MM-DD)')
+                
+                # Validate that end_date >= start_date
+                if ('start_date' in period_data and period_data['start_date'] and
+                    'end_date' in period_data and period_data['end_date']):
+                    try:
+                        start_date = datetime.fromisoformat(period_data['start_date']).date()
+                        end_date = datetime.fromisoformat(period_data['end_date']).date()
+                        if end_date < start_date:
+                            errors.append(f'Période {i+1}: la date de fin doit être postérieure ou égale à la date de début')
+                    except ValueError:
+                        pass  # Date format error already caught above
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_shiftscheduleperiod_changelist')
+            
+            # Delete all existing shift schedule periods
+            ShiftSchedulePeriod.objects.all().delete()
+            
+            # Import new shift schedule periods
+            created_count = 0
+            for period_data in data:
+                shift_schedule = ShiftSchedule.objects.get(name=period_data['shift_schedule_name'])
+                start_date = datetime.fromisoformat(period_data['start_date']).date()
+                end_date = datetime.fromisoformat(period_data['end_date']).date()
+                
+                ShiftSchedulePeriod.objects.create(
+                    shift_schedule=shift_schedule,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} périodes de planning de poste importées.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_shiftscheduleperiod_changelist')
+
+
+@user_passes_test(is_superuser)
+def rotationperiod_export(request):
+    """Export rotation periods to JSON file - only accessible to superusers"""
+    rotation_periods = RotationPeriod.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for period in rotation_periods:
+        period_data = {
+            'daily_rotation_plan_designation': period.daily_rotation_plan.designation,
+            'start_date': period.start_date.isoformat() if period.start_date else None,
+            'end_date': period.end_date.isoformat() if period.end_date else None,
+            'start_time': period.start_time.isoformat() if period.start_time else None,
+            'end_time': period.end_time.isoformat() if period.end_time else None,
+            'created_at': period.created_at.isoformat() if period.created_at else None,
+            'updated_at': period.updated_at.isoformat() if period.updated_at else None,
+        }
+        export_data.append(period_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_rotation_periods.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def rotationperiod_import(request):
+    """Import rotation periods from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_rotationperiod_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_rotationperiod_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de périodes de rotation.')
+                return redirect('admin:core_rotationperiod_changelist')
+            
+            # Validate required fields for each period
+            required_fields = ['daily_rotation_plan_designation', 'start_date', 'end_date', 'start_time', 'end_time']
+            errors = []
+            
+            for i, period_data in enumerate(data):
+                for field in required_fields:
+                    if field not in period_data or not period_data[field]:
+                        errors.append(f'Période {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate that daily_rotation_plan exists
+                if 'daily_rotation_plan_designation' in period_data and period_data['daily_rotation_plan_designation']:
+                    try:
+                        DailyRotationPlan.objects.get(designation=period_data['daily_rotation_plan_designation'])
+                    except DailyRotationPlan.DoesNotExist:
+                        errors.append(f'Période {i+1}: rythme quotidien "{period_data["daily_rotation_plan_designation"]}" introuvable')
+                
+                # Validate date formats
+                for date_field in ['start_date', 'end_date']:
+                    if date_field in period_data and period_data[date_field]:
+                        try:
+                            from datetime import datetime
+                            datetime.fromisoformat(period_data[date_field])
+                        except ValueError:
+                            errors.append(f'Période {i+1}: format de date invalide pour "{date_field}" (attendu: YYYY-MM-DD)')
+                
+                # Validate time formats
+                for time_field in ['start_time', 'end_time']:
+                    if time_field in period_data and period_data[time_field]:
+                        try:
+                            from datetime import datetime
+                            datetime.fromisoformat(f"2000-01-01T{period_data[time_field]}")
+                        except ValueError:
+                            errors.append(f'Période {i+1}: format d\'heure invalide pour "{time_field}" (attendu: HH:MM:SS)')
+                
+                # Validate that end_date >= start_date
+                if ('start_date' in period_data and period_data['start_date'] and
+                    'end_date' in period_data and period_data['end_date']):
+                    try:
+                        start_date = datetime.fromisoformat(period_data['start_date']).date()
+                        end_date = datetime.fromisoformat(period_data['end_date']).date()
+                        if end_date < start_date:
+                            errors.append(f'Période {i+1}: la date de fin doit être postérieure ou égale à la date de début')
+                    except ValueError:
+                        pass  # Date format error already caught above
+                
+                # Validate time consistency (night shifts are allowed)
+                if ('start_time' in period_data and period_data['start_time'] and
+                    'end_time' in period_data and period_data['end_time']):
+                    try:
+                        start_time = datetime.fromisoformat(f"2000-01-01T{period_data['start_time']}").time()
+                        end_time = datetime.fromisoformat(f"2000-01-01T{period_data['end_time']}").time()
+                        
+                        if start_time >= end_time:
+                            # Check if this could be a valid night shift
+                            from datetime import time
+                            is_potential_night_shift = (
+                                start_time >= time(16, 0) and end_time <= time(12, 0)
+                            )
+                            if not is_potential_night_shift:
+                                errors.append(f'Période {i+1}: heure de fin invalide. Les équipes de nuit doivent commencer après 16:00 et finir avant 12:00')
+                    except ValueError:
+                        pass  # Time format error already caught above
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_rotationperiod_changelist')
+            
+            # Delete all existing rotation periods
+            RotationPeriod.objects.all().delete()
+            
+            # Import new rotation periods
+            created_count = 0
+            for period_data in data:
+                daily_rotation_plan = DailyRotationPlan.objects.get(designation=period_data['daily_rotation_plan_designation'])
+                start_date = datetime.fromisoformat(period_data['start_date']).date()
+                end_date = datetime.fromisoformat(period_data['end_date']).date()
+                start_time = datetime.fromisoformat(f"2000-01-01T{period_data['start_time']}").time()
+                end_time = datetime.fromisoformat(f"2000-01-01T{period_data['end_time']}").time()
+                
+                RotationPeriod.objects.create(
+                    daily_rotation_plan=daily_rotation_plan,
+                    start_date=start_date,
+                    end_date=end_date,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} périodes de rotation importées.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_rotationperiod_changelist')
+
+
+@user_passes_test(is_superuser)
+def shiftscheduleweek_export(request):
+    """Export shift schedule weeks to JSON - only accessible to superusers"""
+    weeks = ShiftScheduleWeek.objects.all().order_by('period__shift_schedule__name', 'period__start_date', 'week_number')
+    
+    weeks_data = []
+    for week in weeks:
+        weeks_data.append({
+            'shift_schedule_name': week.period.shift_schedule.name,
+            'period_start_date': week.period.start_date.isoformat(),
+            'period_end_date': week.period.end_date.isoformat(),
+            'week_number': week.week_number
+        })
+    
+    # Generate filename with current date
+    from django.utils import timezone
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_shift_schedule_weeks.json"
+    
+    response = HttpResponse(
+        json.dumps(weeks_data, indent=2, ensure_ascii=False),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def shiftscheduleweek_import(request):
+    """Import shift schedule weeks from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_shiftscheduleweek_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_shiftscheduleweek_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de semaines de planning.')
+                return redirect('admin:core_shiftscheduleweek_changelist')
+            
+            # Validate required fields for each week
+            required_fields = ['shift_schedule_name', 'period_start_date', 'period_end_date', 'week_number']
+            errors = []
+            
+            for i, week_data in enumerate(data):
+                for field in required_fields:
+                    if field not in week_data or week_data[field] is None or week_data[field] == '':
+                        errors.append(f'Semaine {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate that shift schedule exists
+                if 'shift_schedule_name' in week_data and week_data['shift_schedule_name']:
+                    try:
+                        shift_schedule = ShiftSchedule.objects.get(name=week_data['shift_schedule_name'])
+                        
+                        # Validate that the period exists for this shift schedule
+                        if ('period_start_date' in week_data and week_data['period_start_date'] and
+                            'period_end_date' in week_data and week_data['period_end_date']):
+                            try:
+                                start_date = datetime.fromisoformat(week_data['period_start_date']).date()
+                                end_date = datetime.fromisoformat(week_data['period_end_date']).date()
+                                
+                                period = ShiftSchedulePeriod.objects.filter(
+                                    shift_schedule=shift_schedule,
+                                    start_date=start_date,
+                                    end_date=end_date
+                                ).first()
+                                
+                                if not period:
+                                    errors.append(f'Semaine {i+1}: période {start_date} - {end_date} introuvable pour le planning "{week_data["shift_schedule_name"]}"')
+                            except ValueError:
+                                pass  # Date format error will be caught below
+                    except ShiftSchedule.DoesNotExist:
+                        errors.append(f'Semaine {i+1}: planning de poste "{week_data["shift_schedule_name"]}" introuvable')
+                
+                # Validate date formats
+                for date_field in ['period_start_date', 'period_end_date']:
+                    if date_field in week_data and week_data[date_field]:
+                        try:
+                            from datetime import datetime
+                            datetime.fromisoformat(week_data[date_field])
+                        except ValueError:
+                            errors.append(f'Semaine {i+1}: format de date invalide pour "{date_field}" (attendu: YYYY-MM-DD)')
+                
+                # Validate week_number is a positive integer
+                if 'week_number' in week_data:
+                    try:
+                        week_number = int(week_data['week_number'])
+                        if week_number <= 0:
+                            errors.append(f'Semaine {i+1}: le numéro de semaine doit être un entier positif')
+                    except (ValueError, TypeError):
+                        errors.append(f'Semaine {i+1}: numéro de semaine invalide (doit être un nombre entier)')
+                
+                # Validate that period dates are consistent
+                if ('period_start_date' in week_data and week_data['period_start_date'] and
+                    'period_end_date' in week_data and week_data['period_end_date']):
+                    try:
+                        start_date = datetime.fromisoformat(week_data['period_start_date']).date()
+                        end_date = datetime.fromisoformat(week_data['period_end_date']).date()
+                        if end_date < start_date:
+                            errors.append(f'Semaine {i+1}: la date de fin de période doit être postérieure ou égale à la date de début')
+                    except ValueError:
+                        pass  # Date format error already caught above
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_shiftscheduleweek_changelist')
+            
+            # Delete all existing shift schedule weeks
+            ShiftScheduleWeek.objects.all().delete()
+            
+            # Import new shift schedule weeks
+            created_count = 0
+            for week_data in data:
+                shift_schedule = ShiftSchedule.objects.get(name=week_data['shift_schedule_name'])
+                start_date = datetime.fromisoformat(week_data['period_start_date']).date()
+                end_date = datetime.fromisoformat(week_data['period_end_date']).date()
+                
+                period = ShiftSchedulePeriod.objects.get(
+                    shift_schedule=shift_schedule,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                
+                ShiftScheduleWeek.objects.create(
+                    period=period,
+                    week_number=int(week_data['week_number'])
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} semaines de planning importées.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_shiftscheduleweek_changelist')
+
+
+@user_passes_test(is_superuser)
+def shiftscheduledailyplan_export(request):
+    """Export shift schedule daily plans to JSON - only accessible to superusers"""
+    daily_plans = ShiftScheduleDailyPlan.objects.all().order_by('week__period__shift_schedule__name', 'week__period__start_date', 'week__week_number', 'weekday')
+    
+    daily_plans_data = []
+    for plan in daily_plans:
+        daily_plans_data.append({
+            'shift_schedule_name': plan.week.period.shift_schedule.name,
+            'period_start_date': plan.week.period.start_date.isoformat(),
+            'period_end_date': plan.week.period.end_date.isoformat(),
+            'week_number': plan.week.week_number,
+            'weekday': plan.weekday,
+            'daily_rotation_plan_designation': plan.daily_rotation_plan.designation
+        })
+    
+    # Generate filename with current date
+    from django.utils import timezone
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_shift_schedule_daily_plans.json"
+    
+    response = HttpResponse(
+        json.dumps(daily_plans_data, indent=2, ensure_ascii=False),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def shiftscheduledailyplan_import(request):
+    """Import shift schedule daily plans from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_shiftscheduledailyplan_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_shiftscheduledailyplan_changelist')
+        
+        try:
+            # Read and parse JSON
+            content = import_file.read().decode('utf-8')
+            data = json.loads(content)
+            
+            if not isinstance(data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de plans quotidiens de planning.')
+                return redirect('admin:core_shiftscheduledailyplan_changelist')
+            
+            # Validate required fields for each daily plan
+            required_fields = ['shift_schedule_name', 'period_start_date', 'period_end_date', 'week_number', 'weekday', 'daily_rotation_plan_designation']
+            errors = []
+            
+            for i, plan_data in enumerate(data):
+                for field in required_fields:
+                    if field not in plan_data or plan_data[field] is None or plan_data[field] == '':
+                        errors.append(f'Plan {i+1}: champ "{field}" manquant ou vide')
+                
+                # Validate that shift schedule exists
+                if 'shift_schedule_name' in plan_data and plan_data['shift_schedule_name']:
+                    try:
+                        shift_schedule = ShiftSchedule.objects.get(name=plan_data['shift_schedule_name'])
+                        
+                        # Validate that the period exists for this shift schedule
+                        if ('period_start_date' in plan_data and plan_data['period_start_date'] and
+                            'period_end_date' in plan_data and plan_data['period_end_date']):
+                            try:
+                                start_date = datetime.fromisoformat(plan_data['period_start_date']).date()
+                                end_date = datetime.fromisoformat(plan_data['period_end_date']).date()
+                                
+                                period = ShiftSchedulePeriod.objects.filter(
+                                    shift_schedule=shift_schedule,
+                                    start_date=start_date,
+                                    end_date=end_date
+                                ).first()
+                                
+                                if not period:
+                                    errors.append(f'Plan {i+1}: période {start_date} - {end_date} introuvable pour le planning "{plan_data["shift_schedule_name"]}"')
+                                else:
+                                    # Validate that the week exists for this period
+                                    if 'week_number' in plan_data and plan_data['week_number']:
+                                        try:
+                                            week_number = int(plan_data['week_number'])
+                                            week = ShiftScheduleWeek.objects.filter(
+                                                period=period,
+                                                week_number=week_number
+                                            ).first()
+                                            
+                                            if not week:
+                                                errors.append(f'Plan {i+1}: semaine {week_number} introuvable pour la période {start_date} - {end_date}')
+                                        except ValueError:
+                                            pass  # Week number format error will be caught below
+                            except ValueError:
+                                pass  # Date format error will be caught below
+                    except ShiftSchedule.DoesNotExist:
+                        errors.append(f'Plan {i+1}: planning de poste "{plan_data["shift_schedule_name"]}" introuvable')
+                
+                # Validate that daily rotation plan exists
+                if 'daily_rotation_plan_designation' in plan_data and plan_data['daily_rotation_plan_designation']:
+                    try:
+                        DailyRotationPlan.objects.get(designation=plan_data['daily_rotation_plan_designation'])
+                    except DailyRotationPlan.DoesNotExist:
+                        errors.append(f'Plan {i+1}: rythme quotidien "{plan_data["daily_rotation_plan_designation"]}" introuvable')
+                
+                # Validate date formats
+                for date_field in ['period_start_date', 'period_end_date']:
+                    if date_field in plan_data and plan_data[date_field]:
+                        try:
+                            from datetime import datetime
+                            datetime.fromisoformat(plan_data[date_field])
+                        except ValueError:
+                            errors.append(f'Plan {i+1}: format de date invalide pour "{date_field}" (attendu: YYYY-MM-DD)')
+                
+                # Validate week_number is a positive integer
+                if 'week_number' in plan_data:
+                    try:
+                        week_number = int(plan_data['week_number'])
+                        if week_number <= 0:
+                            errors.append(f'Plan {i+1}: le numéro de semaine doit être un entier positif')
+                    except (ValueError, TypeError):
+                        errors.append(f'Plan {i+1}: numéro de semaine invalide (doit être un nombre entier)')
+                
+                # Validate weekday is a valid integer (1-7)
+                if 'weekday' in plan_data:
+                    try:
+                        weekday = int(plan_data['weekday'])
+                        if weekday < 1 or weekday > 7:
+                            errors.append(f'Plan {i+1}: le jour de la semaine doit être entre 1 (Lundi) et 7 (Dimanche)')
+                    except (ValueError, TypeError):
+                        errors.append(f'Plan {i+1}: jour de la semaine invalide (doit être un nombre entier entre 1 et 7)')
+                
+                # Validate that period dates are consistent
+                if ('period_start_date' in plan_data and plan_data['period_start_date'] and
+                    'period_end_date' in plan_data and plan_data['period_end_date']):
+                    try:
+                        start_date = datetime.fromisoformat(plan_data['period_start_date']).date()
+                        end_date = datetime.fromisoformat(plan_data['period_end_date']).date()
+                        if end_date < start_date:
+                            errors.append(f'Plan {i+1}: la date de fin de période doit être postérieure ou égale à la date de début')
+                    except ValueError:
+                        pass  # Date format error already caught above
+            
+            if errors:
+                messages.error(request, f'Erreurs de validation ({len(errors)} erreurs trouvées):')
+                for error in errors[:3]:  # Show first 3 errors
+                    messages.error(request, f'  • {error}')
+                if len(errors) > 3:
+                    messages.error(request, f'  • ... et {len(errors) - 3} autres erreurs.')
+                return redirect('admin:core_shiftscheduledailyplan_changelist')
+            
+            # Delete all existing shift schedule daily plans
+            ShiftScheduleDailyPlan.objects.all().delete()
+            
+            # Import new shift schedule daily plans
+            created_count = 0
+            for plan_data in data:
+                shift_schedule = ShiftSchedule.objects.get(name=plan_data['shift_schedule_name'])
+                start_date = datetime.fromisoformat(plan_data['period_start_date']).date()
+                end_date = datetime.fromisoformat(plan_data['period_end_date']).date()
+                
+                period = ShiftSchedulePeriod.objects.get(
+                    shift_schedule=shift_schedule,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                
+                week = ShiftScheduleWeek.objects.get(
+                    period=period,
+                    week_number=int(plan_data['week_number'])
+                )
+                
+                daily_rotation_plan = DailyRotationPlan.objects.get(designation=plan_data['daily_rotation_plan_designation'])
+                
+                ShiftScheduleDailyPlan.objects.create(
+                    week=week,
+                    weekday=int(plan_data['weekday']),
+                    daily_rotation_plan=daily_rotation_plan
+                )
+                created_count += 1
+            
+            messages.success(request, f'Import réussi: {created_count} plans quotidiens de planning importés.')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Le fichier JSON n\'est pas valide.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation: {str(e)}')
+    
+    return redirect('admin:core_shiftscheduledailyplan_changelist')
+
+
+@user_passes_test(is_superuser)
+def global_export(request):
+    """Export all models to a single ZIP file - only accessible to superusers"""
+    import zipfile
+    import io
+    from django.utils import timezone
+    
+    # Generate timestamp for filename
+    current_date = timezone.now().strftime('%Y-%m-%d_%H%M%S')
+    
+    # Create in-memory ZIP file
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        
+        # Export Agents
+        agents = Agent.objects.all().order_by('matricule')
+        agents_data = []
+        for agent in agents:
+            agents_data.append({
+                'matricule': agent.matricule,
+                'last_name': agent.last_name,
+                'first_name': agent.first_name,
+                'grade': agent.grade,
+                'hire_date': agent.hire_date.isoformat(),
+                'departure_date': agent.departure_date.isoformat() if agent.departure_date else None,
+                'permission_level': agent.permission_level
+            })
+        zip_file.writestr(f"{current_date}_agents.json", json.dumps(agents_data, indent=2, ensure_ascii=False))
+        
+        # Export Departments
+        departments = Department.objects.all().order_by('order', 'name')
+        departments_data = []
+        for dept in departments:
+            departments_data.append({
+                'name': dept.name,
+                'order': dept.order
+            })
+        zip_file.writestr(f"{current_date}_departments.json", json.dumps(departments_data, indent=2, ensure_ascii=False))
+        
+        # Export Functions
+        functions = Function.objects.all().order_by('designation')
+        functions_data = []
+        for func in functions:
+            functions_data.append({
+                'designation': func.designation,
+                'description': func.description,
+                'status': func.status
+            })
+        zip_file.writestr(f"{current_date}_functions.json", json.dumps(functions_data, indent=2, ensure_ascii=False))
+        
+        # Export Schedule Types
+        schedule_types = ScheduleType.objects.all().order_by('designation')
+        schedule_types_data = []
+        for st in schedule_types:
+            schedule_types_data.append({
+                'designation': st.designation,
+                'short_designation': st.short_designation,
+                'color': st.color
+            })
+        zip_file.writestr(f"{current_date}_schedule_types.json", json.dumps(schedule_types_data, indent=2, ensure_ascii=False))
+        
+        # Export Daily Rotation Plans
+        daily_plans = DailyRotationPlan.objects.all().order_by('designation')
+        daily_plans_data = []
+        for plan in daily_plans:
+            daily_plans_data.append({
+                'designation': plan.designation,
+                'description': plan.description,
+                'schedule_type_designation': plan.schedule_type.designation
+            })
+        zip_file.writestr(f"{current_date}_daily_rotation_plans.json", json.dumps(daily_plans_data, indent=2, ensure_ascii=False))
+        
+        # Export Rotation Periods
+        rotation_periods = RotationPeriod.objects.all().order_by('daily_rotation_plan__designation', 'start_date', 'start_time')
+        rotation_periods_data = []
+        for period in rotation_periods:
+            rotation_periods_data.append({
+                'daily_rotation_plan_designation': period.daily_rotation_plan.designation,
+                'start_date': period.start_date.isoformat(),
+                'end_date': period.end_date.isoformat(),
+                'start_time': period.start_time.isoformat(),
+                'end_time': period.end_time.isoformat()
+            })
+        zip_file.writestr(f"{current_date}_rotation_periods.json", json.dumps(rotation_periods_data, indent=2, ensure_ascii=False))
+        
+        # Export Shift Schedules
+        shift_schedules = ShiftSchedule.objects.all().order_by('name')
+        shift_schedules_data = []
+        for schedule in shift_schedules:
+            shift_schedules_data.append({
+                'name': schedule.name,
+                'type': schedule.type,
+                'break_times': schedule.break_times
+            })
+        zip_file.writestr(f"{current_date}_shift_schedules.json", json.dumps(shift_schedules_data, indent=2, ensure_ascii=False))
+        
+        # Export Shift Schedule Periods
+        shift_periods = ShiftSchedulePeriod.objects.all().order_by('shift_schedule__name', 'start_date')
+        shift_periods_data = []
+        for period in shift_periods:
+            shift_periods_data.append({
+                'shift_schedule_name': period.shift_schedule.name,
+                'start_date': period.start_date.isoformat(),
+                'end_date': period.end_date.isoformat()
+            })
+        zip_file.writestr(f"{current_date}_shift_schedule_periods.json", json.dumps(shift_periods_data, indent=2, ensure_ascii=False))
+        
+        # Export Shift Schedule Weeks
+        shift_weeks = ShiftScheduleWeek.objects.all().order_by('period__shift_schedule__name', 'period__start_date', 'week_number')
+        shift_weeks_data = []
+        for week in shift_weeks:
+            shift_weeks_data.append({
+                'shift_schedule_name': week.period.shift_schedule.name,
+                'period_start_date': week.period.start_date.isoformat(),
+                'period_end_date': week.period.end_date.isoformat(),
+                'week_number': week.week_number
+            })
+        zip_file.writestr(f"{current_date}_shift_schedule_weeks.json", json.dumps(shift_weeks_data, indent=2, ensure_ascii=False))
+        
+        # Export Shift Schedule Daily Plans
+        daily_plans_shift = ShiftScheduleDailyPlan.objects.all().order_by('week__period__shift_schedule__name', 'week__period__start_date', 'week__week_number', 'weekday')
+        daily_plans_shift_data = []
+        for plan in daily_plans_shift:
+            daily_plans_shift_data.append({
+                'shift_schedule_name': plan.week.period.shift_schedule.name,
+                'period_start_date': plan.week.period.start_date.isoformat(),
+                'period_end_date': plan.week.period.end_date.isoformat(),
+                'week_number': plan.week.week_number,
+                'weekday': plan.weekday,
+                'daily_rotation_plan_designation': plan.daily_rotation_plan.designation
+            })
+        zip_file.writestr(f"{current_date}_shift_schedule_daily_plans.json", json.dumps(daily_plans_shift_data, indent=2, ensure_ascii=False))
+    
+    zip_buffer.seek(0)
+    
+    response = HttpResponse(
+        zip_buffer.getvalue(),
+        content_type='application/zip'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{current_date}_export_global_planning.zip"'
+    
+    return response

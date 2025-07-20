@@ -1,0 +1,109 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:core_rotationperiod_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Formulaire d'importation</h1>
+
+<div class="module aligned">
+    <div class="form-row">
+        <div class="field-box">
+            <div class="module">
+                <h2>⚠️ DANGER - Remplacement complet de la base de données</h2>
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px; margin: 10px 0; border-radius: 4px;">
+                    <p><strong>Cette opération va :</strong></p>
+                    <ul>
+                        <li><strong>Supprimer TOUTES les {{ rotationperiod_count }} périodes de rotation existantes</strong></li>
+                        <li><strong>Cette action est IRRÉVERSIBLE</strong></li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Format requis :</strong> Le fichier JSON doit contenir une liste de périodes avec les champs :</p>
+                    <ul>
+                        <li><code>"daily_rotation_plan_designation"</code> : Nom du rythme quotidien (texte obligatoire, doit exister)</li>
+                        <li><code>"start_date"</code> : Date de début (obligatoire, format: YYYY-MM-DD)</li>
+                        <li><code>"end_date"</code> : Date de fin (obligatoire, format: YYYY-MM-DD)</li>
+                        <li><code>"start_time"</code> : Heure de début (obligatoire, format: HH:MM:SS)</li>
+                        <li><code>"end_time"</code> : Heure de fin (obligatoire, format: HH:MM:SS)</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>⚠️ PRÉREQUIS IMPORTANT :</strong></p>
+                    <ul>
+                        <li>Les rythmes quotidiens référencés doivent déjà exister dans la base de données</li>
+                        <li>Assurez-vous d'avoir importé les rythmes quotidiens avant les périodes de rotation</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Validations automatiques :</strong></p>
+                    <ul>
+                        <li>La date de fin doit être postérieure ou égale à la date de début</li>
+                        <li>Les dates doivent être au format ISO (YYYY-MM-DD)</li>
+                        <li>Les heures doivent être au format ISO (HH:MM:SS)</li>
+                        <li>Le rythme quotidien référencé doit exister</li>
+                        <li><strong>Équipes de nuit acceptées :</strong> début après 16:00 et fin avant 12:00</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Exemples d'horaires valides :</strong></p>
+                    <ul>
+                        <li>Journée : <code>"start_time": "08:00:00", "end_time": "16:00:00"</code></li>
+                        <li>Après-midi : <code>"start_time": "14:00:00", "end_time": "22:00:00"</code></li>
+                        <li>Nuit : <code>"start_time": "22:00:00", "end_time": "06:00:00"</code></li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>⚠️ ATTENTION :</strong> Cette validation ne vérifie pas les chevauchements car toutes les périodes existantes seront supprimées.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="confirm_overwrite" value="true">
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="import_file"><strong>Fichier JSON à importer :</strong></label>
+                <input type="file" name="import_file" id="import_file" accept=".json" required>
+                <p class="help">Sélectionnez un fichier JSON contenant les données de périodes de rotation à importer.</p>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="confirm_action">
+                    <input type="checkbox" name="confirm_action" id="confirm_action" required>
+                    <strong>Je comprends que cette action supprimera définitivement toutes les périodes de rotation existantes</strong>
+                </label>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <input type="submit" value="⚠️ CONFIRMER ET REMPLACER LA BASE DE DONNÉES" class="default" style="background-color: #dc3545; color: white;">
+            <a href="{% url 'admin:core_rotationperiod_changelist' %}" class="button cancel-link">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('confirm_action').addEventListener('change', function() {
+    const submitButton = document.querySelector('input[type="submit"]');
+    if (this.checked) {
+        submitButton.disabled = false;
+        submitButton.style.opacity = '1';
+    } else {
+        submitButton.disabled = true;
+        submitButton.style.opacity = '0.5';
+    }
+});
+
+// Initially disable submit button
+document.addEventListener('DOMContentLoaded', function() {
+    const submitButton = document.querySelector('input[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.style.opacity = '0.5';
+});
+</script>
+{% endblock %}

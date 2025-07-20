@@ -155,13 +155,16 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Tooltips de validation** : Survol des rythmes quotidiens affiche nom et description pour vérification rapide
 
 ### Gestion des données et sécurité (Juillet 2025)
-- **Export JSON sécurisé** : Export complet de la base d'agents au format JSON avec datage automatique (YYYY-MM-DD_agents.json)
+- **Export JSON sécurisé** : Export complet de tous les modèles au format JSON avec datage automatique (YYYY-MM-DD_model.json)
 - **Import avec remplacement** : Import JSON avec remplacement complet de la base de données et confirmations multiples
 - **Protection superutilisateur** : Préservation automatique des comptes superutilisateurs lors des imports
 - **Interface Django Admin** : Fonctionnalités d'export/import accessibles uniquement via l'interface d'administration Django
+- **Export global unifié** : Bouton d'export global sur la page admin principale générant un fichier ZIP avec tous les modèles
+- **Export individuel par modèle** : Boutons d'export/import spécifiques pour chaque modèle (Agents, Départements, Fonctions, etc.)
 - **Validation anti-conflit** : Résolution automatique des conflits UNIQUE constraint lors des imports
-- **Réinitialisation sécurisée** : Tous les mots de passe sont réinitialisés à "azerty" lors des imports
+- **Réinitialisation sécurisée** : Tous les mots de passe sont réinitialisés à "azerty" lors des imports d'agents
 - **Navigation superutilisateur** : Menu Administration unifié pour accès rapide aux fonctionnalités app et Django Admin
+- **Import/Export complet** : Support de tous les modèles système (9 modèles) avec validation des dépendances hiérarchiques
 
 ### Améliorations interface et documentation (Juillet 2025)
 - **Manuel utilisateur métier** : Guide complet refondu pour administrateurs métier avec contenu spécialisé et workflow détaillé
@@ -336,12 +339,22 @@ L'interface principale propose :
 
 ### Fonctionnalités spéciales superutilisateur
 
-**Export/Import d'agents** (accessible via Django Admin uniquement) :
+**Export global de toutes les données** (accessible via Django Admin uniquement) :
 1. Se connecter à l'interface Django Admin : http://127.0.0.1:8000/admin/
-2. Naviguer vers **Core > Agents**
+2. Naviguer vers **Core** (page principale de l'application)
+3. Utiliser le bouton **📊 Exporter Toutes les Données**
+4. L'export génère un fichier ZIP `YYYY-MM-DD_HHMMSS_export_global_planning.zip` contenant tous les modèles au format JSON
+
+**Export/Import par modèle** (accessible via Django Admin uniquement) :
+1. Se connecter à l'interface Django Admin : http://127.0.0.1:8000/admin/
+2. Naviguer vers **Core > [Modèle]** (Agents, Départements, Fonctions, Types d'Horaires, etc.)
 3. Utiliser les boutons **📊 Exporter JSON** et **⚠️ Importer JSON**
-4. L'export génère un fichier `YYYY-MM-DD_agents.json`
-5. L'import remplace complètement la base d'agents avec confirmations de sécurité
+4. L'export génère un fichier `YYYY-MM-DD_model.json`
+5. L'import remplace complètement la base du modèle avec confirmations de sécurité
+
+**Modèles supportés pour export/import individuel** :
+- Agents, Départements, Fonctions, Types d'Horaires, Rythmes Quotidiens, Périodes de Rotation
+- Plannings de Poste, Périodes de Planning, Semaines de Planning, Plans Quotidiens de Planning
 
 ## Tests
 

@@ -10,8 +10,8 @@ from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan)
-from .views import agent_export, agent_import
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, Department)
+from .views import agent_export, agent_import, department_export, department_import, function_export, function_import, scheduletype_export, scheduletype_import, dailyrotationplan_export, dailyrotationplan_import, shiftschedule_export, shiftschedule_import, shiftscheduleperiod_export, shiftscheduleperiod_import, rotationperiod_export, rotationperiod_import, shiftscheduleweek_export, shiftscheduleweek_import, shiftscheduledailyplan_export, shiftscheduledailyplan_import
 import json
 
 
@@ -74,6 +74,45 @@ class FunctionAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('designation', 'description')
     ordering = ('designation',)
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_functions), name='core_function_export'),
+            path('import/', self.admin_site.admin_view(self.import_functions), name='core_function_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_functions(self, request):
+        """Export functions to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les fonctions.')
+            return redirect('admin:core_function_changelist')
+        return function_export(request)
+    
+    def import_functions(self, request):
+        """Import functions from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les fonctions.')
+            return redirect('admin:core_function_changelist')
+            
+        if request.method == 'POST':
+            return function_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/function/import_form.html', {
+            'title': 'Importer des fonctions',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'function_count': Function.objects.count(),
+        })
 
 
 @admin.register(ScheduleType)
@@ -81,6 +120,45 @@ class ScheduleTypeAdmin(admin.ModelAdmin):
     list_display = ('designation', 'short_designation', 'color', 'color_preview')
     search_fields = ('designation', 'short_designation')
     ordering = ('designation',)
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_scheduletypes), name='core_scheduletype_export'),
+            path('import/', self.admin_site.admin_view(self.import_scheduletypes), name='core_scheduletype_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_scheduletypes(self, request):
+        """Export schedule types to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les types d\'horaires.')
+            return redirect('admin:core_scheduletype_changelist')
+        return scheduletype_export(request)
+    
+    def import_scheduletypes(self, request):
+        """Import schedule types from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les types d\'horaires.')
+            return redirect('admin:core_scheduletype_changelist')
+            
+        if request.method == 'POST':
+            return scheduletype_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/scheduletype/import_form.html', {
+            'title': 'Importer des types d\'horaires',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'scheduletype_count': ScheduleType.objects.count(),
+        })
     
     def color_preview(self, obj):
         """Display color preview in admin list"""
@@ -104,6 +182,45 @@ class DailyRotationPlanAdmin(admin.ModelAdmin):
     ordering = ('designation',)
     inlines = [RotationPeriodInline]
     
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_dailyrotationplans), name='core_dailyrotationplan_export'),
+            path('import/', self.admin_site.admin_view(self.import_dailyrotationplans), name='core_dailyrotationplan_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_dailyrotationplans(self, request):
+        """Export daily rotation plans to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les rythmes quotidiens.')
+            return redirect('admin:core_dailyrotationplan_changelist')
+        return dailyrotationplan_export(request)
+    
+    def import_dailyrotationplans(self, request):
+        """Import daily rotation plans from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les rythmes quotidiens.')
+            return redirect('admin:core_dailyrotationplan_changelist')
+            
+        if request.method == 'POST':
+            return dailyrotationplan_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/dailyrotationplan/import_form.html', {
+            'title': 'Importer des rythmes quotidiens',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'dailyrotationplan_count': DailyRotationPlan.objects.count(),
+        })
+    
     fieldsets = (
         ('Informations générales', {
             'fields': ('designation', 'description', 'schedule_type')
@@ -123,6 +240,45 @@ class RotationPeriodAdmin(admin.ModelAdmin):
     search_fields = ('daily_rotation_plan__designation',)
     ordering = ('daily_rotation_plan', 'start_date', 'start_time')
     date_hierarchy = 'start_date'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_rotationperiods), name='core_rotationperiod_export'),
+            path('import/', self.admin_site.admin_view(self.import_rotationperiods), name='core_rotationperiod_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_rotationperiods(self, request):
+        """Export rotation periods to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les périodes de rotation.')
+            return redirect('admin:core_rotationperiod_changelist')
+        return rotationperiod_export(request)
+    
+    def import_rotationperiods(self, request):
+        """Import rotation periods from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les périodes de rotation.')
+            return redirect('admin:core_rotationperiod_changelist')
+            
+        if request.method == 'POST':
+            return rotationperiod_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/rotationperiod/import_form.html', {
+            'title': 'Importer des périodes de rotation',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'rotationperiod_count': RotationPeriod.objects.count(),
+        })
     
     fieldsets = (
         ('Plan de rotation', {
@@ -165,6 +321,45 @@ class ShiftScheduleAdmin(admin.ModelAdmin):
     ordering = ('name',)
     inlines = [ShiftSchedulePeriodInline]
     
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_shiftschedules), name='core_shiftschedule_export'),
+            path('import/', self.admin_site.admin_view(self.import_shiftschedules), name='core_shiftschedule_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_shiftschedules(self, request):
+        """Export shift schedules to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les plannings de poste.')
+            return redirect('admin:core_shiftschedule_changelist')
+        return shiftschedule_export(request)
+    
+    def import_shiftschedules(self, request):
+        """Import shift schedules from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les plannings de poste.')
+            return redirect('admin:core_shiftschedule_changelist')
+            
+        if request.method == 'POST':
+            return shiftschedule_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/shiftschedule/import_form.html', {
+            'title': 'Importer des plannings de poste',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'shiftschedule_count': ShiftSchedule.objects.count(),
+        })
+    
     fieldsets = (
         ('Informations générales', {
             'fields': ('name', 'type', 'break_times')
@@ -192,6 +387,45 @@ class ShiftSchedulePeriodAdmin(admin.ModelAdmin):
     ordering = ('shift_schedule', 'start_date')
     date_hierarchy = 'start_date'
     inlines = [ShiftScheduleWeekInline]
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_shiftscheduleperiods), name='core_shiftscheduleperiod_export'),
+            path('import/', self.admin_site.admin_view(self.import_shiftscheduleperiods), name='core_shiftscheduleperiod_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_shiftscheduleperiods(self, request):
+        """Export shift schedule periods to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les périodes de planning de poste.')
+            return redirect('admin:core_shiftscheduleperiod_changelist')
+        return shiftscheduleperiod_export(request)
+    
+    def import_shiftscheduleperiods(self, request):
+        """Import shift schedule periods from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les périodes de planning de poste.')
+            return redirect('admin:core_shiftscheduleperiod_changelist')
+            
+        if request.method == 'POST':
+            return shiftscheduleperiod_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/shiftscheduleperiod/import_form.html', {
+            'title': 'Importer des périodes de planning de poste',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'shiftscheduleperiod_count': ShiftSchedulePeriod.objects.count(),
+        })
     
     fieldsets = (
         ('Planning de poste', {
@@ -231,6 +465,45 @@ class ShiftScheduleWeekAdmin(admin.ModelAdmin):
     ordering = ('period', 'week_number')
     inlines = [ShiftScheduleDailyPlanInline]
     
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_shiftscheduleweeks), name='core_shiftscheduleweek_export'),
+            path('import/', self.admin_site.admin_view(self.import_shiftscheduleweeks), name='core_shiftscheduleweek_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_shiftscheduleweeks(self, request):
+        """Export shift schedule weeks to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les semaines de planning.')
+            return redirect('admin:core_shiftscheduleweek_changelist')
+        return shiftscheduleweek_export(request)
+    
+    def import_shiftscheduleweeks(self, request):
+        """Import shift schedule weeks from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les semaines de planning.')
+            return redirect('admin:core_shiftscheduleweek_changelist')
+            
+        if request.method == 'POST':
+            return shiftscheduleweek_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/shiftscheduleweek/import_form.html', {
+            'title': 'Importer des semaines de planning',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'shiftscheduleweek_count': ShiftScheduleWeek.objects.count(),
+        })
+    
     fieldsets = (
         ('Semaine', {
             'fields': ('period', 'week_number')
@@ -255,6 +528,45 @@ class ShiftScheduleDailyPlanAdmin(admin.ModelAdmin):
     search_fields = ('week__period__shift_schedule__name', 'daily_rotation_plan__designation')
     ordering = ('week', 'weekday')
     
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_shiftscheduledailyplans), name='core_shiftscheduledailyplan_export'),
+            path('import/', self.admin_site.admin_view(self.import_shiftscheduledailyplans), name='core_shiftscheduledailyplan_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_shiftscheduledailyplans(self, request):
+        """Export shift schedule daily plans to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les plans quotidiens de planning.')
+            return redirect('admin:core_shiftscheduledailyplan_changelist')
+        return shiftscheduledailyplan_export(request)
+    
+    def import_shiftscheduledailyplans(self, request):
+        """Import shift schedule daily plans from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les plans quotidiens de planning.')
+            return redirect('admin:core_shiftscheduledailyplan_changelist')
+            
+        if request.method == 'POST':
+            return shiftscheduledailyplan_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/shiftscheduledailyplan/import_form.html', {
+            'title': 'Importer des plans quotidiens de planning',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'shiftscheduledailyplan_count': ShiftScheduleDailyPlan.objects.count(),
+        })
+    
     fieldsets = (
         ('Assignation', {
             'fields': ('week', 'weekday', 'daily_rotation_plan')
@@ -275,3 +587,51 @@ class ShiftScheduleDailyPlanAdmin(admin.ModelAdmin):
         """Display schedule type of the daily rotation plan"""
         return obj.daily_rotation_plan.schedule_type.designation
     get_schedule_type.short_description = 'Type d\'horaire'
+
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'order', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('name',)
+    ordering = ('order', 'name')
+    date_hierarchy = 'created_at'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_departments), name='core_department_export'),
+            path('import/', self.admin_site.admin_view(self.import_departments), name='core_department_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_departments(self, request):
+        """Export departments to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les départements.')
+            return redirect('admin:core_department_changelist')
+        return department_export(request)
+    
+    def import_departments(self, request):
+        """Import departments from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les départements.')
+            return redirect('admin:core_department_changelist')
+            
+        if request.method == 'POST':
+            return department_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/department/import_form.html', {
+            'title': 'Importer des départements',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'department_count': Department.objects.count(),
+        })
