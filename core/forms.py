@@ -1,6 +1,6 @@
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department, Team, TeamPosition)
 
 
 class AgentForm(forms.ModelForm):
@@ -509,3 +509,125 @@ class DepartmentForm(forms.ModelForm):
             )
         
         return order
+
+
+class TeamForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = ['designation', 'description', 'color', 'department']
+        widgets = {
+            'designation': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Ex: Équipe Alpha, Salle de contrôle A'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Description détaillée de l\'équipe (optionnel)',
+                'rows': 3
+            }),
+            'color': forms.TextInput(attrs={
+                'class': 'block w-20 h-10 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'color',
+                'placeholder': '#FF0000'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+        }
+        labels = {
+            'designation': 'Nom de l\'équipe',
+            'description': 'Description',
+            'color': 'Couleur',
+            'department': 'Département',
+        }
+
+
+class TeamPositionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        team = kwargs.pop('team', None)
+        super().__init__(*args, **kwargs)
+        
+        # Set team if provided and hide it
+        if team:
+            self.fields['team'].initial = team
+            self.fields['team'].widget = forms.HiddenInput()
+        
+        # Filter available functions to only show active ones
+        self.fields['function'].queryset = Function.objects.filter(status=True)
+        
+        # Filter daily rotation plans to only show those with periods defined
+        self.fields['rotation_plan'].queryset = DailyRotationPlan.objects.filter(
+            periods__isnull=False
+        ).distinct()
+        
+        # Add help texts
+        self.fields['function'].help_text = "Seules les fonctions actives sont disponibles."
+        self.fields['rotation_plan'].help_text = "Seuls les plans de roulement ayant au moins une période définie sont disponibles."
+        self.fields['agent'].help_text = "Optionnel - peut être assigné plus tard."
+    
+    class Meta:
+        model = TeamPosition
+        fields = ['team', 'function', 'agent', 'rotation_plan', 'start_date', 'end_date', 'considers_holidays']
+        widgets = {
+            'team': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'function': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'agent': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'rotation_plan': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'considers_holidays': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+            }),
+        }
+        labels = {
+            'team': 'Équipe',
+            'function': 'Poste/Fonction',
+            'agent': 'Agent assigné',
+            'rotation_plan': 'Plan de roulement',
+            'start_date': 'Date de début',
+            'end_date': 'Date de fin',
+            'considers_holidays': 'Prend en compte les jours fériés',
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        team = cleaned_data.get('team')
+        function = cleaned_data.get('function')
+        
+        # Basic date validation
+        if start_date and end_date and start_date > end_date:
+            raise forms.ValidationError('La date de fin doit être postérieure ou égale à la date de début.')
+        
+        # Check for duplicate function within the team
+        if team and function:
+            existing_positions = TeamPosition.objects.filter(
+                team=team,
+                function=function
+            )
+            
+            # Exclude current instance if editing
+            if self.instance.pk:
+                existing_positions = existing_positions.exclude(pk=self.instance.pk)
+            
+            if existing_positions.exists():
+                raise forms.ValidationError({
+                    'function': f'Le poste "{function.designation}" est déjà assigné à cette équipe.'
+                })
+        
+        return cleaned_data

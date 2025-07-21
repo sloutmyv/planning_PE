@@ -1,0 +1,220 @@
+<div class="p-6">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-medium text-gray-900">
+            {% if position %}Modifier le poste{% else %}Ajouter un poste{% endif %}
+            <span class="text-sm font-normal text-gray-600 ml-2">- {{ team.designation }}</span>
+        </h3>
+        <button onclick="document.getElementById('position-modal').style.display='none'" 
+                class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+
+    <form hx-post="{% if position %}{% url 'team_position_edit' position.id %}{% else %}{% url 'team_position_create' team.id %}{% endif %}" 
+          hx-target="this" 
+          hx-swap="outerHTML"
+          class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">
+                        Erreurs de validation
+                    </h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Team field (hidden) -->
+        {{ form.team }}
+
+        <!-- Fonction/Poste -->
+        <div>
+            <label for="{{ form.function.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.function.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.function }}
+            {% if form.function.errors %}
+            <div class="mt-1 text-sm text-red-600">
+                {% for error in form.function.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if form.function.help_text %}
+            <p class="mt-1 text-sm text-gray-500">{{ form.function.help_text }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Agent assigné -->
+        <div>
+            <label for="{{ form.agent.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.agent.label }}
+            </label>
+            {{ form.agent }}
+            {% if form.agent.errors %}
+            <div class="mt-1 text-sm text-red-600">
+                {% for error in form.agent.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if form.agent.help_text %}
+            <p class="mt-1 text-sm text-gray-500">{{ form.agent.help_text }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Plan de roulement -->
+        <div>
+            <label for="{{ form.rotation_plan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.rotation_plan.label }}
+            </label>
+            {{ form.rotation_plan }}
+            {% if form.rotation_plan.errors %}
+            <div class="mt-1 text-sm text-red-600">
+                {% for error in form.rotation_plan.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if form.rotation_plan.help_text %}
+            <p class="mt-1 text-sm text-gray-500">{{ form.rotation_plan.help_text }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Dates de période -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Date de début -->
+            <div>
+                <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.start_date.label }}
+                </label>
+                {{ form.start_date }}
+                {% if form.start_date.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.start_date.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if form.start_date.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.start_date.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Date de fin -->
+            <div>
+                <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.end_date.label }}
+                </label>
+                {{ form.end_date }}
+                {% if form.end_date.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.end_date.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if form.end_date.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.end_date.help_text }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Prise en compte des jours fériés -->
+        <div>
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    {{ form.considers_holidays }}
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="{{ form.considers_holidays.id_for_label }}" class="font-medium text-gray-700">
+                        {{ form.considers_holidays.label }}
+                    </label>
+                    <p class="text-gray-500">
+                        Si activé, ce poste prendra en compte les jours fériés lors de la planification.
+                    </p>
+                </div>
+            </div>
+            {% if form.considers_holidays.errors %}
+            <div class="mt-1 text-sm text-red-600">
+                {% for error in form.considers_holidays.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Messages d'information -->
+        {% if not form.function.queryset %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">
+                        Aucune fonction disponible
+                    </h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>Il n'y a aucune fonction active disponible. Vous devez créer une fonction avant d'ajouter un poste à l'équipe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not form.rotation_plan.queryset %}
+        <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        Aucun plan de roulement disponible
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>Aucun plan de roulement n'est disponible. Vous pouvez créer le poste sans plan de roulement et l'assigner plus tard.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 space-y-reverse space-y-3 sm:space-y-0 pt-6 border-t border-gray-200">
+            <button type="button" 
+                    onclick="document.getElementById('position-modal').style.display='none'"
+                    class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 border border-gray-300 rounded-md font-medium transition-colors duration-200">
+                Annuler
+            </button>
+            <button type="submit" 
+                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200"
+                    {% if not form.function.queryset %}disabled{% endif %}>
+                {% if position %}Modifier{% else %}Ajouter{% endif %}
+            </button>
+        </div>
+    </form>
+</div>

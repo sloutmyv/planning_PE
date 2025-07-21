@@ -21,6 +21,7 @@ urlpatterns = [
     path('rotation-period-count/', views.rotation_period_count, name='rotation_period_count'),
     path('public-holiday-count/', views.public_holiday_count, name='public_holiday_count'),
     path('department-count/', views.department_count, name='department_count'),
+    path('team-count/', views.team_count, name='team_count'),
     
     # Agent URLs
     path('agents/', views.agent_list, name='agent_list'),
@@ -108,6 +109,20 @@ urlpatterns = [
     path('departments/<int:pk>/', views.department_detail, name='department_detail'),
     path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
     path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    
+    # Team URLs
+    path('teams/', views.team_list, name='team_list'),
+    path('teams/create/', views.team_create, name='team_create'),
+    path('teams/<int:team_id>/edit/', views.team_edit, name='team_edit'),
+    path('teams/<int:team_id>/delete/', views.team_delete, name='team_delete'),
+    
+    # Team Position URLs
+    path('teams/<int:team_id>/positions/create/', views.team_position_create, name='team_position_create'),
+    path('team-positions/<int:position_id>/edit/', views.team_position_edit, name='team_position_edit'),
+    path('team-positions/<int:position_id>/delete/', views.team_position_delete, name='team_position_delete'),
+    
+    # API endpoints for teams
+    path('api/teams/<int:team_id>/positions/', views.api_team_positions, name='api_team_positions'),
     
     # Global Export URL
     path('global-export/', views.global_export, name='global_export'),

@@ -613,3 +613,118 @@ class Department(models.Model):
         verbose_name = "Département"
         verbose_name_plural = "Départements"
         ordering = ['order', 'name']
+
+
+class Team(models.Model):
+    designation = models.CharField(
+        max_length=200,
+        help_text="Nom de l'équipe (ex: 'Équipe Alpha', 'Salle de contrôle A')"
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Description détaillée de l'équipe"
+    )
+    color = models.CharField(
+        max_length=7,
+        help_text="Code couleur hexadécimal (ex: #FF0000)"
+    )
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.PROTECT,
+        help_text="Département auquel appartient l'équipe"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        # Validate hexadecimal color format
+        import re
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', self.color):
+            raise ValidationError({
+                'color': 'La couleur doit être au format hexadécimal (ex: #FF0000)'
+            })
+    
+    def __str__(self):
+        return f"{self.designation} ({self.department.name})"
+    
+    class Meta:
+        verbose_name = "Équipe"
+        verbose_name_plural = "Équipes"
+        ordering = ['department__order', 'designation']
+
+
+class TeamPosition(models.Model):
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name='positions',
+        help_text="Équipe à laquelle appartient ce poste"
+    )
+    function = models.ForeignKey(
+        Function,
+        on_delete=models.PROTECT,
+        help_text="Fonction/poste assigné à l'équipe"
+    )
+    agent = models.ForeignKey(
+        Agent,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="Agent assigné à ce poste (optionnel)"
+    )
+    rotation_plan = models.ForeignKey(
+        DailyRotationPlan,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="Plan de roulement assigné à ce poste (optionnel)"
+    )
+    start_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Date de début d'affectation (optionnel)"
+    )
+    end_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Date de fin d'affectation (optionnel)"
+    )
+    considers_holidays = models.BooleanField(
+        default=True,
+        help_text="Ce poste prend-il en compte les jours fériés ?"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Validate date consistency
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': 'La date de fin doit être postérieure ou égale à la date de début.'
+            })
+        
+        # Validate that function is unique within the team
+        if self.team and self.function:
+            existing_positions = TeamPosition.objects.filter(
+                team=self.team,
+                function=self.function
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            if existing_positions.exists():
+                raise ValidationError({
+                    'function': f'Le poste "{self.function.designation}" est déjà assigné à cette équipe.'
+                })
+    
+    def __str__(self):
+        agent_info = f" - {self.agent}" if self.agent else " - Non assigné"
+        return f"{self.team.designation}: {self.function.designation}{agent_info}"
+    
+    class Meta:
+        verbose_name = "Poste d'Équipe"
+        verbose_name_plural = "Postes d'Équipe"
+        unique_together = ['team', 'function']
+        ordering = ['team__designation', 'function__designation']

@@ -19,9 +19,9 @@ def is_superuser(user):
     """Check if user is a superuser"""
     return user.is_authenticated and user.is_superuser
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department, Team, TeamPosition)
 from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
-                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm, DepartmentForm)
+                    ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm, DepartmentForm, TeamForm, TeamPositionForm)
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
 
 
@@ -2270,6 +2270,13 @@ def department_count(request):
 
 
 @admin_required
+def team_count(request):
+    """HTMX endpoint for team count"""
+    count = Team.objects.count()
+    return HttpResponse(f'<p class="text-2xl font-semibold text-gray-900" id="team-count">{count}</p>')
+
+
+@admin_required
 def department_list(request):
     """List all departments with search, sorting and pagination"""
     search_query = request.GET.get('search', '')
@@ -3716,3 +3723,276 @@ def global_export(request):
     response['Content-Disposition'] = f'attachment; filename="{current_date}_export_global_planning.zip"'
     
     return response
+
+
+# =============================================================================
+# Team Management Views
+# =============================================================================
+
+@login_required
+@admin_required
+def team_list(request):
+    """List all teams with search and department filtering"""
+    search_query = request.GET.get('search', '')
+    department_filter = request.GET.get('department', '')
+    
+    teams = Team.objects.select_related('department').prefetch_related('positions__function', 'positions__agent')
+    
+    # Apply search filter
+    if search_query:
+        teams = teams.filter(
+            Q(designation__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(department__name__icontains=search_query)
+        )
+    
+    # Apply department filter
+    if department_filter:
+        teams = teams.filter(department_id=department_filter)
+    
+    departments = Department.objects.all().order_by('order', 'name')
+    current_agent = get_agent_from_user(request.user)
+    
+    context = {
+        'teams': teams,
+        'search_query': search_query,
+        'department_filter': department_filter,
+        'departments': departments,
+        'current_agent': current_agent,
+    }
+    
+    return render(request, 'core/teams/team_list.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def team_create(request):
+    """Create a new team"""
+    # Check if we have departments
+    if not Department.objects.exists():
+        messages.error(request, 'Aucun département n\'est disponible. Vous devez créer un département avant de créer une équipe.')
+        return redirect('team_list')
+    
+    if request.method == 'POST':
+        form = TeamForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                team = form.save()
+                messages.success(request, f'L\'équipe "{team.designation}" a été créée avec succès.')
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('team-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
+                return redirect('team_list')
+    else:
+        form = TeamForm()
+    
+    context = {'form': form}
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/teams/team_form_htmx.html', context)
+    return render(request, 'core/teams/team_form.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def team_edit(request, team_id):
+    """Edit an existing team"""
+    team = get_object_or_404(Team, id=team_id)
+    
+    if request.method == 'POST':
+        form = TeamForm(request.POST, instance=team)
+        if form.is_valid():
+            with transaction.atomic():
+                team = form.save()
+                messages.success(request, f'L\'équipe "{team.designation}" a été modifiée avec succès.')
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('team-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
+                return redirect('team_list')
+    else:
+        form = TeamForm(instance=team)
+    
+    context = {'form': form, 'team': team}
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/teams/team_form_htmx.html', context)
+    return render(request, 'core/teams/team_form.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def team_delete(request, team_id):
+    """Delete a team"""
+    team = get_object_or_404(Team, id=team_id)
+    team_name = team.designation
+    
+    with transaction.atomic():
+        team.delete()
+    
+    messages.success(request, f'L\'équipe "{team_name}" a été supprimée avec succès.')
+    
+    if request.headers.get('HX-Request'):
+        return HttpResponse("""
+            <script>
+                location.reload();
+            </script>
+        """)
+    
+    return redirect('team_list')
+
+
+# =============================================================================
+# Team Position Management Views
+# =============================================================================
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def team_position_create(request, team_id):
+    """Create a new position for a team"""
+    team = get_object_or_404(Team, id=team_id)
+    
+    # Check if we have functions
+    if not Function.objects.filter(status=True).exists():
+        messages.error(request, 'Aucune fonction active n\'est disponible. Vous devez créer une fonction avant d\'ajouter un poste à l\'équipe.')
+        return redirect('team_list')
+    
+    if request.method == 'POST':
+        form = TeamPositionForm(request.POST, team=team)
+        if form.is_valid():
+            with transaction.atomic():
+                position = form.save()
+                messages.success(request, f'Le poste "{position.function.designation}" a été ajouté à l\'équipe "{team.designation}" avec succès.')
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('position-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
+                return redirect('team_list')
+    else:
+        form = TeamPositionForm(team=team)
+    
+    context = {'form': form, 'team': team}
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/teams/team_position_form_htmx.html', context)
+    return render(request, 'core/teams/team_position_form.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["GET", "POST"])
+def team_position_edit(request, position_id):
+    """Edit an existing team position"""
+    position = get_object_or_404(TeamPosition, id=position_id)
+    
+    if request.method == 'POST':
+        form = TeamPositionForm(request.POST, instance=position, team=position.team)
+        if form.is_valid():
+            with transaction.atomic():
+                position = form.save()
+                messages.success(request, f'Le poste "{position.function.designation}" a été modifié avec succès.')
+                
+                if request.headers.get('HX-Request'):
+                    return HttpResponse("""
+                        <script>
+                            document.getElementById('position-modal').style.display = 'none';
+                            location.reload();
+                        </script>
+                    """)
+                return redirect('team_list')
+    else:
+        form = TeamPositionForm(instance=position, team=position.team)
+    
+    context = {'form': form, 'position': position, 'team': position.team}
+    
+    if request.headers.get('HX-Request'):
+        return render(request, 'core/teams/team_position_form_htmx.html', context)
+    return render(request, 'core/teams/team_position_form.html', context)
+
+
+@login_required
+@admin_required
+@require_http_methods(["POST"])
+def team_position_delete(request, position_id):
+    """Delete a team position"""
+    position = get_object_or_404(TeamPosition, id=position_id)
+    function_name = position.function.designation
+    team_name = position.team.designation
+    
+    with transaction.atomic():
+        position.delete()
+    
+    messages.success(request, f'Le poste "{function_name}" a été retiré de l\'équipe "{team_name}" avec succès.')
+    
+    if request.headers.get('HX-Request'):
+        return HttpResponse("""
+            <script>
+                location.reload();
+            </script>
+        """)
+    
+    return redirect('team_list')
+
+
+# =============================================================================
+# Team API Endpoints
+# =============================================================================
+
+@login_required
+@viewer_required
+def api_team_positions(request, team_id):
+    """API endpoint to get positions for a team"""
+    team = get_object_or_404(Team, id=team_id)
+    positions = TeamPosition.objects.filter(team=team).select_related('function', 'agent', 'rotation_plan')
+    
+    positions_data = []
+    for position in positions:
+        position_data = {
+            'id': position.id,
+            'function': {
+                'id': position.function.id,
+                'designation': position.function.designation,
+                'description': position.function.description,
+                'status': position.function.status,
+            },
+            'agent': {
+                'id': position.agent.id,
+                'matricule': position.agent.matricule,
+                'first_name': position.agent.first_name,
+                'last_name': position.agent.last_name,
+                'grade': position.agent.grade,
+            } if position.agent else None,
+            'rotation_plan': {
+                'id': position.rotation_plan.id,
+                'designation': position.rotation_plan.designation,
+                'description': position.rotation_plan.description,
+                'schedule_type': {
+                    'designation': position.rotation_plan.schedule_type.designation,
+                    'short_designation': position.rotation_plan.schedule_type.short_designation,
+                    'color': position.rotation_plan.schedule_type.color,
+                }
+            } if position.rotation_plan else None,
+            'start_date': position.start_date.isoformat() if position.start_date else None,
+            'end_date': position.end_date.isoformat() if position.end_date else None,
+            'considers_holidays': position.considers_holidays,
+        }
+        positions_data.append(position_data)
+    
+    return JsonResponse({'positions': positions_data})

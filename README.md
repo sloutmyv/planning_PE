@@ -119,6 +119,37 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Messages informatifs** : Notifications de succès et erreurs en français
 - **Mise à jour dynamique** : Interface HTMX pour des interactions fluides
 
+### Gestion des équipes
+- **Interface en cartes moderne** : Affichage des équipes en grille responsive avec couleurs distinctives
+- **Gestion séquentielle des postes** : Création d'équipe puis ajout progressif des postes de travail
+- **Recherche et filtrage avancés** : Recherche par nom d'équipe, description ou département avec filtre par département
+- **Modales HTMX fluides** : Formulaires de création/modification d'équipes et postes sans rechargement de page
+- **Validation intelligente des prérequis** : 
+  - Vérification de l'existence des départements avant création d'équipe
+  - Contrôle de l'existence des fonctions actives avant ajout de poste
+  - Messages informatifs pour les plans de roulement et agents manquants
+- **Affectation flexible des postes** :
+  - Sélection de fonction parmi les postes actifs
+  - Assignation optionnelle d'agent avec gestion des postes vacants
+  - Liaison optionnelle avec plans de roulement existants
+  - Configuration par poste de la prise en compte des jours fériés
+  - Définition de périodes d'affectation avec dates début/fin
+- **Contraintes métier respectées** :
+  - Unicité des fonctions par équipe (impossible d'assigner le même poste deux fois)
+  - Validation des dates d'affectation (fin >= début)
+  - Filtrage automatique des fonctions inactives et plans sans période
+- **Interface visuelle riche** :
+  - Codes couleur personnalisés par équipe pour identification rapide
+  - Badges colorés pour les plans de roulement selon leur type d'horaire
+  - Indicateurs visuels pour la prise en compte des jours fériés
+  - Affichage du statut d'assignation des agents (assigné/vacant)
+- **Actions contextuelles complètes** :
+  - Menu déroulant par équipe (modifier, ajouter poste, supprimer)
+  - Actions individuelles par poste (modifier, supprimer)
+  - Modales de confirmation pour les suppressions critiques
+- **Intégration dashboard** : Compteur d'équipes en temps réel dans le tableau de bord administrateur
+- **Navigation intégrée** : Lien "Équipes" dans le menu Administration, positionné après "Agents"
+
 ### Authentification et sécurité
 - **Système de permissions à 4 niveaux** : 
   - **SA (Super Administrateur)** : Accès complet Django Admin + gestion application + export/import
@@ -265,6 +296,7 @@ L'interface principale propose :
   - 🗃️ Départements (base hiérarchique obligatoire)
   - 🗃️ Liste des Postes (fonctions de l'organisation)
   - 🗃️ Liste des Agents (personnel avec permissions)
+  - 🗃️ Équipes (groupes de travail avec postes assignés)
   - 🗃️ Jours Fériés (dates exceptionnelles)
   - 🗃️ Types d'Horaires (catégories de travail)
   - 🗃️ Rythmes Quotidien (modèles d'horaires quotidiens)
@@ -402,6 +434,28 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 - **Champs d'audit** : created_at et updated_at pour traçabilité
 - **Tri par défaut** : Tri par ordre puis par nom pour affichage hiérarchique cohérent
 - **Flexibilité** : Possibilité de modifier l'ordre manuellement pour réorganiser la hiérarchie
+
+### Team (Équipe)
+- **designation** : Nom de l'équipe (ex: "Équipe Alpha", "Salle de contrôle A")
+- **description** : Description détaillée de l'équipe (optionnel)
+- **color** : Code couleur hexadécimal pour identification visuelle (ex: #FF6B6B)
+- **department** : Département auquel appartient l'équipe (clé étrangère vers Department)
+- **Validation automatique** : Format hexadécimal pour les couleurs
+- **Relation avec TeamPosition** : Une équipe peut avoir plusieurs postes
+- **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Tri par défaut** : Tri par ordre de département puis par nom d'équipe
+
+### TeamPosition (Poste d'Équipe)
+- **team** : Équipe à laquelle appartient ce poste (clé étrangère vers Team)
+- **function** : Fonction/poste assigné à l'équipe (clé étrangère vers Function)
+- **agent** : Agent assigné à ce poste (clé étrangère vers Agent, optionnel)
+- **rotation_plan** : Plan de roulement assigné à ce poste (clé étrangère vers DailyRotationPlan, optionnel)
+- **start_date** / **end_date** : Période d'affectation (optionnel)
+- **considers_holidays** : Ce poste prend-il en compte les jours fériés ? (booléen, défaut: True)
+- **Contrainte unique** : Combinaison équipe + fonction unique (impossible d'assigner le même poste deux fois à une équipe)
+- **Validation métier** : Contrôle de cohérence des dates d'affectation (fin >= début)
+- **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Tri par défaut** : Tri par nom d'équipe puis par nom de fonction
 
 ### Gestion des roulements hebdomadaires
 - **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien
