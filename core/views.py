@@ -3836,22 +3836,26 @@ def team_edit(request, team_id):
 @require_http_methods(["POST"])
 def team_delete(request, team_id):
     """Delete a team"""
-    team = get_object_or_404(Team, id=team_id)
-    team_name = team.designation
-    
-    with transaction.atomic():
-        team.delete()
-    
-    messages.success(request, f'L\'équipe "{team_name}" a été supprimée avec succès.')
-    
-    if request.headers.get('HX-Request'):
-        return HttpResponse("""
-            <script>
-                location.reload();
-            </script>
-        """)
-    
-    return redirect('team_list')
+    try:
+        team = get_object_or_404(Team, id=team_id)
+        team_name = team.designation
+        
+        with transaction.atomic():
+            team.delete()
+        
+        messages.success(request, f'L\'équipe "{team_name}" a été supprimée avec succès.')
+        
+        if request.headers.get('HX-Request'):
+            return HttpResponse("""
+                <script>
+                    location.reload();
+                </script>
+            """)
+        
+        return redirect('team_list')
+    except Exception as e:
+        messages.error(request, f'Erreur lors de la suppression : {str(e)}')
+        return redirect('team_list')
 
 
 # =============================================================================
@@ -3876,15 +3880,12 @@ def team_position_create(request, team_id):
             with transaction.atomic():
                 position = form.save()
                 messages.success(request, f'Le poste "{position.function.designation}" a été ajouté à l\'équipe "{team.designation}" avec succès.')
-                
-                if request.headers.get('HX-Request'):
-                    return HttpResponse("""
-                        <script>
-                            document.getElementById('position-modal').style.display = 'none';
-                            location.reload();
-                        </script>
-                    """)
                 return redirect('team_list')
+        else:
+            # Debug: show form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Erreur {field}: {error}')
     else:
         form = TeamPositionForm(team=team)
     
@@ -3908,14 +3909,6 @@ def team_position_edit(request, position_id):
             with transaction.atomic():
                 position = form.save()
                 messages.success(request, f'Le poste "{position.function.designation}" a été modifié avec succès.')
-                
-                if request.headers.get('HX-Request'):
-                    return HttpResponse("""
-                        <script>
-                            document.getElementById('position-modal').style.display = 'none';
-                            location.reload();
-                        </script>
-                    """)
                 return redirect('team_list')
     else:
         form = TeamPositionForm(instance=position, team=position.team)

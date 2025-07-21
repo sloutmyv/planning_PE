@@ -29,7 +29,9 @@
             <h1 class="text-3xl font-bold text-gray-900">Gestion des Équipes</h1>
             <p class="text-gray-600 mt-2">Gérez les équipes et leurs postes de travail</p>
         </div>
-        <button onclick="openTeamModal('{% url 'team_create' %}')" 
+        <button hx-get="{% url 'team_create' %}" 
+                hx-target="#team-modal-content" 
+                onclick="document.getElementById('team-modal').style.display='flex'"
                 class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -106,19 +108,27 @@
                              x-transition
                              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
                             <div class="py-1">
-                                <button onclick="openTeamModal('{% url 'team_edit' team.id %}')" 
+                                <button hx-get="{% url 'team_edit' team.id %}" 
+                                        hx-target="#team-modal-content"
+                                        onclick="document.getElementById('team-modal').style.display='flex'"
                                         class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Modifier l'équipe
                                 </button>
-                                <button onclick="openPositionModal('{% url 'team_position_create' team.id %}')" 
-                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{% url 'team_position_create' team.id %}" 
+                                   @click.stop
+                                   class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Ajouter un poste
-                                </button>
+                                </a>
                                 <hr class="my-1">
-                                <button onclick="confirmDeleteTeam('{{ team.designation }}', '{% url 'team_delete' team.id %}')" 
-                                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    Supprimer l'équipe
-                                </button>
+                                <form method="POST" action="{% url 'team_delete' team.id %}" 
+                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer l\'équipe {{ team.designation|escapejs }} ? Cette action est irréversible et supprimera tous les postes associés.')"
+                                      class="w-full">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        Supprimer l'équipe
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -130,10 +140,11 @@
                 <div class="flex items-center justify-between">
                     <h4 class="text-sm font-medium text-gray-700">Postes ({{ team.positions.count }})</h4>
                     {% if team.positions.count == 0 %}
-                    <button onclick="openPositionModal('{% url 'team_position_create' team.id %}')" 
-                            class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                    <a href="{% url 'team_position_create' team.id %}" 
+                       class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                       onclick="console.log('Link clicked')">
                         + Ajouter le premier poste
-                    </button>
+                    </a>
                     {% endif %}
                 </div>
                 
@@ -168,18 +179,23 @@
                                     </svg>
                                 </span>
                                 {% endif %}
-                                <button onclick="openPositionModal('{% url 'team_position_edit' position.id %}')" 
-                                        class="text-gray-400 hover:text-gray-600 p-1">
+                                <a href="{% url 'team_position_edit' position.id %}" 
+                                   @click.stop
+                                   class="text-gray-400 hover:text-gray-600 p-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
-                                </button>
-                                <button onclick="confirmDeletePosition('{{ position.function.designation }}', '{% url 'team_position_delete' position.id %}')" 
-                                        class="text-gray-400 hover:text-red-600 p-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
+                                </a>
+                                <form method="POST" action="{% url 'team_position_delete' position.id %}" 
+                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer le poste {{ position.function.designation|escapejs }} ? Cette action est irréversible.')"
+                                      class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-gray-400 hover:text-red-600 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -191,10 +207,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                     <p class="text-sm">Aucun poste défini</p>
-                    <button onclick="openPositionModal('{% url 'team_position_create' team.id %}')" 
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
+                    <a href="{% url 'team_position_create' team.id %}" 
+                       class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
                         Ajouter le premier poste
-                    </button>
+                    </a>
                 </div>
                 {% endif %}
             </div>
@@ -216,7 +232,9 @@
             {% endif %}
         </p>
         {% if not search_query and not department_filter %}
-        <button onclick="openTeamModal('{% url 'team_create' %}')" 
+        <button hx-get="{% url 'team_create' %}" 
+                hx-target="#team-modal-content"
+                onclick="document.getElementById('team-modal').style.display='flex'"
                 class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
             Créer la première équipe
         </button>
@@ -242,126 +260,20 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="delete-confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-6">
-            <div class="flex items-center mb-4">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="text-center">
-                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirmer la suppression</h3>
-                <p class="text-sm text-gray-500 mb-6" id="delete-message">
-                    <!-- Message will be set by JavaScript -->
-                </p>
-            </div>
-            <div class="flex space-x-4">
-                <button onclick="closeDeleteModal()" 
-                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md font-medium transition-colors duration-200">
-                    Annuler
-                </button>
-                <form id="delete-form" method="POST" class="flex-1">
-                    {% csrf_token %}
-                    <button type="submit" 
-                            class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200">
-                        Supprimer
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
 <script>
-function openTeamModal(url) {
-    const modal = document.getElementById('team-modal');
-    const content = document.getElementById('team-modal-content');
-    
-    fetch(url, {
-        headers: {
-            'HX-Request': 'true'
-        }
-    })
-    .then(response => response.text())
-    .then(html => {
-        content.innerHTML = html;
-        modal.style.display = 'flex';
-        htmx.process(content);
-    })
-    .catch(error => {
-        console.error('Error loading modal:', error);
-        alert('Erreur lors du chargement du formulaire');
-    });
-}
-
-function openPositionModal(url) {
-    const modal = document.getElementById('position-modal');
-    const content = document.getElementById('position-modal-content');
-    
-    fetch(url, {
-        headers: {
-            'HX-Request': 'true'
-        }
-    })
-    .then(response => response.text())
-    .then(html => {
-        content.innerHTML = html;
-        modal.style.display = 'flex';
-        htmx.process(content);
-    })
-    .catch(error => {
-        console.error('Error loading modal:', error);
-        alert('Erreur lors du chargement du formulaire');
-    });
-}
-
-function confirmDeleteTeam(teamName, deleteUrl) {
-    const modal = document.getElementById('delete-confirmation-modal');
-    const message = document.getElementById('delete-message');
-    const form = document.getElementById('delete-form');
-    
-    message.textContent = `Êtes-vous sûr de vouloir supprimer l'équipe "${teamName}" ? Cette action est irréversible et supprimera tous les postes associés.`;
-    form.action = deleteUrl;
-    modal.style.display = 'flex';
-}
-
-function confirmDeletePosition(positionName, deleteUrl) {
-    const modal = document.getElementById('delete-confirmation-modal');
-    const message = document.getElementById('delete-message');
-    const form = document.getElementById('delete-form');
-    
-    message.textContent = `Êtes-vous sûr de vouloir supprimer le poste "${positionName}" ? Cette action est irréversible.`;
-    form.action = deleteUrl;
-    modal.style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    document.getElementById('delete-confirmation-modal').style.display = 'none';
-}
-
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
     const teamModal = document.getElementById('team-modal');
     const positionModal = document.getElementById('position-modal');
-    const deleteModal = document.getElementById('delete-confirmation-modal');
     
     if (event.target === teamModal) {
         teamModal.style.display = 'none';
     }
     if (event.target === positionModal) {
         positionModal.style.display = 'none';
-    }
-    if (event.target === deleteModal) {
-        deleteModal.style.display = 'none';
     }
 });
 
@@ -370,7 +282,6 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         document.getElementById('team-modal').style.display = 'none';
         document.getElementById('position-modal').style.display = 'none';
-        document.getElementById('delete-confirmation-modal').style.display = 'none';
     }
 });
 </script>

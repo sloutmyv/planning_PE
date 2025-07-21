@@ -560,6 +560,16 @@ class TeamPositionForm(forms.ModelForm):
             periods__isnull=False
         ).distinct()
         
+        # Make agent and rotation_plan optional
+        self.fields['agent'].required = False
+        self.fields['rotation_plan'].required = False
+        self.fields['start_date'].required = False
+        self.fields['end_date'].required = False
+        
+        # Add empty options for optional fields
+        self.fields['agent'].empty_label = "Aucun agent assigné"
+        self.fields['rotation_plan'].empty_label = "Aucun plan de roulement"
+        
         # Add help texts
         self.fields['function'].help_text = "Seules les fonctions actives sont disponibles."
         self.fields['rotation_plan'].help_text = "Seuls les plans de roulement ayant au moins une période définie sont disponibles."
