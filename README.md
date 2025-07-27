@@ -130,14 +130,19 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
   - Messages informatifs pour les plans de roulement et agents manquants
 - **Affectation flexible des postes** :
   - Sélection de fonction parmi les postes actifs
-  - Assignation optionnelle d'agent avec gestion des postes vacants
-  - Liaison optionnelle avec plans de roulement existants
+  - **Postes multiples autorisés** : Possibilité d'ajouter plusieurs postes de la même fonction dans une équipe
+  - **Système d'affectations historiques** : Gestion des assignations d'agents et roulements avec dates de validité non chevauchantes
   - Configuration par poste de la prise en compte des jours fériés
-  - Définition de périodes d'affectation avec dates début/fin
-- **Contraintes métier respectées** :
-  - Unicité des fonctions par équipe (impossible d'assigner le même poste deux fois)
-  - Validation des dates d'affectation (fin >= début)
+  - Ordre d'affichage personnalisé pour organiser les postes dans l'équipe
+- **Gestion d'affectations avancée** :
+  - **Affectations multiples avec historique** : Assignation de plusieurs agents/roulements par poste avec périodes de validité
+  - **Prévention des chevauchements** : Validation automatique des dates pour éviter les conflits d'affectation
+  - **Interface d'administration intégrée** : Boutons directs vers l'interface admin pour gérer les affectations
+  - **Affichage des affectations actuelles** : Visualisation en temps réel des agents et roulements actuellement assignés
+- **Contraintes métier optimisées** :
+  - Validation des dates d'affectation avec prévention des chevauchements
   - Filtrage automatique des fonctions inactives et plans sans période
+  - Ordre unique par poste dans chaque équipe pour l'affichage
 - **Interface visuelle riche** :
   - Codes couleur personnalisés par équipe pour identification rapide
   - Badges colorés pour les plans de roulement selon leur type d'horaire
@@ -146,6 +151,7 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Actions contextuelles complètes** :
   - Menu déroulant par équipe (modifier, ajouter poste, supprimer)
   - Actions individuelles par poste (modifier, supprimer)
+  - Boutons d'affectation directe vers l'interface d'administration
   - Modales de confirmation pour les suppressions critiques
 - **Intégration dashboard** : Compteur d'équipes en temps réel dans le tableau de bord administrateur
 - **Navigation intégrée** : Lien "Équipes" dans le menu Administration, positionné après "Agents"
@@ -448,14 +454,29 @@ DJANGO_SETTINGS_MODULE=planning_pe.settings python -m pytest tests/ -v
 ### TeamPosition (Poste d'Équipe)
 - **team** : Équipe à laquelle appartient ce poste (clé étrangère vers Team)
 - **function** : Fonction/poste assigné à l'équipe (clé étrangère vers Function)
-- **agent** : Agent assigné à ce poste (clé étrangère vers Agent, optionnel)
-- **rotation_plan** : Plan de roulement assigné à ce poste (clé étrangère vers DailyRotationPlan, optionnel)
-- **start_date** / **end_date** : Période d'affectation (optionnel)
 - **considers_holidays** : Ce poste prend-il en compte les jours fériés ? (booléen, défaut: True)
-- **Contrainte unique** : Combinaison équipe + fonction unique (impossible d'assigner le même poste deux fois à une équipe)
-- **Validation métier** : Contrôle de cohérence des dates d'affectation (fin >= début)
+- **order** : Ordre d'affichage du poste dans l'équipe (entier positif)
+- **Postes multiples autorisés** : Possibilité d'avoir plusieurs postes de la même fonction dans une équipe
+- **Contrainte unique** : Combinaison équipe + ordre unique (pour l'affichage ordonné)
+- **Propriétés calculées** : `current_agent` et `current_rotation_plan` pour les affectations actuelles
 - **Champs d'audit** : created_at et updated_at pour traçabilité
-- **Tri par défaut** : Tri par nom d'équipe puis par nom de fonction
+- **Tri par défaut** : Tri par ordre puis par nom de fonction
+
+### TeamPositionAgentAssignment (Affectation d'Agent)
+- **team_position** : Poste d'équipe concerné (clé étrangère vers TeamPosition)
+- **agent** : Agent assigné (clé étrangère vers Agent)
+- **start_date** / **end_date** : Période d'affectation de l'agent
+- **Validation anti-chevauchement** : Prévention des affectations qui se chevauchent pour un même poste
+- **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Historique complet** : Conservation de tous les changements d'affectation
+
+### TeamPositionRotationAssignment (Affectation de Roulement)
+- **team_position** : Poste d'équipe concerné (clé étrangère vers TeamPosition)
+- **rotation_plan** : Roulement hebdomadaire assigné (clé étrangère vers ShiftSchedule)
+- **start_date** / **end_date** : Période d'affectation du roulement
+- **Validation anti-chevauchement** : Prévention des affectations qui se chevauchent pour un même poste
+- **Champs d'audit** : created_at et updated_at pour traçabilité
+- **Historique complet** : Conservation de tous les changements de planning
 
 ### Gestion des roulements hebdomadaires
 - **Architecture hiérarchique** : Roulement hebdomadaire > Période > Semaine > Rythme quotidien

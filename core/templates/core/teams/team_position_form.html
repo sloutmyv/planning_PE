@@ -62,78 +62,137 @@
                 {% endif %}
             </div>
 
-            <!-- Agent assigné -->
-            <div>
-                <label for="{{ form.agent.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ form.agent.label }}
-                </label>
-                {{ form.agent }}
-                {% if form.agent.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.agent.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                {% if form.agent.help_text %}
-                <p class="mt-1 text-sm text-gray-500">{{ form.agent.help_text }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Plan de roulement -->
-            <div>
-                <label for="{{ form.rotation_plan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ form.rotation_plan.label }}
-                </label>
-                {{ form.rotation_plan }}
-                {% if form.rotation_plan.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.rotation_plan.errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                {% if form.rotation_plan.help_text %}
-                <p class="mt-1 text-sm text-gray-500">{{ form.rotation_plan.help_text }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Dates de période -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Date de début -->
-                <div>
-                    <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        {{ form.start_date.label }}
+            <!-- Section Affectation d'Agent -->
+            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    Affectation d'Agent
+                </h4>
+                
+                <!-- Agent assigné -->
+                <div class="mb-4">
+                    <label for="{{ form.agent.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.agent.label }}
                     </label>
-                    {{ form.start_date }}
-                    {% if form.start_date.errors %}
+                    {{ form.agent }}
+                    {% if form.agent.errors %}
                     <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.start_date.errors %}
+                        {% for error in form.agent.errors %}
                         <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                     {% endif %}
-                    {% if form.start_date.help_text %}
-                    <p class="mt-1 text-sm text-gray-500">{{ form.start_date.help_text }}</p>
+                    {% if form.agent.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.agent.help_text }}</p>
                     {% endif %}
                 </div>
 
-                <!-- Date de fin -->
-                <div>
-                    <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        {{ form.end_date.label }}
+                <!-- Dates d'affectation de l'agent -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Date de début agent -->
+                    <div>
+                        <label for="{{ form.agent_start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.agent_start_date.label }}
+                        </label>
+                        {{ form.agent_start_date }}
+                        {% if form.agent_start_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.agent_start_date.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.agent_start_date.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.agent_start_date.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date de fin agent -->
+                    <div>
+                        <label for="{{ form.agent_end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.agent_end_date.label }}
+                        </label>
+                        {{ form.agent_end_date }}
+                        {% if form.agent_end_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.agent_end_date.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.agent_end_date.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.agent_end_date.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Plan de Roulement -->
+            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Plan de Roulement
+                </h4>
+                
+                <!-- Plan de roulement -->
+                <div class="mb-4">
+                    <label for="{{ form.rotation_plan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.rotation_plan.label }}
                     </label>
-                    {{ form.end_date }}
-                    {% if form.end_date.errors %}
+                    {{ form.rotation_plan }}
+                    {% if form.rotation_plan.errors %}
                     <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.end_date.errors %}
+                        {% for error in form.rotation_plan.errors %}
                         <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                     {% endif %}
-                    {% if form.end_date.help_text %}
-                    <p class="mt-1 text-sm text-gray-500">{{ form.end_date.help_text }}</p>
+                    {% if form.rotation_plan.help_text %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.rotation_plan.help_text }}</p>
                     {% endif %}
+                </div>
+
+                <!-- Dates du plan de roulement -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Date de début roulement -->
+                    <div>
+                        <label for="{{ form.rotation_start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.rotation_start_date.label }}
+                        </label>
+                        {{ form.rotation_start_date }}
+                        {% if form.rotation_start_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.rotation_start_date.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.rotation_start_date.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.rotation_start_date.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date de fin roulement -->
+                    <div>
+                        <label for="{{ form.rotation_end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.rotation_end_date.label }}
+                        </label>
+                        {{ form.rotation_end_date }}
+                        {% if form.rotation_end_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.rotation_end_date.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if form.rotation_end_date.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.rotation_end_date.help_text }}</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -158,6 +217,24 @@
                     <p>{{ error }}</p>
                     {% endfor %}
                 </div>
+                {% endif %}
+            </div>
+
+            <!-- Ordre d'affichage -->
+            <div>
+                <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ form.order.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.order.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if form.order.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.order.help_text }}</p>
                 {% endif %}
             </div>
 

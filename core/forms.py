@@ -1,6 +1,7 @@
 from django import forms
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department, Team, TeamPosition)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, 
+                     Department, Team, TeamPosition, TeamPositionAgentAssignment, TeamPositionRotationAssignment)
 
 
 class AgentForm(forms.ModelForm):
@@ -555,29 +556,12 @@ class TeamPositionForm(forms.ModelForm):
         # Filter available functions to only show active ones
         self.fields['function'].queryset = Function.objects.filter(status=True)
         
-        # Filter daily rotation plans to only show those with periods defined
-        self.fields['rotation_plan'].queryset = DailyRotationPlan.objects.filter(
-            periods__isnull=False
-        ).distinct()
-        
-        # Make agent and rotation_plan optional
-        self.fields['agent'].required = False
-        self.fields['rotation_plan'].required = False
-        self.fields['start_date'].required = False
-        self.fields['end_date'].required = False
-        
-        # Add empty options for optional fields
-        self.fields['agent'].empty_label = "Aucun agent assigné"
-        self.fields['rotation_plan'].empty_label = "Aucun plan de roulement"
-        
         # Add help texts
         self.fields['function'].help_text = "Seules les fonctions actives sont disponibles."
-        self.fields['rotation_plan'].help_text = "Seuls les plans de roulement ayant au moins une période définie sont disponibles."
-        self.fields['agent'].help_text = "Optionnel - peut être assigné plus tard."
     
     class Meta:
         model = TeamPosition
-        fields = ['team', 'function', 'agent', 'rotation_plan', 'start_date', 'end_date', 'considers_holidays']
+        fields = ['team', 'function', 'considers_holidays', 'order']
         widgets = {
             'team': forms.Select(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
@@ -585,7 +569,73 @@ class TeamPositionForm(forms.ModelForm):
             'function': forms.Select(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
             }),
+            'considers_holidays': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'min': '1',
+                'step': '1'
+            }),
+        }
+        labels = {
+            'team': 'Équipe',
+            'function': 'Poste/Fonction',
+            'considers_holidays': 'Prend en compte les jours fériés',
+            'order': 'Ordre d\'affichage',
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        # Allow multiple positions with the same function within a team
+        # Removed validation that prevented duplicate functions
+        return cleaned_data
+
+
+class TeamPositionAgentAssignmentForm(forms.ModelForm):
+    class Meta:
+        model = TeamPositionAgentAssignment
+        fields = ['team_position', 'agent', 'start_date', 'end_date']
+        widgets = {
+            'team_position': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
             'agent': forms.Select(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'type': 'date'
+            }),
+        }
+        labels = {
+            'team_position': 'Poste d\'équipe',
+            'agent': 'Agent',
+            'start_date': 'Date de début',
+            'end_date': 'Date de fin',
+        }
+
+
+class TeamPositionRotationAssignmentForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filter shift schedules to only show those with periods defined
+        self.fields['rotation_plan'].queryset = ShiftSchedule.objects.filter(
+            periods__isnull=False
+        ).distinct()
+        
+        self.fields['rotation_plan'].help_text = "Seuls les roulements hebdomadaires ayant au moins une période définie sont disponibles."
+    
+    class Meta:
+        model = TeamPositionRotationAssignment
+        fields = ['team_position', 'rotation_plan', 'start_date', 'end_date']
+        widgets = {
+            'team_position': forms.Select(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
             }),
             'rotation_plan': forms.Select(attrs={
@@ -599,45 +649,10 @@ class TeamPositionForm(forms.ModelForm):
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
                 'type': 'date'
             }),
-            'considers_holidays': forms.CheckboxInput(attrs={
-                'class': 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
-            }),
         }
         labels = {
-            'team': 'Équipe',
-            'function': 'Poste/Fonction',
-            'agent': 'Agent assigné',
-            'rotation_plan': 'Plan de roulement',
+            'team_position': 'Poste d\'équipe',
+            'rotation_plan': 'Roulement hebdomadaire',
             'start_date': 'Date de début',
             'end_date': 'Date de fin',
-            'considers_holidays': 'Prend en compte les jours fériés',
         }
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        start_date = cleaned_data.get('start_date')
-        end_date = cleaned_data.get('end_date')
-        team = cleaned_data.get('team')
-        function = cleaned_data.get('function')
-        
-        # Basic date validation
-        if start_date and end_date and start_date > end_date:
-            raise forms.ValidationError('La date de fin doit être postérieure ou égale à la date de début.')
-        
-        # Check for duplicate function within the team
-        if team and function:
-            existing_positions = TeamPosition.objects.filter(
-                team=team,
-                function=function
-            )
-            
-            # Exclude current instance if editing
-            if self.instance.pk:
-                existing_positions = existing_positions.exclude(pk=self.instance.pk)
-            
-            if existing_positions.exists():
-                raise forms.ValidationError({
-                    'function': f'Le poste "{function.designation}" est déjà assigné à cette équipe.'
-                })
-        
-        return cleaned_data

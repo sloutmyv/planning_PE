@@ -10,8 +10,14 @@ from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, Department)
-from .views import agent_export, agent_import, department_export, department_import, function_export, function_import, scheduletype_export, scheduletype_import, dailyrotationplan_export, dailyrotationplan_import, shiftschedule_export, shiftschedule_import, shiftscheduleperiod_export, shiftscheduleperiod_import, rotationperiod_export, rotationperiod_import, shiftscheduleweek_export, shiftscheduleweek_import, shiftscheduledailyplan_export, shiftscheduledailyplan_import
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, 
+                     Department, Team, TeamPosition, PublicHoliday, TeamPositionAgentAssignment, TeamPositionRotationAssignment)
+from .views import (agent_export, agent_import, department_export, department_import, function_export, function_import, 
+                    scheduletype_export, scheduletype_import, dailyrotationplan_export, dailyrotationplan_import, 
+                    shiftschedule_export, shiftschedule_import, shiftscheduleperiod_export, shiftscheduleperiod_import, 
+                    rotationperiod_export, rotationperiod_import, shiftscheduleweek_export, shiftscheduleweek_import, 
+                    shiftscheduledailyplan_export, shiftscheduledailyplan_import, team_export, team_import, 
+                    teamposition_export, teamposition_import, publicholiday_export, publicholiday_import)
 import json
 
 
@@ -635,3 +641,267 @@ class DepartmentAdmin(admin.ModelAdmin):
             'has_change_permission': True,
             'department_count': Department.objects.count(),
         })
+
+
+class TeamPositionInline(admin.TabularInline):
+    model = TeamPosition
+    extra = 1
+    fields = ('function', 'order', 'considers_holidays')
+    ordering = ('order', 'function__designation')
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ('designation', 'department', 'color_preview', 'created_at', 'updated_at')
+    list_filter = ('department', 'created_at')
+    search_fields = ('designation', 'description', 'department__name')
+    ordering = ('department__order', 'designation')
+    date_hierarchy = 'created_at'
+    inlines = [TeamPositionInline]
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_teams), name='core_team_export'),
+            path('import/', self.admin_site.admin_view(self.import_teams), name='core_team_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_teams(self, request):
+        """Export teams to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les équipes.')
+            return redirect('admin:core_team_changelist')
+        return team_export(request)
+    
+    def import_teams(self, request):
+        """Import teams from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les équipes.')
+            return redirect('admin:core_team_changelist')
+            
+        if request.method == 'POST':
+            return team_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/team/import_form.html', {
+            'title': 'Importer des équipes',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'team_count': Team.objects.count(),
+        })
+    
+    def color_preview(self, obj):
+        """Display color preview in admin list"""
+        return f'<div style="width: 20px; height: 20px; background-color: {obj.color}; border: 1px solid #ccc; display: inline-block;"></div>'
+    color_preview.allow_tags = True
+    color_preview.short_description = 'Couleur'
+    
+    fieldsets = (
+        ('Informations générales', {
+            'fields': ('designation', 'description', 'department', 'color')
+        }),
+        ('Dates', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(TeamPosition)
+class TeamPositionAdmin(admin.ModelAdmin):
+    list_display = ('team', 'function', 'get_current_agent', 'get_current_rotation', 'order', 'considers_holidays')
+    list_filter = ('team__department', 'team', 'function', 'considers_holidays', 'created_at')
+    search_fields = ('team__designation', 'function__designation')
+    ordering = ('team__department__order', 'team__designation', 'order')
+    date_hierarchy = 'created_at'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_teampositions), name='core_teamposition_export'),
+            path('import/', self.admin_site.admin_view(self.import_teampositions), name='core_teamposition_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_teampositions(self, request):
+        """Export team positions to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les postes d\'équipe.')
+            return redirect('admin:core_teamposition_changelist')
+        return teamposition_export(request)
+    
+    def import_teampositions(self, request):
+        """Import team positions from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les postes d\'équipe.')
+            return redirect('admin:core_teamposition_changelist')
+            
+        if request.method == 'POST':
+            return teamposition_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/teamposition/import_form.html', {
+            'title': 'Importer des postes d\'équipe',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'teamposition_count': TeamPosition.objects.count(),
+        })
+    
+    def get_current_agent(self, obj):
+        """Display current agent assignment"""
+        agent = obj.current_agent
+        return agent.matricule if agent else "Aucun agent"
+    get_current_agent.short_description = 'Agent actuel'
+    
+    def get_current_rotation(self, obj):
+        """Display current rotation assignment"""
+        rotation = obj.current_rotation_plan
+        return rotation.name if rotation else "Aucun roulement"
+    get_current_rotation.short_description = 'Roulement actuel'
+    
+    fieldsets = (
+        ('Équipe et Fonction', {
+            'fields': ('team', 'function', 'order')
+        }),
+        ('Paramètres', {
+            'fields': ('considers_holidays',)
+        }),
+        ('Informations système', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(TeamPositionAgentAssignment)
+class TeamPositionAgentAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('team_position', 'agent', 'start_date', 'end_date', 'is_active')
+    list_filter = ('team_position__team__department', 'team_position__team', 'start_date', 'end_date', 'created_at')
+    search_fields = ('team_position__team__designation', 'team_position__function__designation', 'agent__matricule', 'agent__first_name', 'agent__last_name')
+    ordering = ('team_position__team__designation', 'team_position__function__designation', '-start_date')
+    date_hierarchy = 'start_date'
+    
+    def is_active(self, obj):
+        """Display if assignment is currently active"""
+        return obj.is_active()
+    is_active.boolean = True
+    is_active.short_description = 'Actif'
+    
+    fieldsets = (
+        ('Affectation', {
+            'fields': ('team_position', 'agent')
+        }),
+        ('Période de validité', {
+            'fields': ('start_date', 'end_date')
+        }),
+        ('Informations système', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(TeamPositionRotationAssignment)
+class TeamPositionRotationAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('team_position', 'rotation_plan', 'start_date', 'end_date', 'is_active')
+    list_filter = ('team_position__team__department', 'team_position__team', 'start_date', 'end_date', 'created_at')
+    search_fields = ('team_position__team__designation', 'team_position__function__designation', 'rotation_plan__name')
+    ordering = ('team_position__team__designation', 'team_position__function__designation', '-start_date')
+    date_hierarchy = 'start_date'
+    
+    def is_active(self, obj):
+        """Display if assignment is currently active"""
+        return obj.is_active()
+    is_active.boolean = True
+    is_active.short_description = 'Actif'
+    
+    fieldsets = (
+        ('Affectation', {
+            'fields': ('team_position', 'rotation_plan')
+        }),
+        ('Période de validité', {
+            'fields': ('start_date', 'end_date')
+        }),
+        ('Informations système', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(PublicHoliday)
+class PublicHolidayAdmin(admin.ModelAdmin):
+    list_display = ('designation', 'date', 'created_at', 'updated_at')
+    list_filter = ('date', 'created_at')
+    search_fields = ('designation',)
+    ordering = ('date',)
+    date_hierarchy = 'date'
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('export/', self.admin_site.admin_view(self.export_publicholidays), name='core_publicholiday_export'),
+            path('import/', self.admin_site.admin_view(self.import_publicholidays), name='core_publicholiday_import'),
+        ]
+        return custom_urls + urls
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # Only show export/import buttons to superusers
+        if request.user.is_superuser:
+            extra_context['show_export_import'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def export_publicholidays(self, request):
+        """Export public holidays to JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent exporter les jours fériés.')
+            return redirect('admin:core_publicholiday_changelist')
+        return publicholiday_export(request)
+    
+    def import_publicholidays(self, request):
+        """Import public holidays from JSON - only accessible to superusers"""
+        if not request.user.is_superuser:
+            messages.error(request, 'Accès refusé. Seuls les superutilisateurs peuvent importer les jours fériés.')
+            return redirect('admin:core_publicholiday_changelist')
+            
+        if request.method == 'POST':
+            return publicholiday_import(request)
+        
+        # Show the import form
+        return render(request, 'admin/core/publicholiday/import_form.html', {
+            'title': 'Importer des jours fériés',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'publicholiday_count': PublicHoliday.objects.count(),
+        })
+    
+    fieldsets = (
+        ('Informations du jour férié', {
+            'fields': ('designation', 'date')
+        }),
+        ('Informations système', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')

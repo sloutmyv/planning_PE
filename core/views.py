@@ -3736,7 +3736,11 @@ def team_list(request):
     search_query = request.GET.get('search', '')
     department_filter = request.GET.get('department', '')
     
-    teams = Team.objects.select_related('department').prefetch_related('positions__function', 'positions__agent')
+    teams = Team.objects.select_related('department').prefetch_related(
+        'positions__function',
+        'positions__agent_assignments__agent',
+        'positions__rotation_assignments__rotation_plan'
+    ).order_by('designation')
     
     # Apply search filter
     if search_query:
@@ -3867,33 +3871,48 @@ def team_delete(request, team_id):
 @require_http_methods(["GET", "POST"])
 def team_position_create(request, team_id):
     """Create a new position for a team"""
-    team = get_object_or_404(Team, id=team_id)
-    
-    # Check if we have functions
-    if not Function.objects.filter(status=True).exists():
-        messages.error(request, 'Aucune fonction active n\'est disponible. Vous devez créer une fonction avant d\'ajouter un poste à l\'équipe.')
-        return redirect('team_list')
-    
-    if request.method == 'POST':
-        form = TeamPositionForm(request.POST, team=team)
-        if form.is_valid():
-            with transaction.atomic():
-                position = form.save()
-                messages.success(request, f'Le poste "{position.function.designation}" a été ajouté à l\'équipe "{team.designation}" avec succès.')
-                return redirect('team_list')
+    try:
+        team = get_object_or_404(Team, id=team_id)
+        
+        # Check if we have functions
+        if not Function.objects.filter(status=True).exists():
+            messages.error(request, 'Aucune fonction active n\'est disponible. Vous devez créer une fonction avant d\'ajouter un poste à l\'équipe.')
+            return redirect('team_list')
+        
+        if request.method == 'POST':
+            form = TeamPositionForm(request.POST, team=team)
+            if form.is_valid():
+                try:
+                    with transaction.atomic():
+                        position = form.save()
+                        # Ensure the position has a function before accessing it
+                        if position.function:
+                            function_name = position.function.designation
+                        else:
+                            function_name = 'Fonction non définie'
+                        messages.success(request, f'Le poste "{function_name}" a été ajouté à l\'équipe "{team.designation}" avec succès.')
+                        return redirect('team_list')
+                except Exception as e:
+                    messages.error(request, f'Erreur lors de la création du poste: {str(e)}')
+            else:
+                # Debug: show form errors
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'Erreur {field}: {error}')
         else:
-            # Debug: show form errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'Erreur {field}: {error}')
-    else:
-        form = TeamPositionForm(team=team)
+            form = TeamPositionForm(team=team)
+        
+        context = {'form': form, 'team': team}
+        
+        if request.headers.get('HX-Request'):
+            return render(request, 'core/teams/team_position_form_htmx.html', context)
+        return render(request, 'core/teams/team_position_form.html', context)
     
-    context = {'form': form, 'team': team}
-    
-    if request.headers.get('HX-Request'):
-        return render(request, 'core/teams/team_position_form_htmx.html', context)
-    return render(request, 'core/teams/team_position_form.html', context)
+    except Exception as e:
+        import traceback
+        messages.error(request, f'Erreur dans team_position_create: {str(e)}')
+        messages.error(request, f'Traceback: {traceback.format_exc()}')
+        return redirect('team_list')
 
 
 @login_required
@@ -3953,10 +3972,13 @@ def team_position_delete(request, position_id):
 def api_team_positions(request, team_id):
     """API endpoint to get positions for a team"""
     team = get_object_or_404(Team, id=team_id)
-    positions = TeamPosition.objects.filter(team=team).select_related('function', 'agent', 'rotation_plan')
+    positions = TeamPosition.objects.filter(team=team).select_related('function')
     
     positions_data = []
     for position in positions:
+        current_agent = position.current_agent
+        current_rotation = position.current_rotation_plan
+        
         position_data = {
             'id': position.id,
             'function': {
@@ -3965,27 +3987,349 @@ def api_team_positions(request, team_id):
                 'description': position.function.description,
                 'status': position.function.status,
             },
-            'agent': {
-                'id': position.agent.id,
-                'matricule': position.agent.matricule,
-                'first_name': position.agent.first_name,
-                'last_name': position.agent.last_name,
-                'grade': position.agent.grade,
-            } if position.agent else None,
-            'rotation_plan': {
-                'id': position.rotation_plan.id,
-                'designation': position.rotation_plan.designation,
-                'description': position.rotation_plan.description,
-                'schedule_type': {
-                    'designation': position.rotation_plan.schedule_type.designation,
-                    'short_designation': position.rotation_plan.schedule_type.short_designation,
-                    'color': position.rotation_plan.schedule_type.color,
-                }
-            } if position.rotation_plan else None,
-            'start_date': position.start_date.isoformat() if position.start_date else None,
-            'end_date': position.end_date.isoformat() if position.end_date else None,
+            'current_agent': {
+                'id': current_agent.id,
+                'matricule': current_agent.matricule,
+                'first_name': current_agent.first_name,
+                'last_name': current_agent.last_name,
+                'grade': current_agent.grade,
+            } if current_agent else None,
+            'current_rotation_plan': {
+                'id': current_rotation.id,
+                'name': current_rotation.name,
+                'type': current_rotation.type,
+                'break_times': current_rotation.break_times,
+            } if current_rotation else None,
             'considers_holidays': position.considers_holidays,
         }
         positions_data.append(position_data)
     
     return JsonResponse({'positions': positions_data})
+
+
+# Team Export/Import Functions
+
+@user_passes_test(is_superuser)
+def team_export(request):
+    """Export teams to JSON file - only accessible to superusers"""
+    teams = Team.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for team in teams:
+        team_data = {
+            'designation': team.designation,
+            'description': team.description,
+            'color': team.color,
+            'department': {
+                'name': team.department.name,
+                'order': team.department.order,
+            },
+            'created_at': team.created_at.isoformat() if team.created_at else None,
+            'updated_at': team.updated_at.isoformat() if team.updated_at else None,
+        }
+        export_data.append(team_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_teams.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def team_import(request):
+    """Import teams from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_team_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_team_changelist')
+        
+        try:
+            # Parse JSON content
+            file_content = import_file.read().decode('utf-8')
+            teams_data = json.loads(file_content)
+            
+            if not isinstance(teams_data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste d\'équipes.')
+                return redirect('admin:core_team_changelist')
+            
+            # Count existing records
+            existing_count = Team.objects.count()
+            
+            # Delete existing teams
+            Team.objects.all().delete()
+            
+            # Import new teams
+            imported_count = 0
+            for team_data in teams_data:
+                try:
+                    # Get or create department
+                    department_data = team_data.get('department', {})
+                    department, created = Department.objects.get_or_create(
+                        name=department_data.get('name'),
+                        defaults={'order': department_data.get('order', 10)}
+                    )
+                    
+                    # Create team
+                    Team.objects.create(
+                        designation=team_data.get('designation'),
+                        description=team_data.get('description', ''),
+                        color=team_data.get('color'),
+                        department=department
+                    )
+                    imported_count += 1
+                    
+                except Exception as e:
+                    messages.warning(request, f'Erreur lors de l\'importation de l\'équipe "{team_data.get("designation", "Inconnue")}" : {str(e)}')
+                    continue
+            
+            messages.success(request, f'Importation terminée : {imported_count} équipe(s) importée(s), {existing_count} équipe(s) supprimée(s).')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Erreur lors de la lecture du fichier JSON. Vérifiez le format du fichier.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation : {str(e)}')
+    
+    return redirect('admin:core_team_changelist')
+
+
+# TeamPosition Export/Import Functions
+
+@user_passes_test(is_superuser)
+def teamposition_export(request):
+    """Export team positions to JSON file - only accessible to superusers"""
+    positions = TeamPosition.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for position in positions:
+        current_agent = position.current_agent
+        current_rotation = position.current_rotation_plan
+        
+        position_data = {
+            'team': {
+                'designation': position.team.designation,
+                'department_name': position.team.department.name,
+            },
+            'function': {
+                'designation': position.function.designation,
+                'description': position.function.description,
+            },
+            'current_agent': {
+                'matricule': current_agent.matricule,
+                'first_name': current_agent.first_name,
+                'last_name': current_agent.last_name,
+                'grade': current_agent.grade,
+            } if current_agent else None,
+            'current_rotation_plan': {
+                'name': current_rotation.name,
+                'type': current_rotation.type,
+                'break_times': current_rotation.break_times,
+            } if current_rotation else None,
+            'considers_holidays': position.considers_holidays,
+            'order': position.order,
+            'created_at': position.created_at.isoformat() if position.created_at else None,
+            'updated_at': position.updated_at.isoformat() if position.updated_at else None,
+        }
+        export_data.append(position_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_team_positions.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def teamposition_import(request):
+    """Import team positions from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_teamposition_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_teamposition_changelist')
+        
+        try:
+            # Parse JSON content
+            file_content = import_file.read().decode('utf-8')
+            positions_data = json.loads(file_content)
+            
+            if not isinstance(positions_data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de postes d\'équipe.')
+                return redirect('admin:core_teamposition_changelist')
+            
+            # Count existing records
+            existing_count = TeamPosition.objects.count()
+            
+            # Delete existing positions
+            TeamPosition.objects.all().delete()
+            
+            # Import new positions
+            imported_count = 0
+            for position_data in positions_data:
+                try:
+                    # Get team
+                    team_data = position_data.get('team', {})
+                    team = Team.objects.filter(
+                        designation=team_data.get('designation'),
+                        department__name=team_data.get('department_name')
+                    ).first()
+                    
+                    if not team:
+                        messages.warning(request, f'Équipe "{team_data.get("designation")}" non trouvée, position ignorée.')
+                        continue
+                    
+                    # Get function
+                    function_data = position_data.get('function', {})
+                    function = Function.objects.filter(
+                        designation=function_data.get('designation')
+                    ).first()
+                    
+                    if not function:
+                        messages.warning(request, f'Fonction "{function_data.get("designation")}" non trouvée, position ignorée.')
+                        continue
+                    
+                    # Create position (affectations se gèrent séparément)
+                    TeamPosition.objects.create(
+                        team=team,
+                        function=function,
+                        considers_holidays=position_data.get('considers_holidays', True),
+                        order=position_data.get('order', 1),
+                    )
+                    imported_count += 1
+                    
+                except Exception as e:
+                    messages.warning(request, f'Erreur lors de l\'importation du poste : {str(e)}')
+                    continue
+            
+            messages.success(request, f'Importation terminée : {imported_count} poste(s) importé(s), {existing_count} poste(s) supprimé(s).')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Erreur lors de la lecture du fichier JSON. Vérifiez le format du fichier.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation : {str(e)}')
+    
+    return redirect('admin:core_teamposition_changelist')
+
+
+# PublicHoliday Export/Import Functions
+
+@user_passes_test(is_superuser)
+def publicholiday_export(request):
+    """Export public holidays to JSON file - only accessible to superusers"""
+    holidays = PublicHoliday.objects.all()
+    
+    # Prepare data for export
+    export_data = []
+    for holiday in holidays:
+        holiday_data = {
+            'designation': holiday.designation,
+            'date': holiday.date.isoformat() if holiday.date else None,
+            'created_at': holiday.created_at.isoformat() if holiday.created_at else None,
+            'updated_at': holiday.updated_at.isoformat() if holiday.updated_at else None,
+        }
+        export_data.append(holiday_data)
+    
+    # Generate filename with current date (timezone-aware)
+    current_date = timezone.now().strftime('%Y-%m-%d')
+    filename = f"{current_date}_public_holidays.json"
+    
+    # Create response
+    response = HttpResponse(
+        json.dumps(export_data, indent=2, ensure_ascii=False),
+        content_type='application/json; charset=utf-8'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@user_passes_test(is_superuser)
+@transaction.atomic
+def publicholiday_import(request):
+    """Import public holidays from JSON file - overwrites existing database - only accessible to superusers"""
+    if request.method == 'POST':
+        import_file = request.FILES.get('import_file')
+        
+        if not import_file:
+            messages.error(request, 'Aucun fichier sélectionné.')
+            return redirect('admin:core_publicholiday_changelist')
+        
+        # Validate file type
+        if not import_file.name.endswith('.json'):
+            messages.error(request, 'Le fichier doit être au format JSON.')
+            return redirect('admin:core_publicholiday_changelist')
+        
+        try:
+            # Parse JSON content
+            file_content = import_file.read().decode('utf-8')
+            holidays_data = json.loads(file_content)
+            
+            if not isinstance(holidays_data, list):
+                messages.error(request, 'Le fichier JSON doit contenir une liste de jours fériés.')
+                return redirect('admin:core_publicholiday_changelist')
+            
+            # Count existing records
+            existing_count = PublicHoliday.objects.count()
+            
+            # Delete existing holidays
+            PublicHoliday.objects.all().delete()
+            
+            # Import new holidays
+            imported_count = 0
+            for holiday_data in holidays_data:
+                try:
+                    # Parse date
+                    date = None
+                    if holiday_data.get('date'):
+                        date = datetime.fromisoformat(holiday_data['date']).date()
+                    
+                    # Create holiday
+                    PublicHoliday.objects.create(
+                        designation=holiday_data.get('designation'),
+                        date=date
+                    )
+                    imported_count += 1
+                    
+                except Exception as e:
+                    messages.warning(request, f'Erreur lors de l\'importation du jour férié "{holiday_data.get("designation", "Inconnu")}" : {str(e)}')
+                    continue
+            
+            messages.success(request, f'Importation terminée : {imported_count} jour(s) férié(s) importé(s), {existing_count} jour(s) férié(s) supprimé(s).')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Erreur lors de la lecture du fichier JSON. Vérifiez le format du fichier.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de l\'importation : {str(e)}')
+    
+    return redirect('admin:core_publicholiday_changelist')

@@ -667,33 +667,13 @@ class TeamPosition(models.Model):
         on_delete=models.PROTECT,
         help_text="Fonction/poste assigné à l'équipe"
     )
-    agent = models.ForeignKey(
-        Agent,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        help_text="Agent assigné à ce poste (optionnel)"
-    )
-    rotation_plan = models.ForeignKey(
-        DailyRotationPlan,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        help_text="Plan de roulement assigné à ce poste (optionnel)"
-    )
-    start_date = models.DateField(
-        blank=True,
-        null=True,
-        help_text="Date de début d'affectation (optionnel)"
-    )
-    end_date = models.DateField(
-        blank=True,
-        null=True,
-        help_text="Date de fin d'affectation (optionnel)"
-    )
     considers_holidays = models.BooleanField(
         default=True,
         help_text="Ce poste prend-il en compte les jours fériés ?"
+    )
+    order = models.PositiveIntegerField(
+        default=1,
+        help_text="Ordre d'affichage du poste dans l'équipe (1, 2, 3...)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -701,30 +681,181 @@ class TeamPosition(models.Model):
     def clean(self):
         super().clean()
         
-        # Validate date consistency
+        # Allow multiple positions with the same function within a team
+        # Removed validation that prevented duplicate functions
+        
+        # Validate that order is unique within the team
+        if self.team and self.order:
+            existing_order = TeamPosition.objects.filter(
+                team=self.team,
+                order=self.order
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            if existing_order.exists():
+                raise ValidationError({
+                    'order': f'L\'ordre {self.order} est déjà utilisé dans cette équipe.'
+                })
+    
+    def __str__(self):
+        current_agent = self.current_agent
+        agent_info = f" - {current_agent}" if current_agent else " - Non assigné"
+        function_name = self.function.designation if self.function else "Fonction non définie"
+        return f"{self.team.designation}: {function_name}{agent_info}"
+    
+    def get_current_agent_assignment(self):
+        """Get the current active agent assignment"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.agent_assignments.filter(
+            start_date__lte=today,
+            end_date__gte=today
+        ).first()
+    
+    def get_current_rotation_assignment(self):
+        """Get the current active rotation assignment"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.rotation_assignments.filter(
+            start_date__lte=today,
+            end_date__gte=today
+        ).first()
+    
+    @property
+    def current_agent(self):
+        """Property to get the currently assigned agent"""
+        assignment = self.get_current_agent_assignment()
+        return assignment.agent if assignment else None
+    
+    @property
+    def current_rotation_plan(self):
+        """Property to get the currently assigned rotation plan"""
+        assignment = self.get_current_rotation_assignment()
+        return assignment.rotation_plan if assignment else None
+    
+    class Meta:
+        verbose_name = "Poste d'Équipe"
+        verbose_name_plural = "Postes d'Équipe"
+        unique_together = [
+            ['team', 'order']
+        ]
+        ordering = ['order', 'function__designation']
+
+
+class TeamPositionAgentAssignment(models.Model):
+    team_position = models.ForeignKey(
+        TeamPosition,
+        on_delete=models.CASCADE,
+        related_name='agent_assignments',
+        help_text="Poste d'équipe concerné"
+    )
+    agent = models.ForeignKey(
+        Agent,
+        on_delete=models.CASCADE,
+        help_text="Agent assigné"
+    )
+    start_date = models.DateField(
+        help_text="Date de début d'affectation"
+    )
+    end_date = models.DateField(
+        help_text="Date de fin d'affectation"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Validate that end_date >= start_date
         if self.end_date and self.start_date and self.end_date < self.start_date:
             raise ValidationError({
                 'end_date': 'La date de fin doit être postérieure ou égale à la date de début.'
             })
         
-        # Validate that function is unique within the team
-        if self.team and self.function:
-            existing_positions = TeamPosition.objects.filter(
-                team=self.team,
-                function=self.function
+        # Check for overlapping assignments for the same team position
+        if self.team_position_id and self.start_date and self.end_date:
+            overlapping_assignments = TeamPositionAgentAssignment.objects.filter(
+                team_position=self.team_position,
+                start_date__lte=self.end_date,
+                end_date__gte=self.start_date
             ).exclude(pk=self.pk if self.pk else None)
             
-            if existing_positions.exists():
+            if overlapping_assignments.exists():
+                overlapping = overlapping_assignments.first()
                 raise ValidationError({
-                    'function': f'Le poste "{self.function.designation}" est déjà assigné à cette équipe.'
+                    'start_date': f'Cette période chevauche avec une affectation existante ({overlapping.start_date} - {overlapping.end_date}) pour l\'agent {overlapping.agent}.',
+                    'end_date': f'Cette période chevauche avec une affectation existante ({overlapping.start_date} - {overlapping.end_date}) pour l\'agent {overlapping.agent}.'
                 })
     
+    def is_active(self):
+        """Check if this assignment is currently active"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+    
     def __str__(self):
-        agent_info = f" - {self.agent}" if self.agent else " - Non assigné"
-        return f"{self.team.designation}: {self.function.designation}{agent_info}"
+        return f"{self.team_position} - {self.agent} ({self.start_date} à {self.end_date})"
     
     class Meta:
-        verbose_name = "Poste d'Équipe"
-        verbose_name_plural = "Postes d'Équipe"
-        unique_together = ['team', 'function']
-        ordering = ['team__designation', 'function__designation']
+        verbose_name = "Affectation d'Agent"
+        verbose_name_plural = "Affectations d'Agents"
+        ordering = ['-start_date', 'agent__matricule']
+
+
+class TeamPositionRotationAssignment(models.Model):
+    team_position = models.ForeignKey(
+        TeamPosition,
+        on_delete=models.CASCADE,
+        related_name='rotation_assignments',
+        help_text="Poste d'équipe concerné"
+    )
+    rotation_plan = models.ForeignKey(
+        ShiftSchedule,
+        on_delete=models.CASCADE,
+        help_text="Roulement hebdomadaire assigné"
+    )
+    start_date = models.DateField(
+        help_text="Date de début du roulement"
+    )
+    end_date = models.DateField(
+        help_text="Date de fin du roulement"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        super().clean()
+        
+        # Validate that end_date >= start_date
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': 'La date de fin doit être postérieure ou égale à la date de début.'
+            })
+        
+        # Check for overlapping assignments for the same team position
+        if self.team_position_id and self.start_date and self.end_date:
+            overlapping_assignments = TeamPositionRotationAssignment.objects.filter(
+                team_position=self.team_position,
+                start_date__lte=self.end_date,
+                end_date__gte=self.start_date
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            if overlapping_assignments.exists():
+                overlapping = overlapping_assignments.first()
+                raise ValidationError({
+                    'start_date': f'Cette période chevauche avec une affectation existante ({overlapping.start_date} - {overlapping.end_date}) pour le roulement {overlapping.rotation_plan}.',
+                    'end_date': f'Cette période chevauche avec une affectation existante ({overlapping.start_date} - {overlapping.end_date}) pour le roulement {overlapping.rotation_plan}.'
+                })
+    
+    def is_active(self):
+        """Check if this assignment is currently active"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+    
+    def __str__(self):
+        return f"{self.team_position} - {self.rotation_plan} ({self.start_date} à {self.end_date})"
+    
+    class Meta:
+        verbose_name = "Affectation de Roulement"
+        verbose_name_plural = "Affectations de Roulements"
+        ordering = ['-start_date', 'rotation_plan__name']
