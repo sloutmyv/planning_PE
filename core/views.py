@@ -19,7 +19,7 @@ def is_superuser(user):
     """Check if user is a superuser"""
     return user.is_authenticated and user.is_superuser
 from .models import (Agent, Function, ScheduleType, DailyRotationPlan, RotationPeriod,
-                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department, Team, TeamPosition)
+                     ShiftSchedule, ShiftSchedulePeriod, ShiftScheduleWeek, ShiftScheduleDailyPlan, PublicHoliday, Department, Team, TeamPosition, TeamPositionAgentAssignment, TeamPositionRotationAssignment)
 from .forms import (AgentForm, FunctionForm, ScheduleTypeForm, DailyRotationPlanForm, RotationPeriodForm,
                     ShiftScheduleForm, ShiftSchedulePeriodForm, ShiftScheduleWeekForm, ShiftScheduleDailyPlanForm, WeeklyPlanFormSet, PublicHolidayForm, DepartmentForm, TeamForm, TeamPositionForm)
 from .decorators import permission_required, admin_required, viewer_required, get_agent_from_user
@@ -3736,10 +3736,14 @@ def team_list(request):
     search_query = request.GET.get('search', '')
     department_filter = request.GET.get('department', '')
     
+    from django.db.models import Prefetch
+    
     teams = Team.objects.select_related('department').prefetch_related(
         'positions__function',
-        'positions__agent_assignments__agent',
-        'positions__rotation_assignments__rotation_plan'
+        Prefetch('positions__agent_assignments', 
+                queryset=TeamPositionAgentAssignment.objects.select_related('agent').order_by('-start_date')),
+        Prefetch('positions__rotation_assignments', 
+                queryset=TeamPositionRotationAssignment.objects.select_related('rotation_plan').order_by('-start_date'))
     ).order_by('designation')
     
     # Apply search filter
@@ -3757,12 +3761,15 @@ def team_list(request):
     departments = Department.objects.all().order_by('order', 'name')
     current_agent = get_agent_from_user(request.user)
     
+    from datetime import date
+    
     context = {
         'teams': teams,
         'search_query': search_query,
         'department_filter': department_filter,
         'departments': departments,
         'current_agent': current_agent,
+        'today': date.today(),
     }
     
     return render(request, 'core/teams/team_list.html', context)
@@ -3920,7 +3927,28 @@ def team_position_create(request, team_id):
 @require_http_methods(["GET", "POST"])
 def team_position_edit(request, position_id):
     """Edit an existing team position"""
-    position = get_object_or_404(TeamPosition, id=position_id)
+    from django.db.models import Prefetch
+    
+    from datetime import date
+    today = date.today()
+    
+    position = get_object_or_404(
+        TeamPosition.objects.prefetch_related(
+            Prefetch('agent_assignments', 
+                    queryset=TeamPositionAgentAssignment.objects.select_related('agent').extra(
+                        select={
+                            'is_current': f'start_date <= "{today}" AND end_date >= "{today}"'
+                        }
+                    ).order_by('-is_current', '-start_date')),
+            Prefetch('rotation_assignments', 
+                    queryset=TeamPositionRotationAssignment.objects.select_related('rotation_plan').extra(
+                        select={
+                            'is_current': f'start_date <= "{today}" AND end_date >= "{today}"'
+                        }
+                    ).order_by('-is_current', '-start_date'))
+        ),
+        id=position_id
+    )
     
     if request.method == 'POST':
         form = TeamPositionForm(request.POST, instance=position, team=position.team)
@@ -3932,7 +3960,12 @@ def team_position_edit(request, position_id):
     else:
         form = TeamPositionForm(instance=position, team=position.team)
     
-    context = {'form': form, 'position': position, 'team': position.team}
+    context = {
+        'form': form, 
+        'position': position, 
+        'team': position.team,
+        'today': today
+    }
     
     if request.headers.get('HX-Request'):
         return render(request, 'core/teams/team_position_form_htmx.html', context)
@@ -4333,3 +4366,218 @@ def publicholiday_import(request):
             messages.error(request, f'Erreur lors de l\'importation : {str(e)}')
     
     return redirect('admin:core_publicholiday_changelist')
+
+
+# Team Position Assignment Views
+@admin_required
+@require_http_methods(["POST"])
+def update_agent_assignment(request, assignment_id):
+    """Update agent assignment dates via AJAX"""
+    assignment = get_object_or_404(TeamPositionAgentAssignment, id=assignment_id)
+    
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
+    
+    if not start_date or not end_date:
+        return JsonResponse({'success': False, 'error': 'Dates manquantes'}, status=400)
+    
+    try:
+        from datetime import datetime
+        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if start_date_obj >= end_date_obj:
+            return JsonResponse({'success': False, 'error': 'La date de fin doit être postérieure à la date de début'}, status=400)
+        
+        # Check for overlapping assignments
+        overlapping = TeamPositionAgentAssignment.objects.filter(
+            team_position=assignment.team_position,
+            start_date__lte=end_date_obj,
+            end_date__gte=start_date_obj
+        ).exclude(id=assignment.id)
+        
+        if overlapping.exists():
+            return JsonResponse({'success': False, 'error': 'Cette période chevauche avec une autre affectation'}, status=400)
+        
+        assignment.start_date = start_date_obj
+        assignment.end_date = end_date_obj
+        assignment.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'start_date': start_date_obj.strftime('%d/%m/%Y'),
+            'end_date': end_date_obj.strftime('%d/%m/%Y')
+        })
+        
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Format de date invalide'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def update_rotation_assignment(request, assignment_id):
+    """Update rotation assignment dates via AJAX"""
+    assignment = get_object_or_404(TeamPositionRotationAssignment, id=assignment_id)
+    
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
+    
+    if not start_date or not end_date:
+        return JsonResponse({'success': False, 'error': 'Dates manquantes'}, status=400)
+    
+    try:
+        from datetime import datetime
+        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if start_date_obj >= end_date_obj:
+            return JsonResponse({'success': False, 'error': 'La date de fin doit être postérieure à la date de début'}, status=400)
+        
+        # Check for overlapping assignments
+        overlapping = TeamPositionRotationAssignment.objects.filter(
+            team_position=assignment.team_position,
+            start_date__lte=end_date_obj,
+            end_date__gte=start_date_obj
+        ).exclude(id=assignment.id)
+        
+        if overlapping.exists():
+            return JsonResponse({'success': False, 'error': 'Cette période chevauche avec une autre affectation'}, status=400)
+        
+        assignment.start_date = start_date_obj
+        assignment.end_date = end_date_obj
+        assignment.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'start_date': start_date_obj.strftime('%d/%m/%Y'),
+            'end_date': end_date_obj.strftime('%d/%m/%Y')
+        })
+        
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Format de date invalide'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def delete_agent_assignment(request, assignment_id):
+    """Delete agent assignment via AJAX"""
+    assignment = get_object_or_404(TeamPositionAgentAssignment, id=assignment_id)
+    
+    try:
+        assignment.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def delete_rotation_assignment(request, assignment_id):
+    """Delete rotation assignment via AJAX"""
+    assignment = get_object_or_404(TeamPositionRotationAssignment, id=assignment_id)
+    
+    try:
+        assignment.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def create_agent_assignment(request, position_id):
+    """Create new agent assignment via AJAX"""
+    position = get_object_or_404(TeamPosition, id=position_id)
+    
+    agent_id = request.POST.get('agent_id')
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
+    
+    if not agent_id or not start_date or not end_date:
+        return JsonResponse({'success': False, 'error': 'Tous les champs sont requis'}, status=400)
+    
+    try:
+        from datetime import datetime
+        agent = get_object_or_404(Agent, id=agent_id)
+        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if start_date_obj >= end_date_obj:
+            return JsonResponse({'success': False, 'error': 'La date de fin doit être postérieure à la date de début'}, status=400)
+        
+        # Check for overlapping assignments for this position
+        overlapping = TeamPositionAgentAssignment.objects.filter(
+            team_position=position,
+            start_date__lte=end_date_obj,
+            end_date__gte=start_date_obj
+        )
+        
+        if overlapping.exists():
+            return JsonResponse({'success': False, 'error': 'Cette période chevauche avec une autre affectation d\'agent'}, status=400)
+        
+        # Create the new assignment
+        assignment = TeamPositionAgentAssignment.objects.create(
+            team_position=position,
+            agent=agent,
+            start_date=start_date_obj,
+            end_date=end_date_obj
+        )
+        
+        return JsonResponse({'success': True, 'assignment_id': assignment.id})
+        
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Format de date invalide'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def create_rotation_assignment(request, position_id):
+    """Create new rotation assignment via AJAX"""
+    position = get_object_or_404(TeamPosition, id=position_id)
+    
+    rotation_id = request.POST.get('rotation_id')
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
+    
+    if not rotation_id or not start_date or not end_date:
+        return JsonResponse({'success': False, 'error': 'Tous les champs sont requis'}, status=400)
+    
+    try:
+        from datetime import datetime
+        rotation_plan = get_object_or_404(ShiftSchedule, id=rotation_id)
+        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if start_date_obj >= end_date_obj:
+            return JsonResponse({'success': False, 'error': 'La date de fin doit être postérieure à la date de début'}, status=400)
+        
+        # Check for overlapping assignments for this position
+        overlapping = TeamPositionRotationAssignment.objects.filter(
+            team_position=position,
+            start_date__lte=end_date_obj,
+            end_date__gte=start_date_obj
+        )
+        
+        if overlapping.exists():
+            return JsonResponse({'success': False, 'error': 'Cette période chevauche avec une autre affectation de roulement'}, status=400)
+        
+        # Create the new assignment
+        assignment = TeamPositionRotationAssignment.objects.create(
+            team_position=position,
+            rotation_plan=rotation_plan,
+            start_date=start_date_obj,
+            end_date=end_date_obj
+        )
+        
+        return JsonResponse({'success': True, 'assignment_id': assignment.id})
+        
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Format de date invalide'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

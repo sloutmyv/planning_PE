@@ -137,8 +137,11 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Gestion d'affectations avancée** :
   - **Affectations multiples avec historique** : Assignation de plusieurs agents/roulements par poste avec périodes de validité
   - **Prévention des chevauchements** : Validation automatique des dates pour éviter les conflits d'affectation
-  - **Interface d'administration intégrée** : Boutons directs vers l'interface admin pour gérer les affectations
+  - **Interface d'édition intégrée** : Gestion complète des affectations directement dans l'interface métier
+  - **CRUD complet des affectations** : Ajout, modification, suppression des assignations avec validation en temps réel
+  - **Messages d'erreur spécifiques** : Feedback détaillé pour les conflits de recouvrement d'affectations
   - **Affichage des affectations actuelles** : Visualisation en temps réel des agents et roulements actuellement assignés
+  - **Interface adaptative** : Messages informatifs quand aucune affectation n'est définie sur un poste
 - **Contraintes métier optimisées** :
   - Validation des dates d'affectation avec prévention des chevauchements
   - Filtrage automatique des fonctions inactives et plans sans période
@@ -148,10 +151,12 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
   - Badges colorés pour les plans de roulement selon leur type d'horaire
   - Indicateurs visuels pour la prise en compte des jours fériés
   - Affichage du statut d'assignation des agents (assigné/vacant)
-- **Actions contextuelles complètes** :
+  - **Messages d'état contextuels** : "Pas d'agent affecté au poste à ce jour" / "Pas de roulement affecté au poste à ce jour"
+- **Actions contextuelles simplifiées** :
   - Menu déroulant par équipe (modifier, ajouter poste, supprimer)
   - Actions individuelles par poste (modifier, supprimer)
-  - Boutons d'affectation directe vers l'interface d'administration
+  - **Gestion d'affectations intégrée** : Modification/suppression/ajout d'affectations directement dans le formulaire de poste
+  - **Navigation optimisée** : Bouton "Sauvegarder et retourner" qui sauvegarde les modifications avant de revenir à la liste
   - Modales de confirmation pour les suppressions critiques
 - **Intégration dashboard** : Compteur d'équipes en temps réel dans le tableau de bord administrateur
 - **Navigation intégrée** : Lien "Équipes" dans le menu Administration, positionné après "Agents"
@@ -172,6 +177,22 @@ Application de planification développée avec Django, utilisant HTMX et Alpine.
 - **Gestion transactionnelle** : Transactions atomiques pour toutes les opérations critiques
 
 ## Améliorations récentes
+
+### Refonte complète du système d'affectations d'équipes (Juillet 2025)
+- **Système d'affectations historiques** : Remplacement des affectations uniques par un système de périodes multiples avec dates de validité
+- **Gestion des chevauchements** : Validation automatique empêchant les affectations simultanées d'agents ou roulements sur un même poste
+- **Interface d'édition intégrée** : Suppression de la dépendance à Django Admin, gestion complète des affectations dans l'interface métier
+- **CRUD complet des affectations** : Ajout, modification et suppression des assignations directement dans le formulaire de poste d'équipe
+- **Messages d'erreur détaillés** : Feedback spécifique pour les conflits de recouvrement ("Cette période chevauche avec une autre affectation d'agent/roulement")
+- **Interface adaptative améliorée** : Messages contextuels "Pas d'agent/roulement affecté au poste à ce jour" quand aucune affectation n'est définie
+- **Navigation optimisée** : Bouton "Sauvegarder et retourner" remplace les actions séparées pour une expérience utilisateur fluide
+- **Historique complet** : Conservation de toutes les affectations passées, présentes et futures avec tri automatique (actuelles en premier)
+- **Validation en temps réel** : Contrôles de cohérence des dates et prévention des erreurs de saisie
+- **Simplification interface** : Suppression des doublons "Ajouter nouveau poste" sur les cartes d'équipes
+- **Corrections JavaScript** : Résolution des problèmes d'édition qui disparaissait et des erreurs "Load failed" lors de suppressions
+- **Architecture transactionnelle** : Toutes les opérations d'affectation protégées par des transactions atomiques Django
+
+## Améliorations précédentes
 
 ### Optimisations UX des roulements hebdomadaires (Juillet 2025)
 - **Résolution du problème de fermeture des accordéons** : Les dropdowns restent désormais ouverts après ajout/suppression de rythmes

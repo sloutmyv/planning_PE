@@ -544,6 +544,53 @@ class TeamForm(forms.ModelForm):
 
 
 class TeamPositionForm(forms.ModelForm):
+    # Champs pour les affectations
+    agent = forms.ModelChoiceField(
+        queryset=Agent.objects.all(),
+        required=False,
+        empty_label="-- Aucun agent --",
+        help_text="Agent à affecter à ce poste"
+    )
+    agent_start_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        }),
+        help_text="Date de début d'affectation de l'agent"
+    )
+    agent_end_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        }),
+        help_text="Date de fin d'affectation de l'agent"
+    )
+    
+    rotation_plan = forms.ModelChoiceField(
+        queryset=ShiftSchedule.objects.all(),
+        required=False,
+        empty_label="-- Aucun roulement --",
+        help_text="Plan de roulement à affecter à ce poste"
+    )
+    rotation_start_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        }),
+        help_text="Date de début d'affectation du roulement"
+    )
+    rotation_end_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        }),
+        help_text="Date de fin d'affectation du roulement"
+    )
+    
     def __init__(self, *args, **kwargs):
         team = kwargs.pop('team', None)
         super().__init__(*args, **kwargs)
@@ -556,8 +603,32 @@ class TeamPositionForm(forms.ModelForm):
         # Filter available functions to only show active ones
         self.fields['function'].queryset = Function.objects.filter(status=True)
         
-        # Add help texts
+        # Add CSS classes and help texts
         self.fields['function'].help_text = "Seules les fonctions actives sont disponibles."
+        
+        # Add CSS classes to the new fields
+        self.fields['agent'].widget.attrs.update({
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        })
+        self.fields['rotation_plan'].widget.attrs.update({
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        })
+        
+        # Si on modifie un poste existant, pré-remplir les champs d'affectation avec les valeurs actuelles
+        if self.instance.pk:
+            # Pré-remplir l'agent actuel s'il existe
+            current_agent_assignment = self.instance.get_current_agent_assignment()
+            if current_agent_assignment:
+                self.fields['agent'].initial = current_agent_assignment.agent
+                self.fields['agent_start_date'].initial = current_agent_assignment.start_date
+                self.fields['agent_end_date'].initial = current_agent_assignment.end_date
+            
+            # Pré-remplir le roulement actuel s'il existe  
+            current_rotation_assignment = self.instance.get_current_rotation_assignment()
+            if current_rotation_assignment:
+                self.fields['rotation_plan'].initial = current_rotation_assignment.rotation_plan
+                self.fields['rotation_start_date'].initial = current_rotation_assignment.start_date
+                self.fields['rotation_end_date'].initial = current_rotation_assignment.end_date
     
     class Meta:
         model = TeamPosition
@@ -587,9 +658,79 @@ class TeamPositionForm(forms.ModelForm):
     
     def clean(self):
         cleaned_data = super().clean()
-        # Allow multiple positions with the same function within a team
-        # Removed validation that prevented duplicate functions
+        
+        # Validation des dates d'affectation d'agent
+        agent = cleaned_data.get('agent')
+        agent_start_date = cleaned_data.get('agent_start_date')
+        agent_end_date = cleaned_data.get('agent_end_date')
+        
+        if agent:
+            if not agent_start_date:
+                raise forms.ValidationError({
+                    'agent_start_date': 'La date de début est obligatoire si un agent est sélectionné.'
+                })
+            if not agent_end_date:
+                raise forms.ValidationError({
+                    'agent_end_date': 'La date de fin est obligatoire si un agent est sélectionné.'
+                })
+            if agent_start_date and agent_end_date and agent_start_date >= agent_end_date:
+                raise forms.ValidationError({
+                    'agent_end_date': 'La date de fin doit être postérieure à la date de début.'
+                })
+        
+        # Validation des dates d'affectation de roulement
+        rotation_plan = cleaned_data.get('rotation_plan')
+        rotation_start_date = cleaned_data.get('rotation_start_date')
+        rotation_end_date = cleaned_data.get('rotation_end_date')
+        
+        if rotation_plan:
+            if not rotation_start_date:
+                raise forms.ValidationError({
+                    'rotation_start_date': 'La date de début est obligatoire si un roulement est sélectionné.'
+                })
+            if not rotation_end_date:
+                raise forms.ValidationError({
+                    'rotation_end_date': 'La date de fin est obligatoire si un roulement est sélectionné.'
+                })
+            if rotation_start_date and rotation_end_date and rotation_start_date >= rotation_end_date:
+                raise forms.ValidationError({
+                    'rotation_end_date': 'La date de fin doit être postérieure à la date de début.'
+                })
+        
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        
+        if commit:
+            # Sauvegarder les affectations
+            agent = self.cleaned_data.get('agent')
+            agent_start_date = self.cleaned_data.get('agent_start_date')
+            agent_end_date = self.cleaned_data.get('agent_end_date')
+            
+            if agent and agent_start_date and agent_end_date:
+                # Créer ou mettre à jour l'affectation d'agent
+                TeamPositionAgentAssignment.objects.update_or_create(
+                    team_position=instance,
+                    agent=agent,
+                    start_date=agent_start_date,
+                    defaults={'end_date': agent_end_date}
+                )
+            
+            rotation_plan = self.cleaned_data.get('rotation_plan')
+            rotation_start_date = self.cleaned_data.get('rotation_start_date')
+            rotation_end_date = self.cleaned_data.get('rotation_end_date')
+            
+            if rotation_plan and rotation_start_date and rotation_end_date:
+                # Créer ou mettre à jour l'affectation de roulement
+                TeamPositionRotationAssignment.objects.update_or_create(
+                    team_position=instance,
+                    rotation_plan=rotation_plan,
+                    start_date=rotation_start_date,
+                    defaults={'end_date': rotation_end_date}
+                )
+        
+        return instance
 
 
 class TeamPositionAgentAssignmentForm(forms.ModelForm):

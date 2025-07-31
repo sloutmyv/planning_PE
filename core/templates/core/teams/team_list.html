@@ -139,13 +139,6 @@
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <h4 class="text-sm font-medium text-gray-700">Postes ({{ team.positions.count }})</h4>
-                    {% if team.positions.count == 0 %}
-                    <a href="{% url 'team_position_create' team.id %}" 
-                       class="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                       onclick="console.log('Link clicked')">
-                        + Ajouter le premier poste
-                    </a>
-                    {% endif %}
                 </div>
                 
                 {% if team.positions.all %}
@@ -160,7 +153,7 @@
                                     {{ position.current_agent.matricule }} - {{ position.current_agent.first_name }} {{ position.current_agent.last_name }}
                                 </p>
                                 {% else %}
-                                <p class="text-xs text-gray-500 mt-1 italic">Aucun agent assigné</p>
+                                <p class="text-xs text-red-500 mt-1 font-medium">Poste vacant</p>
                                 {% endif %}
                                 <div class="flex items-center mt-2">
                                     {% if position.current_rotation_plan %}
@@ -184,7 +177,8 @@
                                 {% endif %}
                                 <a href="{% url 'team_position_edit' position.id %}" 
                                    @click.stop
-                                   class="text-gray-400 hover:text-gray-600 p-1">
+                                   class="text-gray-400 hover:text-gray-600 p-1" 
+                                   title="Modifier le poste">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -212,7 +206,7 @@
                     <p class="text-sm">Aucun poste défini</p>
                     <a href="{% url 'team_position_create' team.id %}" 
                        class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
-                        Ajouter le premier poste
+                        Ajouter nouveau poste
                     </a>
                 </div>
                 {% endif %}

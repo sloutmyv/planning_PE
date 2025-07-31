@@ -121,6 +121,14 @@ urlpatterns = [
     path('team-positions/<int:position_id>/edit/', views.team_position_edit, name='team_position_edit'),
     path('team-positions/<int:position_id>/delete/', views.team_position_delete, name='team_position_delete'),
     
+    # Team Position Assignment URLs
+    path('agent-assignments/<int:assignment_id>/update/', views.update_agent_assignment, name='update_agent_assignment'),
+    path('rotation-assignments/<int:assignment_id>/update/', views.update_rotation_assignment, name='update_rotation_assignment'),
+    path('agent-assignments/<int:assignment_id>/delete/', views.delete_agent_assignment, name='delete_agent_assignment'),
+    path('rotation-assignments/<int:assignment_id>/delete/', views.delete_rotation_assignment, name='delete_rotation_assignment'),
+    path('team-positions/<int:position_id>/agent-assignments/create/', views.create_agent_assignment, name='create_agent_assignment'),
+    path('team-positions/<int:position_id>/rotation-assignments/create/', views.create_rotation_assignment, name='create_rotation_assignment'),
+    
     # API endpoints for teams
     path('api/teams/<int:team_id>/positions/', views.api_team_positions, name='api_team_positions'),
     
