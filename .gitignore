@@ -195,16 +195,3 @@ cython_debug/
 
 
 json_bdd
-
-# --- Ajouts (agents IA / orchestration) ---
-# Bruit macOS et fichiers de session curl (présents par erreur dans l'historique)
-.DS_Store
-**/.DS_Store
-cookies.txt
-# Caches d'outils d'agents
-.opencode/cache/
-.codex/
-# Bases locales et dumps
-*.sqlite3
-*.sqlite3-journal
-db.sqlite3.backup*
